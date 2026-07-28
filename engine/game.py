@@ -1,217 +1,268 @@
 from engine.betting import BettingEngine
+from engine.betting_round import BettingRound
 from engine.dealer import Dealer
 from engine.game_state import GameState
 from engine.pot_manager import PotManager
 from engine.showdown import Showdown
-from ui.console import ConsoleUI
-from models.action import Action
+
 from models.deck import Deck
+from models.player import Player
 from models.table import Table
-from engine.betting_round import BettingRound
+
 
 class Game:
     """
     Main Texas Hold'em game controller.
+
+    Responsibilities
+    ----------------
+    • Manage the game lifecycle
+    • Coordinate engine components
+    • Start and end hands
+    • Control game flow
+
+    This class does NOT:
+        • Evaluate hands
+        • Move chips directly
+        • Resolve betting
+        • Determine winners
     """
 
-    def __init__(self, players):
+    def __init__(
+        self,
+        players: list[Player]
+    ):
+
+        if len(players) < 2:
+
+            raise ValueError(
+                "At least two players are required."
+            )
 
         self.players = players
 
+        # ==========================================
+        # Game Components
+        # ==========================================
+
         self.table = Table()
+
+        self.deck = Deck()
+
+        self.dealer = Dealer(
+            self.deck
+        )
 
         self.pot_manager = PotManager()
 
-        self.deck = Deck()
-        self.deck.shuffle()
-
-        self.dealer = Dealer(self.deck)
-
-        self.betting = BettingEngine(
+        self.betting_engine = BettingEngine(
             self.table,
             self.pot_manager
         )
 
-        self.showdown_engine = Showdown()
+        self.betting_round = BettingRound(
+            self.players,
+            self.table
+        )
+
+        self.showdown = Showdown()
+
+        # ==========================================
+        # Game State
+        # ==========================================
 
         self.state = GameState.WAITING
 
+        self.hand_number = 0
+
+        self.running = False
+
+    # ==================================================
+    # Game Lifecycle
     # ==================================================
 
-    def start_round(self):
+    def start_game(self):
+        """
+        Start the poker game.
+        """
 
-        print("\n========== NEW ROUND ==========\n")
+        self.running = True
 
-        self.reset_round()
+        self.state = GameState.WAITING
+
+    # --------------------------------------------------
+
+    def stop_game(self):
+        """
+        Stop the poker game.
+        """
+
+        self.running = False
+
+    # --------------------------------------------------
+
+    def is_running(self) -> bool:
+
+        return self.running
+
+    # --------------------------------------------------
+
+    def current_hand(self) -> int:
+
+        return self.hand_number
+        # ==================================================
+    # Hand Lifecycle
+    # ==================================================
+
+    def start_hand(self):
+        """
+        Start a new hand.
+        """
+
+        self.hand_number += 1
+
+        self.state = GameState.PRE_FLOP
+
+        self.reset_hand()
+
+        self.rotate_dealer()
+
+        self.assign_positions()
 
         self.post_blinds()
 
-        self.pre_flop()
+        self.deal_hole_cards()
 
-        self.betting_round()
+    # --------------------------------------------------
 
-        self.flop()
+    def reset_hand(self):
+        """
+        Prepare every component for a new hand.
+        """
 
-        self.betting_round()
+        self.deck.reset()
 
-        self.turn()
-
-        self.betting_round()
-
-        self.river()
-
-        self.betting_round()
-
-        self.showdown()
-
-    # ==================================================
-
-    def reset_round(self):
-
-        self.deck = Deck()
         self.deck.shuffle()
-
-        self.dealer = Dealer(self.deck)
 
         self.table.reset_for_round()
 
         self.pot_manager.reset()
 
+        self.betting_round.reset()
+
         for player in self.players:
 
             player.reset_for_round()
 
-    # ==================================================
+    # --------------------------------------------------
+
+    def rotate_dealer(self):
+        """
+        Move the dealer button.
+        """
+
+        self.dealer.rotate_dealer(
+
+            self.table,
+
+            len(self.players)
+
+        )
+
+    # --------------------------------------------------
+
+    def assign_positions(self):
+        """
+        Assign poker positions.
+        """
+
+        self.dealer.assign_positions(
+
+            self.players,
+
+            self.table
+
+        )
+
+    # --------------------------------------------------
 
     def post_blinds(self):
+        """
+        Post the small and big blinds.
+        """
 
-        sb = (
-            self.table.dealer_position + 1
-        ) % len(self.players)
+        small_blind = None
 
-        bb = (
-            self.table.dealer_position + 2
-        ) % len(self.players)
+        big_blind = None
 
-        self.betting.post_small_blind(
-            self.players[sb]
+        for player in self.players:
+
+            position = player.position
+
+            if position.name == "SMALL_BLIND":
+
+                small_blind = player
+
+            elif position.name == "BIG_BLIND":
+
+                big_blind = player
+
+        if small_blind is None:
+
+            raise RuntimeError(
+                "Small blind not found."
+            )
+
+        if big_blind is None:
+
+            raise RuntimeError(
+                "Big blind not found."
+            )
+
+        self.betting_engine.post_small_blind(
+
+            small_blind
+
         )
 
-        self.betting.post_big_blind(
-            self.players[bb]
+        self.betting_engine.post_big_blind(
+
+            big_blind
+
         )
 
+    # --------------------------------------------------
+
+    def deal_hole_cards(self):
+        """
+        Deal two private cards to every
+        active player.
+        """
+
+        self.dealer.deal_hole_cards(
+
+            self.players
+
+        )
+        # ==================================================
+    # Betting Streets
     # ==================================================
 
-    def pre_flop(self):
+    def play_pre_flop(self):
+        """
+        Run the pre-flop betting round.
+        """
 
         self.state = GameState.PRE_FLOP
 
-        self.dealer.deal_hole_cards(
-            self.players
-        )
+        self.play_betting_round()
 
-        print("Hole cards dealt.")
+    # --------------------------------------------------
 
-    # ==================================================
-    def betting_round(self):
-
-        print("\n========== BETTING ==========\n")
-
-        # Reset street betting
-        self.table.current_bet = 0
-
-        for player in self.players:
-            player.reset_betting_round()
-
-        # For now, start with the first player.
-        # We'll later calculate the correct position
-        # (left of BB pre-flop, left of dealer otherwise).
-        betting_round = BettingRound(
-            self.players,
-            starting_index=0
-        )
-
-        while not betting_round.is_finished():
-
-            player = betting_round.current_player()
-
-            if not player.is_active():
-
-                betting_round.next_player()
-                continue
-
-            ConsoleUI.show_player(player)
-
-            print(f"Pot : ${self.pot_manager.total_pot()}")
-            print(f"Current Bet : ${self.table.current_bet}")
-
-            if not player.is_ai:
-
-                action = ConsoleUI.choose_action()
-
-                match action:
-
-                    case Action.FOLD:
-
-                        self.betting.fold(player)
-
-                        print(f"{player.name} folds.")
-
-                    case Action.CALL:
-
-                        self.betting.call(player)
-
-                        print(f"{player.name} calls.")
-
-                    case Action.CHECK:
-
-                        self.betting.check(player)
-
-                        print(f"{player.name} checks.")
-
-                    case Action.RAISE:
-
-                        amount = int(input("Raise To : "))
-
-                        self.betting.raise_bet(
-                            player,
-                            amount
-                        )
-
-                        betting_round.set_last_raiser(player)
-
-                        print(
-                            f"{player.name} raises to {amount}."
-                        )
-
-                    case Action.ALL_IN:
-
-                        self.betting.all_in(player)
-
-                        print(
-                            f"{player.name} goes ALL-IN!"
-                        )
-
-            else:
-
-                # Temporary bot
-                self.betting.call(player)
-
-                print(f"{player.name} calls.")
-
-            # For now, one pass through all players.
-            if betting_round.current_index == len(self.players) - 1:
-                betting_round.end_round()
-            else:
-                betting_round.next_player()
-
-        print()
-
-        print(f"Pot is now ${self.pot_manager.total_pot()}")    
-        # ==================================================
-
-    def flop(self):
+    def play_flop(self):
+        """
+        Deal the flop and run betting.
+        """
 
         self.state = GameState.FLOP
 
@@ -219,14 +270,16 @@ class Game:
             self.table
         )
 
-        print(
-            "\nFlop :",
-            self.table.show_community_cards()
-        )
+        self.betting_round.reset_for_new_street()
 
-    # ==================================================
+        self.play_betting_round()
 
-    def turn(self):
+    # --------------------------------------------------
+
+    def play_turn(self):
+        """
+        Deal the turn and run betting.
+        """
 
         self.state = GameState.TURN
 
@@ -234,14 +287,16 @@ class Game:
             self.table
         )
 
-        print(
-            "\nTurn :",
-            self.table.show_community_cards()
-        )
+        self.betting_round.reset_for_new_street()
 
-    # ==================================================
+        self.play_betting_round()
 
-    def river(self):
+    # --------------------------------------------------
+
+    def play_river(self):
+        """
+        Deal the river and run betting.
+        """
 
         self.state = GameState.RIVER
 
@@ -249,39 +304,268 @@ class Game:
             self.table
         )
 
-        print(
-            "\nRiver :",
-            self.table.show_community_cards()
-        )
+        self.betting_round.reset_for_new_street()
+
+        self.play_betting_round()
 
     # ==================================================
+    # Betting
+    # ==================================================
 
-    def showdown(self):
+    def play_betting_round(self):
+        """
+        Execute one betting street.
+
+        Actual player decisions are handled
+        externally (UI / AI). This method
+        advances until the betting round ends.
+        """
+
+        self.betting_round.start()
+
+        while self.betting_round.can_continue():
+
+            current_player = (
+                self.betting_round.current_player()
+            )
+
+            #
+            # Human / AI decision happens here.
+            #
+            # Examples:
+            #
+            # fold
+            # check
+            # call
+            # bet
+            # raise
+            # all-in
+            #
+            # The chosen action should call the
+            # appropriate BettingEngine method.
+            #
+
+            break
+
+        self.betting_round.finish()
+        # ==================================================
+    # Showdown
+    # ==================================================
+
+    def play_showdown(self):
+        """
+        Resolve the showdown.
+        """
 
         self.state = GameState.SHOWDOWN
 
-        print("\n========== SHOWDOWN ==========\n")
+        return self.showdown.resolve(
 
-        winner, result = self.showdown_engine.resolve(
             self.players,
+
             self.table.community_cards,
+
             self.pot_manager
+
         )
 
-        print()
+    # --------------------------------------------------
 
-        print(
-            f"Winner       : {winner.name}"
+    def finish_hand(self):
+        """
+        Finish the current hand.
+        """
+
+        self.play_showdown()
+
+        self.eliminate_busted_players()
+
+        self.state = GameState.HAND_COMPLETE
+
+    # ==================================================
+    # Player Management
+    # ==================================================
+
+    def eliminate_busted_players(self):
+        """
+        Eliminate players with no chips.
+        """
+
+        for player in self.players:
+
+            if (
+
+                player.chips == 0
+
+                and
+
+                not player.eliminated
+
+            ):
+
+                player.eliminate()
+
+    # --------------------------------------------------
+
+    def active_players(self) -> list[Player]:
+        """
+        Return every player still in
+        the tournament.
+        """
+
+        return [
+
+            player
+
+            for player in self.players
+
+            if not player.eliminated
+
+        ]
+
+    # --------------------------------------------------
+
+    def active_player_count(self) -> int:
+        """
+        Number of players still in
+        the tournament.
+        """
+
+        return len(
+
+            self.active_players()
+
         )
 
-        print(
-            f"Winning Hand : {result.hand_name}"
+    # ==================================================
+    # Hand Flow
+    # ==================================================
+
+    def play_hand(self):
+        """
+        Play one complete hand.
+        """
+
+        self.start_hand()
+
+        self.play_pre_flop()
+
+        if self.active_player_count() > 1:
+
+            self.play_flop()
+
+        if self.active_player_count() > 1:
+
+            self.play_turn()
+
+        if self.active_player_count() > 1:
+
+            self.play_river()
+
+        self.finish_hand()
+        # ==================================================
+    # Tournament
+    # ==================================================
+
+    def next_hand(self):
+        """
+        Prepare for the next hand.
+        """
+
+        if self.is_game_over():
+
+            return
+
+        self.start_hand()
+
+    # --------------------------------------------------
+
+    def is_game_over(self) -> bool:
+        """
+        Returns True when only one player
+        remains in the tournament.
+        """
+
+        return self.active_player_count() <= 1
+
+    # --------------------------------------------------
+
+    def winner(self) -> Player | None:
+        """
+        Return the tournament winner.
+        """
+
+        if not self.is_game_over():
+
+            return None
+
+        active = self.active_players()
+
+        if not active:
+
+            return None
+
+        return active[0]
+
+    # --------------------------------------------------
+
+    def reset_game(self):
+        """
+        Reset the entire game.
+        """
+
+        self.running = False
+
+        self.hand_number = 0
+
+        self.state = GameState.WAITING
+
+        self.table.reset()
+
+        self.pot_manager.reset()
+
+        self.betting_round.reset()
+
+        for player in self.players:
+
+            player.reset_for_round()
+
+            player.eliminated = False
+
+    # ==================================================
+    # Debug
+    # ==================================================
+
+    def __repr__(self):
+
+        return (
+
+            "Game("
+
+            f"players={len(self.players)}, "
+
+            f"hand={self.hand_number}, "
+
+            f"state={self.state.name}"
+
+            ")"
+
         )
 
-        print(
-            f"Score        : {result.score}"
-        )
+    # --------------------------------------------------
 
-        print(
-            f"Pot Won      : ${self.pot_manager.total_pot()}"
+    def __str__(self):
+
+        return (
+
+            "========== GAME ==========\n"
+
+            f"Players      : {len(self.players)}\n"
+
+            f"Hand         : {self.hand_number}\n"
+
+            f"State        : {self.state.name}\n"
+
+            f"Running      : {self.running}"
+
         )

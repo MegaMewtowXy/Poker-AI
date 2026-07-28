@@ -1,41 +1,93 @@
+from dataclasses import dataclass, field
+
 from models.player import Player
 
 
+@dataclass(slots=True)
 class Pot:
     """
-    Represents one poker pot.
+    Represents a poker pot.
 
-    A Texas Hold'em hand always has one main pot
-    and may have multiple side pots.
+    A game always has one main pot and may have
+    multiple side pots.
+
+    Each pot tracks:
+    - Amount of chips
+    - Players eligible to win it
     """
 
-    def __init__(self):
+    amount: int = 0
 
-        self.amount = 0
+    eligible_players: list[Player] = field(
+        default_factory=list
+    )
 
-        self.eligible_players: list[Player] = []
+    # =====================================================
+    # Chip Management
+    # =====================================================
 
-    # -----------------------------------
+    def add_chips(
+        self,
+        amount: int
+    ):
 
-    def add_chips(self, amount: int):
+        if amount < 0:
+            raise ValueError(
+                "Cannot add negative chips."
+            )
 
         self.amount += amount
 
-    # -----------------------------------
+    # -----------------------------------------------------
 
-    def add_player(self, player: Player):
+    def remove_chips(
+        self,
+        amount: int
+    ):
+
+        if amount < 0:
+            raise ValueError(
+                "Cannot remove negative chips."
+            )
+
+        if amount > self.amount:
+            raise ValueError(
+                "Not enough chips in pot."
+            )
+
+        self.amount -= amount
+
+    # =====================================================
+    # Eligible Players
+    # =====================================================
+
+    def add_player(
+        self,
+        player: Player
+    ):
 
         if player not in self.eligible_players:
-            self.eligible_players.append(player)
 
-    # -----------------------------------
+            self.eligible_players.append(
+                player
+            )
 
-    def remove_player(self, player: Player):
+    # -----------------------------------------------------
+
+    def remove_player(
+        self,
+        player: Player
+    ):
 
         if player in self.eligible_players:
-            self.eligible_players.remove(player)
 
-    # -----------------------------------
+            self.eligible_players.remove(
+                player
+            )
+
+    # =====================================================
+    # Reset
+    # =====================================================
 
     def clear(self):
 
@@ -43,22 +95,44 @@ class Pot:
 
         self.eligible_players.clear()
 
-    # -----------------------------------
+    # =====================================================
+    # Information
+    # =====================================================
 
-    def __len__(self):
+    def player_count(self):
 
-        return len(self.eligible_players)
+        return len(
+            self.eligible_players
+        )
 
-    # -----------------------------------
+    # -----------------------------------------------------
 
-    def __str__(self):
+    def is_empty(self):
 
-        names = ", ".join(
+        return self.amount == 0
+
+    # =====================================================
+    # Debug
+    # =====================================================
+
+    def __repr__(self):
+
+        players = ", ".join(
+
             player.name
+
             for player in self.eligible_players
+
         )
 
         return (
-            f"Pot(${self.amount})\n"
-            f"Eligible Players: {names}"
+
+            f"Pot("
+
+            f"amount={self.amount}, "
+
+            f"eligible=[{players}]"
+
+            f")"
+
         )

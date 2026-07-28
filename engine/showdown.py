@@ -1,10 +1,25 @@
+from models.hand_result import HandResult
+from models.player import Player
+
 from engine.evaluator import HandEvaluator
 from engine.pot_manager import PotManager
 
 
 class Showdown:
     """
-    Handles showdown and pot distribution.
+    Resolves the end of a Texas Hold'em hand.
+
+    Responsibilities
+    ----------------
+    • Evaluate remaining players
+    • Build side pots
+    • Award every pot
+    • Return showdown results
+
+    This class does NOT:
+        • Deal cards
+        • Control betting
+        • Print UI
     """
 
     def __init__(self):
@@ -12,96 +27,37 @@ class Showdown:
         self.evaluator = HandEvaluator()
 
     # ==================================================
-    # Hand Evaluation
+    # Validation
     # ==================================================
 
-    def evaluate_players(
+    def validate(
         self,
-        players,
+        players: list[Player],
         community_cards
     ):
         """
-        Evaluate every active player's hand.
-
-        Returns
-        -------
-        list[(Player, HandResult)]
+        Validate showdown inputs.
         """
 
-        results = []
+        if len(players) < 2:
 
-        for player in players:
-
-            if player.folded:
-                continue
-
-            result = self.evaluator.evaluate(
-                player.hand,
-                community_cards
+            raise ValueError(
+                "At least two players are required."
             )
 
-            results.append(
-                (player, result)
+        if len(community_cards) != 5:
+
+            raise ValueError(
+                "Showdown requires exactly five community cards."
             )
 
-        return results
-
     # ==================================================
-    # Winner Determination
-    # ==================================================
-
-    def determine_winner(
-        self,
-        evaluated_players
-    ):
-        """
-        Returns the winning player and hand.
-        """
-
-        winner = evaluated_players[0]
-
-        for player, result in evaluated_players[1:]:
-
-            if result.score < winner[1].score:
-
-                winner = (player, result)
-
-        return winner
-
-    # ==================================================
-    # Pot Distribution
-    # ==================================================
-
-    def distribute_main_pot(
-        self,
-        winner,
-        pot_manager: PotManager
-    ):
-        """
-        Give the main pot to the winner.
-        """
-
-        winner.win_chips(
-            pot_manager.main_pot.amount
-        )
-
-    def distribute_side_pots(
-        self,
-        pot_manager: PotManager
-    ):
-        """
-        Side pots will be implemented later.
-        """
-
-        pass
-
-    # ==================================================
-    # Resolve Showdown
+    # Showdown
     # ==================================================
 
     def resolve(
         self,
-        players,
+        players: list[Player],
         community_cards,
         pot_manager: PotManager
     ):
@@ -110,41 +66,302 @@ class Showdown:
 
         Returns
         -------
-        (winner, hand_result)
+        dict[Player, HandResult]
+            Every active player's hand result.
         """
 
-        evaluated = self.evaluate_players(
+        self.validate(
             players,
             community_cards
         )
 
-        print()
+        active_players = [
 
-        print("Player Results")
+            player
 
-        print("----------------------------")
+            for player in players
 
-        for player, result in evaluated:
+            if not player.folded
 
-            print(
-                f"{player.name:<12}"
-                f"{result.hand_name:<20}"
-                f"Score: {result.score}"
+        ]
+
+        results = self.evaluate_players(
+            active_players,
+            community_cards
+        )
+
+        pot_manager.build_side_pots()
+
+        self.award_pots(
+            results,
+            pot_manager
+        )
+
+        return results
+        # ==================================================
+    # Evaluation
+    # ==================================================
+
+    def evaluate_players(
+        self,
+        players: list[Player],
+        community_cards
+    ) -> dict[Player, HandResult]:
+        """
+        Evaluate every remaining player.
+        """
+
+        results = {}
+
+        for player in players:
+
+            results[player] = self.evaluator.evaluate(
+                player.hand,
+                community_cards
             )
 
-        print()
+        return results
 
-        winner, result = self.determine_winner(
-            evaluated
+    # ==================================================
+    # Winner Determination
+    # ==================================================
+
+    def find_best_players(
+        self,
+        players: list[Player],
+        results: dict[Player, HandResult]
+    ) -> list[Player]:
+        """
+        Return every player tied for the
+        best hand.
+        """
+
+        if not players:
+
+            return []
+
+        best_score = min(
+
+            results[player].score
+
+            for player in players
+
         )
 
-        self.distribute_main_pot(
-            winner,
-            pot_manager
+        winners = [
+
+            player
+
+            for player in players
+
+            if results[player].score == best_score
+
+        ]
+
+        return winners
+
+    # --------------------------------------------------
+
+    def winning_result(
+        self,
+        winners: list[Player],
+        results: dict[Player, HandResult]
+    ) -> HandResult:
+        """
+        Return the winning HandResult.
+
+        Assumes winners is non-empty.
+        """
+
+        return results[
+            winners[0]
+        ]
+
+    # --------------------------------------------------
+
+    def winner_count(
+        self,
+        winners: list[Player]
+    ) -> int:
+        """
+        Number of winning players.
+        """
+
+        return len(winners)
+
+    # --------------------------------------------------
+
+    def has_tie(
+        self,
+        winners: list[Player]
+    ) -> bool:
+        """
+        Returns True if multiple players
+        share the best hand.
+        """
+
+        return len(winners) > 1
+        # ==================================================
+    # Pot Resolution
+    # ==================================================
+
+    def award_pots(
+        self,
+        results: dict[Player, HandResult],
+        pot_manager: PotManager
+    ):
+        """
+        Resolve the main pot and every side pot.
+        """
+
+        active_players = list(
+            results.keys()
         )
 
-        self.distribute_side_pots(
-            pot_manager
+        for pot in pot_manager.get_all_pots():
+
+            eligible = pot_manager.eligible_players(
+                pot,
+                active_players
+            )
+
+            if not eligible:
+
+                continue
+
+            winners = self.find_best_players(
+                eligible,
+                results
+            )
+
+            self.resolve_pot(
+                pot,
+                winners,
+                pot_manager
+            )
+
+    # --------------------------------------------------
+
+    def resolve_pot(
+        self,
+        pot,
+        winners: list[Player],
+        pot_manager: PotManager
+    ):
+        """
+        Award a single pot.
+        """
+
+        if not winners:
+
+            return
+
+        if len(winners) == 1:
+
+            pot_manager.award_pot(
+                winners[0],
+                pot
+            )
+
+        else:
+
+            pot_manager.split_pot(
+                winners,
+                pot
+            )
+
+    # --------------------------------------------------
+
+    def total_winners(
+        self,
+        results: dict[Player, HandResult]
+    ) -> list[Player]:
+        """
+        Return every player tied for
+        the overall best hand.
+        """
+
+        return self.find_best_players(
+            list(results.keys()),
+            results
         )
 
-        return winner, result
+    # --------------------------------------------------
+
+    def winning_player(
+        self,
+        results: dict[Player, HandResult]
+    ) -> Player | None:
+        """
+        Return the sole winner if one exists.
+        Otherwise return None.
+        """
+
+        winners = self.total_winners(
+            results
+        )
+
+        if len(winners) != 1:
+
+            return None
+
+        return winners[0]
+        # ==================================================
+    # Utility
+    # ==================================================
+
+    def showdown_players(
+        self,
+        players: list[Player]
+    ) -> list[Player]:
+        """
+        Return every player that reaches
+        showdown.
+        """
+
+        return [
+
+            player
+
+            for player in players
+
+            if not player.folded
+
+        ]
+
+    # --------------------------------------------------
+
+    def hand_results(
+        self,
+        players: list[Player],
+        community_cards
+    ) -> dict[Player, HandResult]:
+        """
+        Convenience wrapper for evaluating
+        showdown players.
+        """
+
+        return self.evaluate_players(
+            self.showdown_players(players),
+            community_cards
+        )
+
+    # ==================================================
+    # Debug
+    # ==================================================
+
+    def __repr__(self):
+
+        return "Showdown()"
+
+    # --------------------------------------------------
+
+    def __str__(self):
+
+        return (
+
+            "========== SHOWDOWN ==========\n"
+
+            "Evaluator : HandEvaluator"
+
+        )
