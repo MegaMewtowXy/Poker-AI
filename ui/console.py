@@ -2,6 +2,9 @@ from models.action import Action
 
 
 class ConsoleUI:
+    """
+    Console interface for human players.
+    """
 
     @staticmethod
     def show_player(player):
@@ -10,9 +13,9 @@ class ConsoleUI:
 
         print(f"Player : {player.name}")
 
-        print(f"Chips  : {player.chips}")
-
         print(f"Cards  : {player.show_hand()}")
+
+        print(f"Chips  : {player.chips}")
 
         print("--------------------------------")
 
@@ -23,9 +26,9 @@ class ConsoleUI:
 
         print("1. Fold")
 
-        print("2. Call")
+        print("2. Check")
 
-        print("3. Check")
+        print("3. Call")
 
         print("4. Raise")
 
@@ -33,7 +36,7 @@ class ConsoleUI:
 
         while True:
 
-            choice = input("\nChoose action: ")
+            choice = input("\nChoose Action : ")
 
             match choice:
 
@@ -41,10 +44,10 @@ class ConsoleUI:
                     return Action.FOLD
 
                 case "2":
-                    return Action.CALL
+                    return Action.CHECK
 
                 case "3":
-                    return Action.CHECK
+                    return Action.CALL
 
                 case "4":
                     return Action.RAISE

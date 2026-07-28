@@ -3,10 +3,11 @@ from engine.dealer import Dealer
 from engine.game_state import GameState
 from engine.pot_manager import PotManager
 from engine.showdown import Showdown
-
+from ui.console import ConsoleUI
+from models.action import Action
 from models.deck import Deck
 from models.table import Table
-
+from engine.betting_round import BettingRound
 
 class Game:
     """
@@ -113,37 +114,102 @@ class Game:
         print("Hole cards dealt.")
 
     # ==================================================
-
     def betting_round(self):
 
         print("\n========== BETTING ==========\n")
 
-        print(
-            f"Total Pot : ${self.pot_manager.total_pot()}"
-        )
-
-        print(
-            f"Current Bet : ${self.table.current_bet}"
-        )
+        # Reset street betting
+        self.table.current_bet = 0
 
         for player in self.players:
+            player.reset_betting_round()
 
-            if player.folded:
+        # For now, start with the first player.
+        # We'll later calculate the correct position
+        # (left of BB pre-flop, left of dealer otherwise).
+        betting_round = BettingRound(
+            self.players,
+            starting_index=0
+        )
+
+        while not betting_round.is_finished():
+
+            player = betting_round.current_player()
+
+            if not player.is_active():
+
+                betting_round.next_player()
                 continue
 
-            print("--------------------------------")
+            ConsoleUI.show_player(player)
 
-            print(f"Player : {player.name}")
+            print(f"Pot : ${self.pot_manager.total_pot()}")
+            print(f"Current Bet : ${self.table.current_bet}")
 
-            print(f"Cards : {player.show_hand()}")
+            if not player.is_ai:
 
-            print(f"Chips : {player.chips}")
+                action = ConsoleUI.choose_action()
 
-            print(f"Current Bet : {player.current_bet}")
+                match action:
 
-            print("--------------------------------")
+                    case Action.FOLD:
 
-    # ==================================================
+                        self.betting.fold(player)
+
+                        print(f"{player.name} folds.")
+
+                    case Action.CALL:
+
+                        self.betting.call(player)
+
+                        print(f"{player.name} calls.")
+
+                    case Action.CHECK:
+
+                        self.betting.check(player)
+
+                        print(f"{player.name} checks.")
+
+                    case Action.RAISE:
+
+                        amount = int(input("Raise To : "))
+
+                        self.betting.raise_bet(
+                            player,
+                            amount
+                        )
+
+                        betting_round.set_last_raiser(player)
+
+                        print(
+                            f"{player.name} raises to {amount}."
+                        )
+
+                    case Action.ALL_IN:
+
+                        self.betting.all_in(player)
+
+                        print(
+                            f"{player.name} goes ALL-IN!"
+                        )
+
+            else:
+
+                # Temporary bot
+                self.betting.call(player)
+
+                print(f"{player.name} calls.")
+
+            # For now, one pass through all players.
+            if betting_round.current_index == len(self.players) - 1:
+                betting_round.end_round()
+            else:
+                betting_round.next_player()
+
+        print()
+
+        print(f"Pot is now ${self.pot_manager.total_pot()}")    
+        # ==================================================
 
     def flop(self):
 

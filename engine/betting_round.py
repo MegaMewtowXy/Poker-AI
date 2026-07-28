@@ -3,9 +3,8 @@ from models.player import Player
 
 class BettingRound:
     """
-    Controls a single betting street.
-
-    (Pre-Flop, Flop, Turn or River)
+    Controls one betting street in Texas Hold'em.
+    Responsible only for turn order and betting flow.
     """
 
     def __init__(
@@ -16,16 +15,12 @@ class BettingRound:
 
         self.players = players
 
-        # Player whose turn it is
         self.current_index = starting_index
 
-        # Player who made the most recent raise
         self.last_raiser = None
 
-        # Last player that still needs to act
         self.last_to_act = None
 
-        # Whether this betting round has ended
         self.finished = False
 
     # ==================================================
@@ -36,9 +31,6 @@ class BettingRound:
         self,
         starting_index: int
     ):
-        """
-        Prepare for a new betting street.
-        """
 
         self.current_index = starting_index
 
@@ -49,53 +41,32 @@ class BettingRound:
         self.finished = False
 
         for player in self.players:
-            player.current_bet = 0
+            player.reset_betting_round()
 
     # ==================================================
     # Current Player
     # ==================================================
 
     def current_player(self) -> Player:
-        """
-        Returns the player whose turn it is.
-        """
 
         return self.players[self.current_index]
 
     # ==================================================
-    # Turn Order
+    # Player State
     # ==================================================
 
-    def next_player(self):
-        """
-        Move to the next active player.
-        """
+    def is_player_active(
+        self,
+        player: Player
+    ) -> bool:
 
-        total = len(self.players)
-
-        while True:
-
-            self.current_index = (
-                self.current_index + 1
-            ) % total
-
-            player = self.players[self.current_index]
-
-            if (
-                not player.folded
-                and not player.all_in
-                and not player.eliminated
-            ):
-                break
-
-    # ==================================================
-    # Player Lists
-    # ==================================================
+        return (
+            not player.folded
+            and not player.eliminated
+            and not player.all_in
+        )
 
     def active_players(self):
-        """
-        Returns all players still in the hand.
-        """
 
         return [
 
@@ -110,52 +81,91 @@ class BettingRound:
 
         ]
 
-    def players_still_to_act(self):
-        """
-        Placeholder.
-
-        Will later return players who still
-        need to respond to the latest bet.
-        """
-
-        return []
-
-    # ==================================================
-    # Round Status
-    # ==================================================
-
     def only_one_player_left(self):
-        """
-        True if everyone else folded.
-        """
 
         return len(
             self.active_players()
         ) == 1
 
+    # ==================================================
+    # Turn Order
+    # ==================================================
+
+    def next_player(self):
+
+        total = len(self.players)
+
+        while True:
+
+            self.current_index = (
+                self.current_index + 1
+            ) % total
+
+            player = self.players[self.current_index]
+
+            if self.is_player_active(player):
+                return player
+
+    # ==================================================
+    # Betting Flow
+    # ==================================================
+
+    def set_last_raiser(
+        self,
+        player: Player
+    ):
+
+        self.last_raiser = player
+
+    def set_last_to_act(
+        self,
+        player: Player
+    ):
+
+        self.last_to_act = player
+
+    def should_finish(
+        self,
+        player: Player
+    ) -> bool:
+
+        if self.only_one_player_left():
+
+            self.finished = True
+
+            return True
+
+        if (
+            self.last_to_act is not None
+            and player == self.last_to_act
+        ):
+
+            self.finished = True
+
+            return True
+
+        return False
+
+    # ==================================================
+    # Round Status
+    # ==================================================
+
     def end_round(self):
-        """
-        Finish this betting street.
-        """
 
         self.finished = True
 
     def is_finished(self):
-        """
-        Returns whether betting has ended.
-        """
 
         return self.finished
 
     # ==================================================
-    # String Representation
+    # Debug
     # ==================================================
 
     def __str__(self):
 
         return (
-            f"Current Player Index : {self.current_index}\n"
-            f"Last Raiser          : "
-            f"{self.last_raiser.name if self.last_raiser else 'None'}\n"
-            f"Finished             : {self.finished}"
+            f"Current Player : "
+            f"{self.current_player().name}\n"
+            f"Finished : {self.finished}"
         )
