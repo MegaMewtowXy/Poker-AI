@@ -1,75 +1,227 @@
 from enum import Enum, auto
 
 
+
 class GameState(Enum):
     """
     Represents the current state of a
     Texas Hold'em game.
+
+    This enum only manages game flow.
+
+    It does NOT handle:
+    - Players
+    - Betting
+    - Cards
+    - Pots
+    - Winners
     """
 
-    # Waiting to begin
+
+
+    # ==================================================
+    # States
+    # ==================================================
+
     WAITING = auto()
 
-    # A new hand is being prepared
+
     STARTING_HAND = auto()
 
-    # Hole cards dealt
+
     PRE_FLOP = auto()
 
-    # Three community cards dealt
+
     FLOP = auto()
 
-    # Fourth community card dealt
+
     TURN = auto()
 
-    # Fifth community card dealt
+
     RIVER = auto()
 
-    # Determining winner(s)
+
     SHOWDOWN = auto()
 
-    # Hand has ended
+
     HAND_COMPLETE = auto()
 
-    # Tournament finished
+
     GAME_OVER = auto()
 
+
+
     # ==================================================
-    # Helpers
+    # State Helpers
     # ==================================================
 
-    def is_betting_round(self) -> bool:
+    def is_betting_round(
+        self
+    ) -> bool:
         """
-        Returns True if the game is currently
-        in a betting street.
+        Returns True if players can make bets.
         """
 
         return self in {
 
             GameState.PRE_FLOP,
+
             GameState.FLOP,
+
             GameState.TURN,
+
             GameState.RIVER
 
         }
 
-    # --------------------------------------------------
 
-    def is_finished(self) -> bool:
-        """
-        Returns True if the game has ended.
-        """
-
-        return self == GameState.GAME_OVER
 
     # --------------------------------------------------
 
-    def is_showdown(self) -> bool:
+    def is_showdown(
+        self
+    ) -> bool:
         """
-        Returns True during showdown.
+        Check showdown state.
         """
 
-        return self == GameState.SHOWDOWN
+        return (
+
+            self == GameState.SHOWDOWN
+
+        )
+
+
+
+    # --------------------------------------------------
+
+    def is_finished(
+        self
+    ) -> bool:
+        """
+        Check if entire game ended.
+        """
+
+        return (
+
+            self == GameState.GAME_OVER
+
+        )
+
+
+
+    # --------------------------------------------------
+
+    def is_playing(
+        self
+    ) -> bool:
+        """
+        Returns True while a hand is active.
+        """
+
+        return self in {
+
+            GameState.STARTING_HAND,
+
+            GameState.PRE_FLOP,
+
+            GameState.FLOP,
+
+            GameState.TURN,
+
+            GameState.RIVER,
+
+            GameState.SHOWDOWN
+
+        }
+
+
+
+    # ==================================================
+    # State Transitions
+    # ==================================================
+
+    def next_state(self):
+        """
+        Return the normal next state.
+
+        Game controller decides whether
+        transition is allowed.
+        """
+
+        transitions = {
+
+
+            GameState.WAITING:
+
+                GameState.STARTING_HAND,
+
+
+            GameState.STARTING_HAND:
+
+                GameState.PRE_FLOP,
+
+
+            GameState.PRE_FLOP:
+
+                GameState.FLOP,
+
+
+            GameState.FLOP:
+
+                GameState.TURN,
+
+
+            GameState.TURN:
+
+                GameState.RIVER,
+
+
+            GameState.RIVER:
+
+                GameState.SHOWDOWN,
+
+
+            GameState.SHOWDOWN:
+
+                GameState.HAND_COMPLETE,
+
+
+            GameState.HAND_COMPLETE:
+
+                GameState.STARTING_HAND
+
+        }
+
+
+        return transitions.get(
+            self,
+            None
+        )
+
+
+
+    # --------------------------------------------------
+
+    def can_transition_to(
+        self,
+        new_state
+    ) -> bool:
+        """
+        Validate a state transition.
+        """
+
+        return (
+
+            self.next_state()
+
+            ==
+
+            new_state
+
+        )
+
+
 
     # ==================================================
     # Debug
@@ -81,3 +233,13 @@ class GameState(Enum):
             "_",
             " "
         ).title()
+
+
+
+    def __repr__(self):
+
+        return (
+
+            f"GameState.{self.name}"
+
+        )

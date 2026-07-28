@@ -1,73 +1,185 @@
-import random
 import json
+
 import os
+
+from datetime import datetime
+
+
+
+
 
 class Trainer:
     """
-    Self reinforcement trainer.
+    Rule-based reinforcement trainer.
 
     Responsibilities
     ----------------
     • Store AI experiences
     • Calculate rewards
-    • Adjust strategy weights
+    • Learn strategy adjustments
+    • Maintain training statistics
+    • Save/load training memory
+    • Apply learned parameters
 
-    This is NOT:
-        • Neural network training
-        • GPU based learning
+    Does NOT
+    --------
+    • Neural network training
+    • GPU learning
+    • Replace poker strategy
+    • Make decisions
     """
 
 
-    def __init__(self):
-
-        self.experiences = []
 
 
-        # Adjustable AI parameters
+
+    def __init__(
+        self,
+        learning_rate=0.01
+    ):
+
+
+        self.learning_rate = learning_rate
+
+
+
+        # ======================================
+        # Learned Parameters
+        # ======================================
 
         self.weights = {
 
-            "aggression": 0.5,
 
-            "bluff_frequency": 0.2,
+            "aggression":
 
-            "risk_tolerance": 0.5
+                0.5,
+
+
+            "bluff_frequency":
+
+                0.2,
+
+
+            "risk_tolerance":
+
+                0.5
 
         }
 
 
 
+        # ======================================
+        # Experience Memory
+        # ======================================
+
+        self.experiences = []
+
+
+
+        # ======================================
+        # Statistics
+        # ======================================
+
+        self.stats = {
+
+
+            "games":
+
+                0,
+
+
+            "wins":
+
+                0,
+
+
+            "losses":
+
+                0,
+
+
+            "total_reward":
+
+                0.0
+
+        }
+
+
+
+        self.created = str(
+
+            datetime.now()
+
+        )
+
+
+
+
+
     # ==========================================
-    # Experience Recording
+    # Record Experience
     # ==========================================
 
     def record_experience(
         self,
         state: dict,
         action: str,
-        reward: float
+        reward: float,
+        confidence=0,
+        equity=None,
+        result=None
     ):
         """
-        Store a completed decision.
+        Store one AI decision experience.
         """
+
+
+        experience = {
+
+
+            "state":
+
+                state,
+
+
+            "action":
+
+                action,
+
+
+            "reward":
+
+                reward,
+
+
+            "confidence":
+
+                confidence,
+
+
+            "equity":
+
+                equity,
+
+
+            "result":
+
+                result
+
+        }
+
 
 
         self.experiences.append(
 
-            {
-
-                "state": state,
-
-                "action": action,
-
-                "reward": reward
-
-            }
+            experience
 
         )
 
 
 
+        self.stats["total_reward"] += reward
+    
     # ==========================================
     # Reward Calculation
     # ==========================================
@@ -78,6 +190,9 @@ class Trainer:
     ) -> float:
         """
         Convert chip result into reward.
+
+        Range:
+        -1.0 to +1.0
         """
 
 
@@ -92,6 +207,7 @@ class Trainer:
             )
 
 
+
         if chips_change < 0:
 
             return max(
@@ -103,8 +219,14 @@ class Trainer:
             )
 
 
+
         return 0.0
-        # ==========================================
+
+
+
+
+
+    # ==========================================
     # Learning
     # ==========================================
 
@@ -112,9 +234,10 @@ class Trainer:
         self
     ):
         """
-        Update strategy weights
-        based on experience.
+        Adjust AI behaviour
+        based on previous experiences.
         """
+
 
 
         if not self.experiences:
@@ -126,55 +249,126 @@ class Trainer:
         for experience in self.experiences:
 
 
-            reward = experience["reward"]
+            reward = experience.get(
 
-            action = experience["action"]
+                "reward",
+
+                0
+
+            )
+
+
+            action = experience.get(
+
+                "action",
+
+                ""
+
+            ).lower()
 
 
 
-            # Positive outcome
+            adjustment = (
+
+                self.learning_rate
+
+                *
+
+                abs(reward)
+
+            )
+
+
+
+            # ==================================
+            # Positive Reinforcement
+            # ==================================
 
             if reward > 0:
 
 
+                self.stats["wins"] += 1
+
+
+
                 if action in [
 
                     "bet",
 
-                    "raise"
+                    "raise",
+
+                    "all_in"
 
                 ]:
 
-                    self.weights["aggression"] += 0.01
+
+                    self.weights["aggression"] += adjustment
 
 
 
                 if action == "bluff":
 
-                    self.weights["bluff_frequency"] += 0.01
+
+                    self.weights["bluff_frequency"] += adjustment
 
 
 
-            # Negative outcome
+                if action in [
+
+                    "call",
+
+                    "check"
+
+                ]:
+
+
+                    self.weights["risk_tolerance"] += adjustment
+
+
+
+            # ==================================
+            # Negative Reinforcement
+            # ==================================
 
             elif reward < 0:
 
 
+                self.stats["losses"] += 1
+
+
+
                 if action in [
 
                     "bet",
 
-                    "raise"
+                    "raise",
+
+                    "all_in"
 
                 ]:
 
-                    self.weights["aggression"] -= 0.01
+
+                    self.weights["aggression"] -= adjustment
 
 
 
                 if action == "bluff":
 
-                    self.weights["bluff_frequency"] -= 0.01
+
+                    self.weights["bluff_frequency"] -= adjustment
+
+
+
+                if action in [
+
+                    "call",
+
+                    "check"
+
+                ]:
+
+
+                    self.weights["risk_tolerance"] -= adjustment
 
 
 
@@ -182,16 +376,19 @@ class Trainer:
 
 
 
+
+
     # ==========================================
-    # Weight Control
+    # Weight Normalization
     # ==========================================
 
     def normalize_weights(
         self
     ):
         """
-        Keep weights between 0 and 1.
+        Keep learned values stable.
         """
+
 
 
         for key in self.weights:
@@ -213,19 +410,179 @@ class Trainer:
 
 
 
+
+
     # ==========================================
-    # Access
+    # Apply Learned Weights
+    # ==========================================
+
+    def apply_to_strategy(
+        self,
+        strategy_manager
+    ):
+        """
+        Apply learned parameters to
+        StrategyManager.
+
+        Trainer modifies personality
+        parameters only.
+        It does not make decisions.
+        """
+
+
+
+        if strategy_manager is None:
+
+            return False
+
+
+
+
+        if hasattr(
+
+            strategy_manager,
+
+            "set_parameter"
+
+        ):
+
+
+            strategy_manager.set_parameter(
+
+                "aggression",
+
+                self.weights["aggression"]
+
+            )
+
+
+            strategy_manager.set_parameter(
+
+                "bluff_frequency",
+
+                self.weights["bluff_frequency"]
+
+            )
+
+
+            strategy_manager.set_parameter(
+
+                "risk_tolerance",
+
+                self.weights["risk_tolerance"]
+
+            )
+
+
+            return True
+
+
+
+
+        return False
+
+
+
+
+
+    # ==========================================
+    # Get Learned Weights
     # ==========================================
 
     def get_weights(
         self
-    ) -> dict:
+    ):
         """
-        Return current learned parameters.
+        Return learned AI parameters.
         """
 
+
         return self.weights.copy()
-        # ==========================================
+
+
+
+
+
+    # ==========================================
+    # Training Summary
+    # ==========================================
+
+    def statistics(
+        self
+    ):
+        """
+        Return training performance.
+        """
+
+
+
+        total = len(
+
+            self.experiences
+
+        )
+
+
+
+        average_reward = 0
+
+
+
+        if total > 0:
+
+            average_reward = (
+
+                self.stats["total_reward"]
+
+                /
+
+                total
+
+            )
+
+
+
+        return {
+
+
+            "experiences":
+
+                total,
+
+
+            "games":
+
+                self.stats["games"],
+
+
+            "wins":
+
+                self.stats["wins"],
+
+
+            "losses":
+
+                self.stats["losses"],
+
+
+            "average_reward":
+
+                round(
+
+                    average_reward,
+
+                    3
+
+                ),
+
+
+            "weights":
+
+                self.weights.copy()
+
+        }
+    
+    # ==========================================
     # Save Training Data
     # ==========================================
 
@@ -234,27 +591,55 @@ class Trainer:
         path="data/training_data/trainer.json"
     ):
         """
-        Save experiences and weights.
+        Save trainer memory.
         """
 
+
+
         directory = os.path.dirname(
+
             path
+
         )
+
 
 
         if directory:
 
+
             os.makedirs(
+
                 directory,
+
                 exist_ok=True
+
             )
+
+
+
 
 
         data = {
 
+
+            "version":
+
+                1,
+
+
+            "created":
+
+                self.created,
+
+
             "weights":
 
                 self.weights,
+
+
+            "statistics":
+
+                self.stats,
 
 
             "experiences":
@@ -264,16 +649,29 @@ class Trainer:
         }
 
 
+
+
+
         with open(
+
             path,
+
             "w"
+
         ) as file:
 
+
             json.dump(
+
                 data,
+
                 file,
+
                 indent=4
+
             )
+
+
 
 
 
@@ -286,23 +684,40 @@ class Trainer:
         path="data/training_data/trainer.json"
     ):
         """
-        Load previous training.
+        Load previous learning.
         """
 
-        if not os.path.exists(path):
 
-            return
+
+        if not os.path.exists(
+
+            path
+
+        ):
+
+            return False
+
+
 
 
 
         with open(
+
             path,
+
             "r"
+
         ) as file:
 
+
             data = json.load(
+
                 file
+
             )
+
+
+
 
 
         self.weights = data.get(
@@ -312,6 +727,17 @@ class Trainer:
             self.weights
 
         )
+
+
+
+        self.stats = data.get(
+
+            "statistics",
+
+            self.stats
+
+        )
+
 
 
         self.experiences = data.get(
@@ -324,98 +750,145 @@ class Trainer:
 
 
 
-    # ==========================================
-    # Statistics
-    # ==========================================
+        self.created = data.get(
 
-    def statistics(
-        self
-    ):
-        """
-        Training summary.
-        """
+            "created",
 
-        total = len(
-
-            self.experiences
+            str(datetime.now())
 
         )
 
 
-        if total == 0:
 
-            return {
-
-                "experiences": 0,
-
-                "average_reward": 0
-
-            }
+        self.normalize_weights()
 
 
 
-        rewards = [
-
-            exp["reward"]
-
-            for exp in self.experiences
-
-        ]
+        return True
 
 
-        return {
-
-            "experiences":
-
-                total,
-
-
-            "average_reward":
-
-                round(
-
-                    sum(rewards)
-
-                    /
-
-                    total,
-
-                    3
-
-                ),
-
-
-            "weights":
-
-                self.weights.copy()
-
-        }
 
 
 
     # ==========================================
-    # Reset
+    # Reset Training
     # ==========================================
 
     def reset(
         self
     ):
         """
-        Clear training memory.
+        Clear all learned behaviour.
         """
+
+
 
         self.experiences.clear()
 
 
+
         self.weights = {
 
-            "aggression": 0.5,
 
-            "bluff_frequency": 0.2,
+            "aggression":
 
-            "risk_tolerance": 0.5
+                0.5,
+
+
+            "bluff_frequency":
+
+                0.2,
+
+
+            "risk_tolerance":
+
+                0.5
 
         }
+
+
+
+        self.stats = {
+
+
+            "games":
+
+                0,
+
+
+            "wins":
+
+                0,
+
+
+            "losses":
+
+                0,
+
+
+            "total_reward":
+
+                0.0
+
+        }
+
+
+
+        self.created = str(
+
+            datetime.now()
+
+        )
+
+
+
+
+
+    # ==========================================
+    # Profile
+    # ==========================================
+
+    def profile(
+        self
+    ):
+        """
+        Trainer information.
+        """
+
+
+
+        return {
+
+
+            "experiences":
+
+                len(
+
+                    self.experiences
+
+                ),
+
+
+
+            "learning_rate":
+
+                self.learning_rate,
+
+
+
+            "weights":
+
+                self.weights.copy(),
+
+
+
+            "statistics":
+
+                self.statistics()
+
+        }
+
+
 
 
 
@@ -423,6 +896,26 @@ class Trainer:
     # Debug
     # ==========================================
 
-    def __repr__(self):
+    def __repr__(
+        self
+    ):
 
-        return "Trainer()" 
+        return (
+
+            "Trainer()"
+
+        )
+
+
+
+
+
+    def __str__(
+        self
+    ):
+
+        return (
+
+            "Rule Based Poker AI Trainer"
+
+        )

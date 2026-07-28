@@ -3,12 +3,16 @@ import os
 from AI.trainer import Trainer
 
 
+
+
 def test_trainer():
 
     print("\n========== TRAINER TEST ==========")
 
 
+
     trainer = Trainer()
+
 
 
     # ==========================================
@@ -16,30 +20,45 @@ def test_trainer():
     # ==========================================
 
     positive = trainer.calculate_reward(
+
         500
+
     )
 
+
     negative = trainer.calculate_reward(
+
         -500
+
     )
 
 
     print("\nRewards")
 
-    print(
-        "Positive:",
-        positive
-    )
 
     print(
-        "Negative:",
-        negative
+
+        "Positive:",
+
+        positive
+
     )
+
+
+    print(
+
+        "Negative:",
+
+        negative
+
+    )
+
 
 
     assert positive == 0.5
 
     assert negative == -0.5
+
 
 
 
@@ -50,34 +69,52 @@ def test_trainer():
     trainer.record_experience(
 
         {
-            "strength": 80,
 
-            "position": "BUTTON"
+            "strength":80,
+
+            "position":"BUTTON"
 
         },
 
         "raise",
 
-        0.8
+        0.8,
+
+        confidence=0.9,
+
+        equity=75,
+
+        result="win"
 
     )
+
 
 
     trainer.record_experience(
 
         {
-            "strength": 20
+
+            "strength":20
 
         },
 
         "bluff",
 
-        -0.5
+        -0.5,
+
+        confidence=0.3,
+
+        equity=25,
+
+        result="loss"
 
     )
 
 
+
+
     stats = trainer.statistics()
+
 
 
     print("\nStatistics")
@@ -85,7 +122,9 @@ def test_trainer():
     print(stats)
 
 
+
     assert stats["experiences"] == 2
+
 
 
 
@@ -96,10 +135,13 @@ def test_trainer():
     before = trainer.get_weights()
 
 
+
     trainer.learn()
 
 
+
     after = trainer.get_weights()
+
 
 
     print("\nWeights Before")
@@ -107,12 +149,38 @@ def test_trainer():
     print(before)
 
 
+
     print("\nWeights After")
 
     print(after)
 
 
+
     assert before != after
+
+
+
+
+    # ==========================================
+    # Profile
+    # ==========================================
+
+    profile = trainer.profile()
+
+
+
+    print("\nTrainer Profile")
+
+    print(profile)
+
+
+
+    assert "learning_rate" in profile
+
+    assert "weights" in profile
+
+    assert "statistics" in profile
+
 
 
 
@@ -123,27 +191,45 @@ def test_trainer():
     path = "data/training_data/test_trainer.json"
 
 
+
     trainer.save(
+
         path
+
     )
+
 
 
     assert os.path.exists(
+
         path
+
     )
+
 
 
     new_trainer = Trainer()
 
 
-    new_trainer.load(
+
+    loaded = new_trainer.load(
+
         path
+
     )
 
 
+
+    assert loaded == True
+
+
+
     assert len(
+
         new_trainer.experiences
+
     ) == 2
+
 
 
 
@@ -154,15 +240,45 @@ def test_trainer():
     new_trainer.reset()
 
 
+
     assert len(
+
         new_trainer.experiences
+
     ) == 0
 
 
 
+    reset_weights = new_trainer.get_weights()
+
+
+
+    assert reset_weights["aggression"] == 0.5
+
+    assert reset_weights["bluff_frequency"] == 0.2
+
+    assert reset_weights["risk_tolerance"] == 0.5
+
+
+
+
+    # Cleanup
+
+    if os.path.exists(path):
+
+        os.remove(path)
+
+
+
+
     print(
+
         "\n========== TRAINER TEST PASSED =========="
+
     )
+
+
+
 
 
 if __name__ == "__main__":

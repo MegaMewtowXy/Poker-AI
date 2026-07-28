@@ -1,49 +1,46 @@
-from enum import Enum
-
-
-class Action(Enum):
-    """
-    Possible poker actions.
-    """
-
-    FOLD = "fold"
-
-    CHECK = "check"
-
-    CALL = "call"
-
-    BET = "bet"
-
-    RAISE = "raise"
-
-    ALL_IN = "all_in"
+from models.action import Action
 
 
 
 class DecisionEngine:
     """
-    AI decision maker.
+    Final AI poker decision engine.
 
-    Uses:
+    Responsibilities
+    ----------------
+    • Combine AI analysis
+    • Calculate decision score
+    • Select poker action
+    • Generate confidence
+    • Explain reasoning
+
+    Uses
+    ----
     • Hand strength
-    • Difficulty
-    • Strategy
+    • Equity
+    • Pot odds
+    • Position
     • Opponent information
+    • Range information
+    • Board information
+    • Strategy
+    • Difficulty
 
-    Does NOT:
+    Does NOT
+    --------
+    • Calculate equity
+    • Calculate hand strength
+    • Calculate bet size
     • Execute actions
-    • Control betting
     """
+
 
 
     def __init__(
         self,
-        hand_strength,
-        difficulty,
-        strategy
+        difficulty=None,
+        strategy=None
     ):
-
-        self.hand_strength = hand_strength
 
         self.difficulty = difficulty
 
@@ -51,194 +48,946 @@ class DecisionEngine:
 
 
 
+        # ======================================
+        # Action Thresholds
+        # ======================================
+
+        self.action_thresholds = {
+
+            "fold":
+              -20,
+
+            "call":
+
+                20,
+
+
+            "bet":
+
+                45,
+
+
+            "raise":
+
+                75
+
+        }
+
+
+
+
+
     # ==========================================
-    # Basic Decision Rules
+    # Safe Parameter Access
     # ==========================================
 
-    def basic_action(
+    def get_strategy_value(
         self,
-        strength: int
-    ) -> Action:
+        method,
+        default=0
+    ):
         """
-        Simple rule-based baseline.
+        Safely get strategy parameter.
+        """
 
-        Used by easy AI.
+        if self.strategy is None:
+
+            return default
+
+
+
+        function = getattr(
+
+            self.strategy,
+
+            method,
+
+            None
+
+        )
+
+
+
+        if callable(function):
+
+            return function()
+
+
+
+        return default
+
+
+
+
+    def get_difficulty_value(
+        self,
+        method,
+        default=1
+    ):
+        """
+        Safely get difficulty parameter.
+        """
+
+        if self.difficulty is None:
+
+            return default
+
+
+
+        function = getattr(
+
+            self.difficulty,
+
+            method,
+
+            None
+
+        )
+
+
+
+        if callable(function):
+
+            return function()
+
+
+
+        return default
+
+
+
+
+
+    # ==========================================
+    # Score Calculation
+    # ==========================================
+
+    def calculate_score(
+        self,
+        analysis
+    ):
+        """
+        Convert complete poker analysis
+        into aggression score.
+
+        Higher score:
+        More aggressive action.
         """
 
 
-        if strength < 25:
 
-            return Action.FOLD
+        score = 0
 
-
-
-        if strength < 50:
-
-            return Action.CALL
+        factors = {}
 
 
 
-        if strength < 75:
 
-            return Action.BET
+        # ======================================
+        # Hand Strength
+        # ======================================
+
+        strength = analysis.get(
+
+            "strength",
+
+            analysis.get(
+
+                "final_strength",
+
+                0
+
+            )
+
+        )
 
 
 
-        return Action.RAISE
-        # ==========================================
+        if strength >= 85:
+
+            value = 40
+
+
+
+        elif strength >= 65:
+
+            value = 30
+
+
+
+        elif strength >= 45:
+
+            value = 15
+
+
+
+        else:
+
+            value = -15
+
+
+
+
+        score += value
+
+        factors["strength"] = value
+
+
+
+
+        # ======================================
+        # Equity
+        # ======================================
+
+        equity = analysis.get(
+
+            "equity",
+
+            0
+
+        )
+
+
+
+        if equity >= 75:
+
+            value = 40
+
+
+
+        elif equity >= 55:
+
+            value = 30
+
+
+
+        elif equity >= 40:
+
+            value = 15
+
+
+
+        else:
+
+            value = -25
+
+
+
+
+        score += value
+
+        factors["equity"] = value
+            # ======================================
+        # Pot Odds
+        # ======================================
+
+        pot_odds = analysis.get(
+
+            "pot_odds",
+
+            100
+
+        )
+
+
+
+        if equity >= pot_odds:
+
+            value = 20
+
+
+
+        else:
+
+            value = -15
+
+
+
+
+        score += value
+
+        factors["pot_odds"] = value
+
+
+
+
+        # ======================================
+        # Position
+        # ======================================
+
+        position = analysis.get(
+
+            "position",
+
+            {}
+
+        )
+
+
+
+        advantage = position.get(
+
+            "advantage",
+
+            0
+
+        )
+
+
+
+        value = advantage * 3
+
+
+
+        score += value
+
+        factors["position"] = value
+
+
+
+
+        # ======================================
+        # Opponent Threat
+        # ======================================
+
+        opponent = analysis.get("opponent") or {}
+
+
+
+
+        threat = opponent.get(
+
+            "threat_level",
+
+            5
+
+        )
+
+
+
+        value = (
+
+            5 - threat
+
+        ) * 2
+
+
+
+        score += value
+
+        factors["opponent"] = value
+
+
+
+
+        # ======================================
+        # Range Strength
+        # ======================================
+
+        range_info = analysis.get("range") or {}
+
+        
+
+
+
+        range_strength = range_info.get(
+
+            "range_strength",
+
+            0
+
+        )
+
+
+
+        if range_strength >= 70:
+
+            value = -10
+
+
+
+        elif range_strength >= 50:
+
+            value = -5
+
+
+
+        else:
+
+            value = 0
+
+
+
+
+        score += value
+
+        factors["range"] = value
+
+
+
+
+        # ======================================
+        # Board Analysis
+        # ======================================
+
+        board = analysis.get("board") or {}
+
+           
+
+
+
+        danger = board.get(
+
+            "danger_level",
+
+            0
+
+        )
+
+
+
+        if danger >= 6:
+
+            value = -10
+
+
+
+        elif danger >= 4:
+
+            value = -5
+
+
+
+        else:
+
+            value = 0
+
+
+
+
+        score += value
+
+        factors["board"] = value
+
+
+
+
+        return score, factors
+
+
+
+
+
+    # ==========================================
     # Strategy Adjustment
     # ==========================================
 
     def apply_strategy(
         self,
-        action: Action,
-        strength: int
-    ) -> Action:
+        score,
+        factors
+    ):
         """
-        Modify action based on playing style.
+        Apply playing style influence.
         """
 
 
-        aggression = self.strategy.aggression()
 
-        risk = self.strategy.risk_tolerance()
+        aggression = self.get_strategy_value(
+
+            "aggression",
+
+            0.5
+
+        )
 
 
 
-        # Aggressive players raise more
+        risk = self.get_strategy_value(
 
-        if (
+            "risk_tolerance",
 
-            aggression >= 0.8
+            0.5
 
-            and
+        )
 
-            strength >= 55
 
-        ):
+
+        pressure = self.get_strategy_value(
+
+            "pressure_factor",
+
+            0.5
+
+        )
+
+
+
+        strategy_bonus = (
+
+            aggression
+
+            +
+
+            risk
+
+            +
+
+            pressure
+
+        ) / 3
+
+
+
+
+        value = (
+
+            strategy_bonus
+
+            *
+
+            20
+
+        )
+
+
+
+        score += value
+
+
+
+        factors["strategy"] = round(
+
+            value,
+
+            2
+
+        )
+
+
+
+        return score
+
+
+
+
+
+    # ==========================================
+    # Difficulty Adjustment
+    # ==========================================
+
+    def apply_difficulty(
+        self,
+        score,
+        factors
+    ):
+        """
+        Apply AI difficulty modifiers.
+        """
+
+
+
+        aggression = self.get_difficulty_value(
+
+            "aggression_modifier",
+
+            1.0
+
+        )
+
+
+
+        value = (
+
+            aggression - 1
+
+        ) * 20
+
+
+
+        score += value
+
+
+
+        factors["difficulty"] = round(
+
+            value,
+
+            2
+
+        )
+
+
+
+        return score
+
+
+
+
+
+    # ==========================================
+    # Bluff Adjustment
+    # ==========================================
+
+    def apply_bluff(
+        self,
+        score,
+        analysis,
+        factors
+    ):
+        """
+        Modify score using bluff engine.
+        """
+
+
+
+        bluff = analysis.get("bluff") or {}
+
+           
+
+
+
+        should_bluff = bluff.get(
+
+            "should_bluff",
+
+            False
+
+        )
+
+
+
+        if not should_bluff:
+
+            return score
+
+
+
+        frequency = self.get_strategy_value(
+
+            "bluff_frequency",
+
+            0.1
+
+        )
+
+
+
+        multiplier = self.get_difficulty_value(
+
+            "bluff_multiplier",
+
+            1.0
+
+        )
+
+
+
+        value = (
+
+            frequency
+
+            *
+
+            multiplier
+
+            *
+
+            25
+
+        )
+
+
+
+        score += value
+
+
+
+        factors["bluff"] = round(
+
+            value,
+
+            2
+
+        )
+
+
+
+        return score
+        # ==========================================
+    # Mistake Simulation
+    # ==========================================
+
+    def apply_error(
+        self,
+        score
+    ):
+        """
+        Simulates weaker AI mistakes.
+
+        Higher difficulty:
+        fewer mistakes.
+        """
+
+
+
+        mistake_rate = self.get_difficulty_value(
+
+            "mistake_rate",
+
+            0.1
+
+        )
+
+
+
+        # Higher mistake rate reduces score.
+        # Hard AI should have close to zero penalty.
+
+        penalty = (
+
+            mistake_rate
+
+            *
+
+            10
+
+        )
+
+
+
+        return score - penalty
+
+
+
+
+
+    # ==========================================
+    # Score To Action
+    # ==========================================
+
+    def score_to_action(
+    self,
+    score,
+    analysis
+):
+        """
+        Convert score into a legal poker action.
+        """
+
+        call_amount = analysis.get(
+            "call_amount",
+            0
+        )
+
+        if score < self.action_thresholds["fold"]:
+
+            return Action.FOLD
+
+        elif score < self.action_thresholds["call"]:
+
+            return Action.CALL if call_amount > 0 else Action.CHECK
+
+        elif score < self.action_thresholds["bet"]:
+
+            return Action.RAISE if call_amount > 0 else Action.BET
+
+        elif score < self.action_thresholds["raise"]:
+
+            return Action.RAISE
+
+        else:
+
+            return Action.ALL_IN
+
+
+
+    # ==========================================
+    # Action Safety
+    # ==========================================
+
+    def validate_action(
+        self,
+        action,
+        analysis
+    ):
+        """
+        Prevent impossible decisions.
+        """
+
+
+
+        all_in_available = analysis.get(
+
+            "all_in_available",
+
+            True
+
+        )
+
+
+
+        if action == Action.ALL_IN and not all_in_available:
 
             return Action.RAISE
 
 
 
-        # Passive players avoid big actions
-
-        if (
-
-            aggression <= 0.35
-
-            and
-
-            strength < 75
-
-        ):
-
-
-            if strength >= 35:
-
-                return Action.CALL
-
-
-            return Action.FOLD
-
-
-
-        # Risk taking players continue more
-
-        if (
-
-            risk >= 0.75
-
-            and
-
-            strength >= 40
-
-        ):
-
-            return Action.CALL
-
-
-
         return action
 
 
 
+
+
     # ==========================================
-    # Bluffing
-    # ==========================================
-
-    def should_bluff(
-        self
-    ) -> bool:
-        """
-        Decide whether AI attempts a bluff.
-        """
-
-        import random
-
-
-        frequency = (
-
-            self.strategy.bluff_frequency()
-
-        )
-
-
-        return random.random() < frequency
-        # ==========================================
-    # Opponent Adjustment
+    # Confidence
     # ==========================================
 
-    def opponent_adjustment(
+    def confidence(
         self,
-        action: Action,
-        opponent_model=None
-    ) -> Action:
+        score
+    ):
         """
-        Adjust action based on opponent style.
+        Convert score into confidence.
+
+        Range:
+        0 - 1
         """
 
 
-        if opponent_model is None:
 
-            return action
-
+        confidence = abs(score) / 100
 
 
-        opponent_type = (
 
-            opponent_model.classify()
+        return round(
 
-            .value
+            min(
+
+                confidence,
+
+                1.0
+
+            ),
+
+            2
 
         )
 
 
-        # Against aggressive players,
-        # allow more calls and traps
-
-        if opponent_type == "loose_aggressive":
-
-
-            if action == Action.FOLD:
-
-                return Action.CALL
 
 
 
-        # Against tight players,
-        # increase pressure
+    # ==========================================
+    # Reason Generator
+    # ==========================================
 
-        if opponent_type == "tight_passive":
+    def generate_reason(
+        self,
+        action,
+        factors
+    ):
+        """
+        Explain AI decision.
+        """
 
 
-            if action == Action.CALL:
 
-                return Action.BET
+        positive = []
+
+        negative = []
 
 
 
-        return action
+        for key, value in factors.items():
+
+
+            if value > 0:
+
+                positive.append(key)
+
+
+
+            elif value < 0:
+
+                negative.append(key)
+
+
+
+
+        if action == Action.ALL_IN:
+
+            return "maximum_strength_decision"
+
+
+
+
+        if action == Action.RAISE:
+
+
+            if positive:
+
+                return (
+
+                    "aggressive_play_based_on_"
+
+                    +
+
+                    "_".join(
+
+                        positive
+
+                    )
+
+                )
+
+
+            return "pressure_raise"
+
+
+
+
+        if action == Action.BET:
+
+            return "value_or_bluff_bet"
+
+
+
+
+        if action == Action.CALL:
+
+
+            if negative:
+
+                return (
+
+                    "defensive_call_with_"
+
+                    +
+
+                    "_".join(
+
+                        negative
+
+                    )
+
+                )
+
+
+            return "pot_odds_call"
+
+
+
+
+        if action == Action.FOLD:
+
+            return "weak_hand_or_bad_conditions"
+
+
+
+        return "standard_decision"
+
+
 
 
 
@@ -248,67 +997,191 @@ class DecisionEngine:
 
     def decide(
         self,
-        strength: int,
-        opponent_model=None
-    ) -> Action:
+        analysis
+    ):
         """
-        Complete AI decision.
+        Generate complete AI decision.
 
         Returns:
-        FOLD
-        CHECK
-        CALL
-        BET
-        RAISE
+
+        {
+            action,
+            score,
+            confidence,
+            reason,
+            factors
+        }
         """
 
 
-        action = self.basic_action(
 
-            strength
+        score, factors = self.calculate_score(
+
+            analysis
 
         )
 
 
-        action = self.apply_strategy(
+
+        score = self.apply_strategy(
+
+            score,
+
+            factors
+
+        )
+
+
+
+        score = self.apply_difficulty(
+
+            score,
+
+            factors
+
+        )
+
+
+
+        score = self.apply_bluff(
+
+            score,
+
+            analysis,
+
+            factors
+
+        )
+
+
+
+        score = self.apply_error(
+
+            score
+
+        )
+        
+        action = self.score_to_action(
+
+            score,
+            analysis
+
+        )
+
+
+
+        action = self.validate_action(
 
             action,
 
-            strength
+            analysis
 
         )
 
 
-        # Bluff attempt
-
-        if (
-
-            strength < 35
-
-            and
-
-            self.should_bluff()
-
-        ):
-
-            action = Action.BET
 
 
+        return {
 
-        # Opponent adaptation
 
-        if self.difficulty.can_use_opponent_model():
-
-            action = self.opponent_adjustment(
+            "action":
 
                 action,
 
-                opponent_model
 
-            )
+            "score":
+
+                round(
+
+                    score,
+
+                    2
+
+                ),
 
 
-        return action
+            "confidence":
+
+                self.confidence(
+
+                    score
+
+                ),
+
+
+            "reason":
+
+                self.generate_reason(
+
+                    action,
+
+                    factors
+
+                ),
+
+
+            "factors":
+
+                factors
+
+        }
+
+
+
+
+
+    # ==========================================
+    # Explanation
+    # ==========================================
+
+    def explain(
+        self,
+        analysis
+    ):
+        """
+        Human readable decision debug.
+        """
+
+
+
+        decision = self.decide(
+
+            analysis
+
+        )
+
+
+
+        return {
+
+
+            "action":
+
+                decision["action"].value,
+
+
+            "score":
+
+                decision["score"],
+
+
+            "confidence":
+
+                decision["confidence"],
+
+
+            "reason":
+
+                decision["reason"],
+
+
+            "factors":
+
+                decision["factors"]
+
+        }
+
+
 
 
 
@@ -319,3 +1192,9 @@ class DecisionEngine:
     def __repr__(self):
 
         return "DecisionEngine()"
+
+
+
+    def __str__(self):
+
+        return "Poker AI Decision Engine"

@@ -1,5 +1,7 @@
 from AI.bot_player import BotPlayer
 
+from AI.game_context import GameContext
+
 from AI.difficulty import Difficulty
 
 from AI.strategy import Strategy
@@ -7,19 +9,30 @@ from AI.strategy import Strategy
 from models.card import Card, Suit, Rank
 
 
+
 def card(rank, suit):
 
     return Card(
+
         suit,
+
         rank
+
     )
+
 
 
 
 def test_bot_player():
 
+
     print("\n========== BOT PLAYER TEST ==========")
 
+
+
+    # ==========================================
+    # Create Bot
+    # ==========================================
 
     bot = BotPlayer(
 
@@ -32,16 +45,19 @@ def test_bot_player():
     )
 
 
-    # ==========================================
-    # Profile
-    # ==========================================
-
-    profile = bot.profile()
-
 
     print("\nBot Profile")
 
-    print(profile)
+    print(
+
+        bot.profile()
+
+    )
+
+
+
+    profile = bot.profile()
+
 
 
     assert profile["name"] == "DeepBot"
@@ -52,108 +68,160 @@ def test_bot_player():
 
 
 
+
     # ==========================================
-    # Hand Decision
+    # Create Game Context
     # ==========================================
 
-    hole_cards = [
-
-        card(
-
-            Rank.ACE,
-
-            Suit.SPADES
-
-        ),
-
-        card(
-
-            Rank.ACE,
-
-            Suit.HEARTS
-
-        )
-
-    ]
+    context = GameContext(
 
 
-    community_cards = [
-
-        card(
-
-            Rank.KING,
-
-            Suit.CLUBS
-
-        ),
-
-        card(
-
-            Rank.SEVEN,
-
-            Suit.DIAMONDS
-
-        ),
-
-        card(
-
-            Rank.TWO,
-
-            Suit.SPADES
-
-        )
-
-    ]
+        hole_cards=[
 
 
-    result = bot.decide(
+            card(
 
-        hole_cards,
+                Rank.ACE,
 
-        community_cards,
+                Suit.SPADES
 
-        opponent_count=2,
+            ),
 
-        position="BUTTON"
+
+            card(
+
+                Rank.ACE,
+
+                Suit.HEARTS
+
+            )
+
+        ],
+
+
+
+        community_cards=[
+
+
+            card(
+
+                Rank.KING,
+
+                Suit.CLUBS
+
+            ),
+
+
+            card(
+
+                Rank.SEVEN,
+
+                Suit.DIAMONDS
+
+            ),
+
+
+            card(
+
+                Rank.TWO,
+
+                Suit.SPADES
+
+            )
+
+        ],
+
+
+
+        position="BUTTON",
+
+
+        street="flop",
+
+
+        pot_size=200,
+
+
+        current_bet=50,
+
+
+        min_raise=100,
+
+
+        big_blind=50,
+
+
+        player_stack=1000,
+
+
+        players_remaining=3
 
     )
+
+
+
+
+    # ==========================================
+    # Decision Test
+    # ==========================================
+
+    decision = bot.decide(
+
+        context
+
+    )
+
 
 
     print("\nDecision")
 
-    print(result)
+    print(
 
-
-
-    assert "action" in result
-
-    assert "analysis" in result
-
-
-
-    # ==========================================
-    # Opponent Memory
-    # ==========================================
-
-    bot.new_hand()
-
-
-    bot.record_opponent_action(
-
-        "Alice",
-
-        "raise"
+        decision
 
     )
 
 
-    bot.record_opponent_action(
 
-        "Alice",
+    assert "action" in decision
 
-        "bet"
+    assert "amount" in decision
+
+    assert "confidence" in decision
+
+    assert "analysis" in decision
+
+
+
+    assert decision["action"] is not None
+
+
+
+    analysis = decision["analysis"]
+
+
+
+    assert "strength" in analysis
+
+    assert "equity" in analysis
+
+    assert "bluff" in analysis
+
+    assert "risk" in analysis
+
+
+
+
+    # ==========================================
+    # Opponent Model Test
+    # ==========================================
+
+    bot.add_opponent(
+
+        "Alice"
 
     )
+
 
 
     opponent = bot.opponent_model(
@@ -161,6 +229,7 @@ def test_bot_player():
         "Alice"
 
     )
+
 
 
     print("\nOpponent Profile")
@@ -172,15 +241,92 @@ def test_bot_player():
     )
 
 
+
     assert opponent is not None
 
 
-    print(
-        "\n========== BOT PLAYER TEST PASSED =========="
+
+
+    # ==========================================
+    # Range Model Test
+    # ==========================================
+
+    opponent_range = bot.opponent_range(
+
+        "Alice"
+
     )
 
 
 
+    print("\nOpponent Range")
+
+    print(
+
+        opponent_range.profile()
+
+    )
+
+
+
+    assert opponent_range is not None
+
+    assert "range" in opponent_range.profile()
+
+
+
+
+    # ==========================================
+    # Learning Test
+    # ==========================================
+
+    bot.record_opponent_action(
+
+        "Alice",
+
+        "raise",
+
+        "BUTTON"
+
+    )
+
+
+
+    updated_range = bot.opponent_range(
+
+        "Alice"
+
+    )
+
+
+
+    assert len(
+
+        updated_range.get_history()
+
+    ) > 0
+
+
+
+
+    # ==========================================
+    # New Hand Reset
+    # ==========================================
+
+    bot.new_hand()
+
+
+
+    print(
+
+        "\n========== BOT PLAYER TEST PASSED =========="
+
+    )
+
+
+
+
 if __name__ == "__main__":
+
 
     test_bot_player()

@@ -1,21 +1,34 @@
 from AI.bot_player import BotPlayer
+
+from AI.game_context import GameContext
+
 from models.action import Action
+
+
+
 
 
 class BotController:
     """
-    Connects AI decisions with game engine actions.
+    Final AI game controller.
 
     Responsibilities
     ----------------
-    • Ask bot for decisions
-    • Convert AI actions into engine actions
+    • Connect game engine with BotPlayer
+    • Request decisions
+    • Validate decisions
+    • Execute actions
+    • Maintain decision history
 
-    Does NOT:
-        • Manage game rules
-        • Modify chips directly
-        • Handle betting logic
+
+    Does NOT
+    --------
+    • Decide strategy
+    • Calculate poker analysis
+    • Evaluate hands
+    • Calculate bets
     """
+
 
 
     def __init__(
@@ -26,43 +39,124 @@ class BotController:
         self.bot = bot
 
 
+        self.last_decision = None
+
+
+        self.history = []
+
+
+
+
+
     # ==========================================
-    # Decision Request
+    # Request AI Decision
     # ==========================================
 
     def get_action(
         self,
-        hole_cards,
-        community_cards,
-        opponent_count,
-        position=None,
+        context: GameContext,
         opponent_name=None
     ):
         """
-        Ask AI what action to take.
+        Ask BotPlayer for decision.
         """
 
-        result = self.bot.decide(
 
-            hole_cards,
+        decision = self.bot.decide(
 
-            community_cards,
-
-            opponent_count,
-
-            position,
+            context,
 
             opponent_name
 
         )
 
 
-        return result["action"]
+        self.last_decision = decision
+
+
+        self.history.append(
+
+            decision
+
+        )
+
+
+        return decision
+
+
 
 
 
     # ==========================================
-    # Action Conversion
+    # Validate Decision
+    # ==========================================
+
+    def validate_decision(
+        self,
+        decision
+    ):
+        """
+        Ensure decision format is valid.
+        """
+
+
+        required = [
+
+            "action",
+
+            "amount"
+
+        ]
+
+
+
+        for field in required:
+
+
+            if field not in decision:
+
+                raise ValueError(
+
+                    f"Missing decision field: {field}"
+
+                )
+
+
+
+        if not isinstance(
+
+            decision["action"],
+
+            Action
+
+        ):
+
+            raise ValueError(
+
+                "Invalid action type"
+
+            )
+
+
+
+        if decision["amount"] < 0:
+
+            raise ValueError(
+
+                "Invalid bet amount"
+
+            )
+
+
+
+        return True
+
+
+
+
+
+    # ==========================================
+    # Action Name
     # ==========================================
 
     def action_name(
@@ -70,31 +164,59 @@ class BotController:
         action: Action
     ) -> str:
         """
-        Convert enum action to engine-readable text.
+        Convert action enum to readable name.
         """
 
-        return action.value
-        # ==========================================
+
+        return action.name.lower()
+
+
+
+
+
+    # ==========================================
     # Execute Action
     # ==========================================
 
     def execute_action(
         self,
-        action: Action,
+        decision,
         player,
-        betting_manager,
-        amount=0
+        betting_manager
     ):
         """
-        Execute AI chosen action
-        through the engine.
+        Execute AI decision through game engine.
 
-        Engine remains responsible
-        for validation.
+        Controller only forwards actions.
+        It does NOT decide.
         """
+
+
+
+        self.validate_decision(
+
+            decision
+
+        )
+
+
+
+        action = decision["action"]
+
+
+        amount = decision.get(
+
+            "amount",
+
+            0
+
+        )
+
+
 
 
         if action == Action.FOLD:
+
 
             betting_manager.fold(
 
@@ -103,7 +225,9 @@ class BotController:
             )
 
 
+
         elif action == Action.CHECK:
+
 
             betting_manager.check(
 
@@ -112,7 +236,9 @@ class BotController:
             )
 
 
+
         elif action == Action.CALL:
+
 
             betting_manager.call(
 
@@ -121,7 +247,9 @@ class BotController:
             )
 
 
+
         elif action == Action.BET:
+
 
             betting_manager.bet(
 
@@ -132,7 +260,9 @@ class BotController:
             )
 
 
+
         elif action == Action.RAISE:
+
 
             betting_manager.raise_bet(
 
@@ -143,7 +273,9 @@ class BotController:
             )
 
 
+
         elif action == Action.ALL_IN:
+
 
             betting_manager.all_in(
 
@@ -152,10 +284,121 @@ class BotController:
             )
 
 
+
         else:
+
 
             raise ValueError(
 
-                f"Unknown action: {action}"
+                f"Unsupported action: {action}"
 
             )
+
+
+
+        return True
+
+
+
+
+
+    # ==========================================
+    # History
+    # ==========================================
+
+    def get_history(
+        self
+    ):
+        """
+        Return decision history.
+        """
+
+
+        return self.history.copy()
+
+
+
+
+
+    def reset_history(
+        self
+    ):
+        """
+        Reset history for simulations.
+        """
+
+
+        self.history.clear()
+
+
+        self.last_decision = None
+
+
+
+
+
+    # ==========================================
+    # Last Decision
+    # ==========================================
+
+    def get_last_decision(
+        self
+    ):
+        """
+        Return latest AI decision.
+        """
+
+
+        return self.last_decision
+
+
+
+
+
+    # ==========================================
+    # Profile
+    # ==========================================
+
+    def profile(
+        self
+    ):
+        """
+        Controller information.
+        """
+
+
+        return {
+
+
+            "bot":
+
+                self.bot.name,
+
+
+            "decisions_made":
+
+                len(
+
+                    self.history
+
+                )
+
+        }
+
+
+
+
+
+    # ==========================================
+    # Debug
+    # ==========================================
+
+    def __repr__(
+        self
+    ):
+
+        return (
+
+            f"BotController({self.bot.name})"
+
+        )

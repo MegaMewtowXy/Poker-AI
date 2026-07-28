@@ -4,65 +4,90 @@ from typing import Optional
 from models.card import Card
 
 
+
 @dataclass(slots=True)
 class HandResult:
     """
-    Represents the evaluation of a player's hand.
+    Complete poker hand evaluation result.
 
-    Produced by HandEvaluator and later enriched
-    by Monte Carlo simulations and AI analysis.
+    Used by:
+    - HandEvaluator
+    - Showdown
+    - AI analysis
+    - Monte Carlo simulation
     """
 
+
     # =====================================================
-    # Hand Evaluation
+    # Evaluation
     # =====================================================
 
-    # Treys score (lower is better)
     score: int
 
-    # Treys rank class (0-9 depending on evaluator)
     rank: int
 
-    # Human-readable name
     hand_name: str
 
-    # Best five cards that form the hand
     best_five: list[Card] = field(
         default_factory=list
     )
 
+
+
     # =====================================================
-    # AI Information
+    # AI Data
     # =====================================================
 
-    # Probability of winning (0.0 - 1.0)
     win_probability: Optional[float] = None
 
-    # Hand equity from Monte Carlo
     equity: Optional[float] = None
 
-    # Strength score used by AI
     hand_strength: Optional[float] = None
 
-    # Confidence of AI recommendation
     confidence: Optional[float] = None
 
-    # AI explanation
     explanation: str = ""
 
+
+
     # =====================================================
-    # Showdown Information
+    # Showdown
     # =====================================================
 
-    # Did this hand win?
     is_winner: bool = False
 
-    # Pot won
     chips_won: int = 0
 
-    # Was the pot split?
     split_pot: bool = False
-        # =====================================================
+
+
+
+    showdown_message: str = ""
+
+
+
+    # =====================================================
+    # Validation
+    # =====================================================
+
+    def __post_init__(self):
+
+        if self.score < 0:
+
+            raise ValueError(
+                "Hand score cannot be negative."
+            )
+
+
+        if not 0 <= self.rank <= 9:
+
+            raise ValueError(
+                "Invalid poker hand rank."
+            )
+
+
+
+    # =====================================================
     # AI Helpers
     # =====================================================
 
@@ -74,15 +99,33 @@ class HandResult:
         confidence: float,
         explanation: str
     ):
-        """
-        Store AI analysis results.
-        """
+
+
+        if not 0 <= win_probability <= 1:
+
+            raise ValueError(
+                "Win probability must be between 0 and 1."
+            )
+
+
+        if not 0 <= confidence <= 1:
+
+            raise ValueError(
+                "Confidence must be between 0 and 1."
+            )
+
 
         self.win_probability = win_probability
+
         self.equity = equity
+
         self.hand_strength = hand_strength
+
         self.confidence = confidence
+
         self.explanation = explanation
+
+
 
     # =====================================================
     # Showdown Helpers
@@ -93,43 +136,101 @@ class HandResult:
         chips_won: int,
         split_pot: bool = False
     ):
-        """
-        Mark this hand as a winner.
-        """
+
 
         self.is_winner = True
+
         self.chips_won = chips_won
+
         self.split_pot = split_pot
+
+
 
     # -----------------------------------------------------
 
     def reset_showdown(self):
-        """
-        Clear showdown-specific information.
-        """
 
         self.is_winner = False
+
         self.chips_won = 0
+
         self.split_pot = False
 
+
+
+        self.showdown_message = ""
+
+
+
     # =====================================================
-    # Information
+    # Hand Classification
     # =====================================================
 
     @property
-    def lost(self) -> bool:
+    def is_royal_flush(self):
+
+        return (
+            self.hand_name
+            ==
+            "Royal Flush"
+        )
+
+
+    @property
+    def is_pair(self):
+
+        return (
+            "Pair"
+            in
+            self.hand_name
+        )
+
+
+
+    @property
+    def has_ai_analysis(self):
+
+        return (
+
+            self.win_probability is not None
+
+            and
+
+            self.hand_strength is not None
+
+        )
+
+
+
+    @property
+    def lost(self):
 
         return not self.is_winner
 
-    # -----------------------------------------------------
 
-    @property
-    def has_ai_analysis(self) -> bool:
 
-        return (
-            self.win_probability is not None
-            and self.hand_strength is not None
-        )
+    # =====================================================
+    # Comparison
+    # =====================================================
+
+    def __lt__(
+        self,
+        other
+    ):
+
+        if not isinstance(
+            other,
+            HandResult
+        ):
+
+            return NotImplemented
+
+
+        # Lower Treys score wins
+
+        return self.score < other.score
+
+
 
     # =====================================================
     # Debug
@@ -138,40 +239,71 @@ class HandResult:
     def __repr__(self):
 
         return (
+
             "HandResult("
+
             f"hand='{self.hand_name}', "
+
             f"score={self.score}, "
+
             f"winner={self.is_winner}"
+
             ")"
+
         )
+
+
 
     # -----------------------------------------------------
 
     def __str__(self):
 
         text = [
+
             f"Hand : {self.hand_name}",
+
             f"Score : {self.score}"
+
         ]
 
+
         if self.win_probability is not None:
+
             text.append(
-                f"Win Probability : {self.win_probability:.2%}"
+
+                f"Win Probability : "
+                f"{self.win_probability:.2%}"
+
             )
+
 
         if self.hand_strength is not None:
+
             text.append(
-                f"Hand Strength : {self.hand_strength:.3f}"
+
+                f"Hand Strength : "
+                f"{self.hand_strength:.3f}"
+
             )
+
 
         if self.confidence is not None:
+
             text.append(
-                f"Confidence : {self.confidence:.2%}"
+
+                f"Confidence : "
+                f"{self.confidence:.2%}"
+
             )
 
+
         if self.is_winner:
+
             text.append(
+
                 f"Winner (+{self.chips_won} chips)"
+
             )
+
 
         return "\n".join(text)

@@ -2,13 +2,16 @@ from AI.bot_controller import BotController
 
 from AI.bot_player import BotPlayer
 
+from AI.game_context import GameContext
+
 from AI.difficulty import Difficulty
 
 from AI.strategy import Strategy
 
-from AI.decision import Action
+from models.action import Action
 
 from models.card import Card, Suit, Rank
+
 
 
 
@@ -24,11 +27,69 @@ def card(rank, suit):
 
 
 
+
+class MockBettingManager:
+
+    def __init__(self):
+
+        self.action = None
+
+        self.amount = 0
+
+
+
+    def fold(self, player):
+
+        self.action = "fold"
+
+
+
+    def check(self, player):
+
+        self.action = "check"
+
+
+
+    def call(self, player):
+
+        self.action = "call"
+
+
+
+    def bet(self, player, amount):
+
+        self.action = "bet"
+
+        self.amount = amount
+
+
+
+    def raise_bet(self, player, amount):
+
+        self.action = "raise"
+
+        self.amount = amount
+
+
+
+    def all_in(self, player):
+
+        self.action = "all_in"
+
+
+
+
+
 def test_bot_controller():
+
 
     print("\n========== BOT CONTROLLER TEST ==========")
 
 
+
+    # ==========================================
+    # Create Bot
+    # ==========================================
 
     bot = BotPlayer(
 
@@ -48,90 +109,138 @@ def test_bot_controller():
     )
 
 
-    # ==========================================
-    # Action Request
-    # ==========================================
 
-    hole_cards = [
+    print("\nController Profile")
 
-        card(
+    print(
 
-            Rank.ACE,
-
-            Suit.SPADES
-
-        ),
-
-        card(
-
-            Rank.ACE,
-
-            Suit.HEARTS
-
-        )
-
-    ]
-
-
-    community_cards = [
-
-        card(
-
-            Rank.KING,
-
-            Suit.CLUBS
-
-        ),
-
-        card(
-
-            Rank.SEVEN,
-
-            Suit.DIAMONDS
-
-        ),
-
-        card(
-
-            Rank.TWO,
-
-            Suit.SPADES
-
-        )
-
-    ]
-
-
-
-    action = controller.get_action(
-
-        hole_cards,
-
-        community_cards,
-
-        opponent_count=2,
-
-        position="BUTTON"
+        controller.profile()
 
     )
 
 
-    print("\nAI Action")
 
-    print(
 
-        action.value
+    # ==========================================
+    # Create Game Context
+    # ==========================================
+
+    context = GameContext(
+
+
+        hole_cards=[
+
+            card(
+
+                Rank.ACE,
+
+                Suit.SPADES
+
+            ),
+
+            card(
+
+                Rank.ACE,
+
+                Suit.HEARTS
+
+            )
+
+        ],
+
+
+        community_cards=[
+
+            card(
+
+                Rank.KING,
+
+                Suit.CLUBS
+
+            ),
+
+            card(
+
+                Rank.SEVEN,
+
+                Suit.DIAMONDS
+
+            ),
+
+            card(
+
+                Rank.TWO,
+
+                Suit.SPADES
+
+            )
+
+        ],
+
+
+        position="BUTTON",
+
+        street="flop",
+
+        pot_size=200,
+
+        current_bet=50,
+
+        min_raise=100,
+
+        big_blind=50,
+
+        player_stack=1000,
+
+        players_remaining=3
+
+    )
+
+
+
+
+    # ==========================================
+    # Get Decision
+    # ==========================================
+
+    decision = controller.get_action(
+
+        context
+
+    )
+
+
+
+    print("\nAI Decision")
+
+    print(decision)
+
+
+
+    assert isinstance(
+
+        decision,
+
+        dict
 
     )
 
 
     assert isinstance(
 
-        action,
+        decision["action"],
 
         Action
 
     )
+
+
+    assert "amount" in decision
+
+    assert "confidence" in decision
+
+    assert "analysis" in decision
+
 
 
 
@@ -139,25 +248,99 @@ def test_bot_controller():
     # Action Conversion
     # ==========================================
 
-    name = controller.action_name(
+    action_name = controller.action_name(
 
         Action.RAISE
 
     )
 
 
-    print("\nConverted Action")
 
-    print(name)
+    print("\nAction Name")
+
+    print(action_name)
 
 
-    assert name == "raise"
+
+    assert action_name == "raise"
+
+
+
+
+    # ==========================================
+    # Execute Action
+    # ==========================================
+
+    manager = MockBettingManager()
+
+
+
+    controller.execute_action(
+
+        decision,
+
+        "DeepBot",
+
+        manager
+
+    )
+
+
+
+    print("\nExecuted Action")
+
+    print(manager.action)
+
+
+
+    assert manager.action is not None
+
+
+
+
+    # ==========================================
+    # History
+    # ==========================================
+
+    history = controller.get_history()
+
+
+
+    print("\nHistory")
+
+    print(history)
+
+
+
+    assert len(history) == 1
+
+
+
+    assert controller.get_last_decision() == decision
+
+
+
+
+    # ==========================================
+    # Validation
+    # ==========================================
+
+    assert controller.validate_decision(
+
+        decision
+
+    )
+
 
 
 
     print(
+
         "\n========== BOT CONTROLLER TEST PASSED =========="
+
     )
+
+
 
 
 

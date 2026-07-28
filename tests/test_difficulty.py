@@ -4,9 +4,12 @@ from AI.difficulty import (
 )
 
 
+
 def test_difficulty():
 
+
     print("\n========== DIFFICULTY TEST ==========")
+
 
 
     # ==========================================
@@ -14,14 +17,18 @@ def test_difficulty():
     # ==========================================
 
     easy = DifficultyManager(
+
         Difficulty.EASY
+
     )
 
 
     print("\nEasy Config")
 
     print(
+
         easy.config()
+
     )
 
 
@@ -33,20 +40,30 @@ def test_difficulty():
 
     assert not easy.can_adapt()
 
+    assert not easy.can_self_train()
+
+    assert easy.strategy_weight() == 0.5
+
+
+
 
     # ==========================================
     # MEDIUM
     # ==========================================
 
     medium = DifficultyManager(
+
         Difficulty.MEDIUM
+
     )
 
 
     print("\nMedium Config")
 
     print(
+
         medium.config()
+
     )
 
 
@@ -54,7 +71,13 @@ def test_difficulty():
 
     assert not medium.can_use_opponent_model()
 
-    assert not medium.can_bluff()
+    assert medium.can_bluff()
+
+    assert not medium.can_adapt()
+
+    assert medium.strategy_weight() == 0.75
+
+
 
 
     # ==========================================
@@ -62,14 +85,18 @@ def test_difficulty():
     # ==========================================
 
     hard = DifficultyManager(
+
         Difficulty.HARD
+
     )
 
 
     print("\nHard Config")
 
     print(
+
         hard.config()
+
     )
 
 
@@ -83,20 +110,28 @@ def test_difficulty():
 
     assert not hard.can_self_train()
 
+    assert hard.strategy_weight() == 1.0
+
+
+
 
     # ==========================================
     # EXPERT
     # ==========================================
 
     expert = DifficultyManager(
+
         Difficulty.EXPERT
+
     )
 
 
     print("\nExpert Config")
 
     print(
+
         expert.config()
+
     )
 
 
@@ -110,10 +145,39 @@ def test_difficulty():
 
     assert expert.can_self_train()
 
+    assert expert.strategy_weight() == 1.0
+
+
+
+
+    # ==========================================
+    # Profile
+    # ==========================================
+
+    profile = expert.profile()
+
+
+    print("\nExpert Profile")
+
+    print(profile)
+
+
+    assert profile["difficulty"] == "expert"
+
+    assert profile["self_training"] is True
+
+    assert profile["strategy_weight"] == 1.0
+
+
+
 
     print(
+
         "\n========== DIFFICULTY TEST PASSED =========="
+
     )
+
+
 
 
 if __name__ == "__main__":

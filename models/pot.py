@@ -3,63 +3,129 @@ from dataclasses import dataclass, field
 from models.player import Player
 
 
+
 @dataclass(slots=True)
 class Pot:
     """
     Represents a poker pot.
 
-    A game always has one main pot and may have
-    multiple side pots.
+    Supports:
+    - Main pot
+    - Side pots
+    - Multiple winners
+    - Split payouts
+    - Tournament tracking
 
-    Each pot tracks:
-    - Amount of chips
-    - Players eligible to win it
+    Does NOT:
+    - Decide winners
+    - Build side pots
+    - Handle betting
     """
 
+
+
+    # =====================================================
+    # Identity
+    # =====================================================
+
+    pot_id: int = 0
+
+
+    is_main_pot: bool = False
+
+
+
+    # =====================================================
+    # Chips
+    # =====================================================
+
     amount: int = 0
+
+
+
+    # =====================================================
+    # Eligibility
+    # =====================================================
 
     eligible_players: list[Player] = field(
         default_factory=list
     )
 
+
+
+    # =====================================================
+    # Showdown Result
+    # =====================================================
+
+    winners: list[Player] = field(
+        default_factory=list
+    )
+
+
+    payouts: dict[Player, int] = field(
+        default_factory=dict
+    )
+
+
+
+    # =====================================================
+    # State
+    # =====================================================
+
+    closed: bool = False
+
+
+
     # =====================================================
     # Chip Management
     # =====================================================
+
 
     def add_chips(
         self,
         amount: int
     ):
 
-        if amount < 0:
-            raise ValueError(
-                "Cannot add negative chips."
+        self._validate_amount(amount)
+
+
+        if self.closed:
+
+            raise RuntimeError(
+                "Cannot add chips to closed pot."
             )
+
 
         self.amount += amount
 
+
+
     # -----------------------------------------------------
+
 
     def remove_chips(
         self,
         amount: int
     ):
 
-        if amount < 0:
-            raise ValueError(
-                "Cannot remove negative chips."
-            )
+        self._validate_amount(amount)
+
 
         if amount > self.amount:
+
             raise ValueError(
                 "Not enough chips in pot."
             )
 
+
         self.amount -= amount
 
+
+
     # =====================================================
-    # Eligible Players
+    # Eligibility
     # =====================================================
+
 
     def add_player(
         self,
@@ -72,7 +138,10 @@ class Pot:
                 player
             )
 
+
+
     # -----------------------------------------------------
+
 
     def remove_player(
         self,
@@ -85,9 +154,116 @@ class Pot:
                 player
             )
 
+
+
+    # -----------------------------------------------------
+
+
+    def is_eligible(
+        self,
+        player: Player
+    ) -> bool:
+
+        return player in self.eligible_players
+
+
+
     # =====================================================
-    # Reset
+    # Winner Handling
     # =====================================================
+
+
+    def set_winners(
+        self,
+        winners: list[Player]
+    ):
+
+        self.winners = winners
+
+
+
+    # -----------------------------------------------------
+
+
+    def award(
+        self,
+        player: Player,
+        amount: int
+    ):
+
+        self._validate_amount(amount)
+
+
+        if amount > self.amount:
+
+            raise ValueError(
+                "Payout exceeds pot size."
+            )
+
+
+        self.payouts[player] = (
+
+            self.payouts.get(
+                player,
+                0
+            )
+
+            +
+
+            amount
+
+        )
+
+
+
+    # -----------------------------------------------------
+
+
+    def split_amount(
+        self,
+        winners: list[Player]
+    ) -> dict[Player, int]:
+
+        if not winners:
+
+            return {}
+
+
+        share = self.amount // len(winners)
+
+        remainder = self.amount % len(winners)
+
+
+        result = {}
+
+
+        for index, player in enumerate(winners):
+
+            result[player] = share
+
+
+            if index < remainder:
+
+                result[player] += 1
+
+
+        return result
+
+
+
+    # =====================================================
+    # Lifecycle
+    # =====================================================
+
+
+    def close(self):
+
+        self.closed = True
+
+
+
+    # -----------------------------------------------------
+
 
     def clear(self):
 
@@ -95,9 +271,18 @@ class Pot:
 
         self.eligible_players.clear()
 
+        self.winners.clear()
+
+        self.payouts.clear()
+
+        self.closed = False
+
+
+
     # =====================================================
     # Information
     # =====================================================
+
 
     def player_count(self):
 
@@ -105,34 +290,155 @@ class Pot:
             self.eligible_players
         )
 
+
+
     # -----------------------------------------------------
+
+
+    def winner_count(self):
+
+        return len(
+            self.winners
+        )
+
+
+
+    # -----------------------------------------------------
+
 
     def is_empty(self):
 
         return self.amount == 0
 
+
+
+    # -----------------------------------------------------
+
+
+    def total_paid(self):
+
+        return sum(
+            self.payouts.values()
+        )
+
+
+
+    # -----------------------------------------------------
+
+
+    def remaining_amount(self):
+
+        return (
+
+            self.amount
+
+            -
+
+            self.total_paid()
+
+        )
+
+
+
+    # =====================================================
+    # Serialization
+    # =====================================================
+
+
+    def to_dict(self):
+
+        return {
+
+            "pot_id": self.pot_id,
+
+            "amount": self.amount,
+
+            "main_pot": self.is_main_pot,
+
+            "eligible_players": [
+
+                p.name
+
+                for p in self.eligible_players
+
+            ],
+
+            "winners": [
+
+                p.name
+
+                for p in self.winners
+
+            ],
+
+            "payouts": {
+
+                p.name: amount
+
+                for p, amount in self.payouts.items()
+
+            },
+
+            "closed": self.closed
+
+        }
+
+
+
+    # =====================================================
+    # Validation
+    # =====================================================
+
+
+    def _validate_amount(
+        self,
+        amount
+    ):
+
+        if amount < 0:
+
+            raise ValueError(
+                "Amount cannot be negative."
+            )
+
+
+
     # =====================================================
     # Debug
     # =====================================================
 
+
     def __repr__(self):
-
-        players = ", ".join(
-
-            player.name
-
-            for player in self.eligible_players
-
-        )
 
         return (
 
-            f"Pot("
+            "Pot("
+
+            f"id={self.pot_id}, "
 
             f"amount={self.amount}, "
 
-            f"eligible=[{players}]"
+            f"main={self.is_main_pot}"
 
-            f")"
+            ")"
+
+        )
+
+
+
+    # -----------------------------------------------------
+
+
+    def __str__(self):
+
+        return (
+
+            f"Pot #{self.pot_id}\n"
+
+            f"Amount: ${self.amount}\n"
+
+            f"Players: {self.player_count()}\n"
+
+            f"Closed: {self.closed}"
 
         )

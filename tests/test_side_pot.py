@@ -3,83 +3,91 @@ from models.player import Player
 from engine.pot_manager import PotManager
 
 
+
+
 def test_side_pots():
 
-    print("\n========== SIDE POT TEST ==========")
+
+    print(
+        "\n========== SIDE POT TEST =========="
+    )
+
 
 
     # ==========================================
-    # Create Players
+    # Players
     # ==========================================
 
     alice = Player(
+
         "Alice",
+
         100
+
     )
+
 
     bob = Player(
+
         "Bob",
+
         500
+
     )
 
+
     charlie = Player(
+
         "Charlie",
+
         1000
+
     )
+
 
 
     players = [
 
         alice,
+
         bob,
+
         charlie
 
     ]
 
 
+
     pot_manager = PotManager()
+
 
 
     # ==========================================
     # Contributions
-    #
-    # Alice   -> 100 all-in
-    # Bob     -> 300 total
-    # Charlie -> 500 total
-    #
-    # Expected:
-    #
-    # Main Pot:
-    # 100 * 3 = 300
-    #
-    # Side Pot 1:
-    # 200 * 2 = 400
-    #
-    # Side Pot 2:
-    # 200 * 1 = 200
-    #
-    # Total:
-    # 900
-    #
     # ==========================================
 
 
     contributions = [
 
-        (alice, 100),
+        (alice,100),
 
-        (bob, 300),
+        (bob,300),
 
-        (charlie, 500)
+        (charlie,500)
 
     ]
 
 
+
     for player, amount in contributions:
 
+
         player.place_bet(
+
             amount
+
         )
+
 
         pot_manager.add_to_main_pot(
 
@@ -90,16 +98,20 @@ def test_side_pots():
         )
 
 
+
     print("\nBefore Building Pots")
 
     pot_manager.print_contributions()
 
 
+
     # ==========================================
-    # Build Side Pots
+    # Build Pots
     # ==========================================
 
+
     pot_manager.build_side_pots()
+
 
 
     print("\nGenerated Pots")
@@ -107,14 +119,18 @@ def test_side_pots():
     pot_manager.print_pots()
 
 
-    # ==========================================
-    # Validation
-    # ==========================================
 
     pots = pot_manager.get_all_pots()
 
 
+
+    # ==========================================
+    # Amount Validation
+    # ==========================================
+
+
     assert len(pots) == 3
+
 
 
     assert pots[0].amount == 300
@@ -124,19 +140,91 @@ def test_side_pots():
     assert pots[2].amount == 200
 
 
+
     assert pot_manager.total_pot() == 900
+
+
+
+    # ==========================================
+    # Eligibility Validation
+    # ==========================================
+
+
+    main_players = pot_manager.eligible_players(
+
+        pots[0],
+
+        players
+
+    )
+
+
+    side_one_players = pot_manager.eligible_players(
+
+        pots[1],
+
+        players
+
+    )
+
+
+    side_two_players = pot_manager.eligible_players(
+
+        pots[2],
+
+        players
+
+    )
+
+
+
+    assert set(main_players) == {
+
+        alice,
+
+        bob,
+
+        charlie
+
+    }
+
+
+
+    assert set(side_one_players) == {
+
+        bob,
+
+        charlie
+
+    }
+
+
+
+    assert set(side_two_players) == {
+
+        charlie
+
+    }
+
 
 
     print("\nTotal Pot:")
 
     print(
+
         pot_manager.total_pot()
+
     )
+
 
 
     print(
+
         "\n========== SIDE POT TEST PASSED =========="
+
     )
+
+
 
 
 if __name__ == "__main__":

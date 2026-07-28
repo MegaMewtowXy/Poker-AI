@@ -1,9 +1,8 @@
-from math import comb
-
 from models.card import Card
 from models.player import Player
 
 from engine.evaluator import HandEvaluator
+
 
 
 class Probability:
@@ -13,19 +12,29 @@ class Probability:
     Responsibilities
     ----------------
     • Pot odds
-    • Drawing odds
-    • Equity estimation
-    • Win probability
-    • Monte Carlo simulation
-    • Expected value
+    • Implied odds
+    • Outs calculation
+    • Drawing probability
+    • Hand evaluation
+    • Monte Carlo equity
+    • EV calculations
 
-    This class never modifies game state.
-    It performs mathematical calculations only.
+    Simulation safety:
+    ------------------
+    This class never modifies:
+    - Player state
+    - Opponent state
+    - Deck state
+    - Table state
     """
+
+
 
     def __init__(self):
 
         self.evaluator = HandEvaluator()
+
+
 
     # ==================================================
     # Pot Odds
@@ -36,20 +45,27 @@ class Probability:
         call_amount: int,
         pot_size: int
     ) -> float:
-        """
-        Returns the pot odds.
 
-        Formula:
-            call / (pot + call)
-        """
 
         if call_amount <= 0:
 
             return 0.0
 
+
+        if pot_size < 0:
+
+            raise ValueError(
+                "Pot size cannot be negative."
+            )
+
+
         return call_amount / (
+
             pot_size + call_amount
+
         )
+
+
 
     # --------------------------------------------------
 
@@ -58,23 +74,17 @@ class Probability:
         call_amount: int,
         pot_size: int
     ) -> float:
-        """
-        Pot odds expressed as a percentage.
-        """
 
-        return (
 
-            Probability.pot_odds(
+        return Probability.pot_odds(
 
-                call_amount,
+            call_amount,
 
-                pot_size
+            pot_size
 
-            )
+        ) * 100
 
-            * 100
 
-        )
 
     # ==================================================
     # Implied Odds
@@ -86,24 +96,27 @@ class Probability:
         current_pot: int,
         expected_future_chips: int
     ) -> float:
-        """
-        Returns implied odds.
-        """
+
 
         if call_amount <= 0:
 
             return 0.0
 
+
         return (
 
             current_pot
 
-            + expected_future_chips
+            +
+
+            expected_future_chips
 
         ) / call_amount
 
+
+
     # ==================================================
-    # Hand Strength
+    # Hand Evaluation
     # ==================================================
 
     def hand_strength(
@@ -111,9 +124,7 @@ class Probability:
         hole_cards: list[Card],
         community_cards: list[Card]
     ):
-        """
-        Evaluate the current hand.
-        """
+
 
         return self.evaluator.evaluate(
 
@@ -122,73 +133,61 @@ class Probability:
             community_cards
 
         )
-        # ==================================================
+
+
+
+    # ==================================================
     # Outs
     # ==================================================
 
     @staticmethod
-    def outs(
-        unseen_cards: int,
-        winning_cards: int
+    def calculate_outs(
+        winning_cards: int,
+        unseen_cards: int = 47
     ) -> int:
-        """
-        Return number of outs.
 
-        Example:
-        9 flush outs remaining.
-        """
 
         if winning_cards < 0:
 
             return 0
 
-        if winning_cards > unseen_cards:
 
-            return unseen_cards
+        return min(
 
-        return winning_cards
+            winning_cards,
 
-    # ==================================================
-    # Drawing Probability
-    # ==================================================
+            unseen_cards
+
+        )
+
+
+
+    # --------------------------------------------------
 
     @staticmethod
     def one_card_draw_probability(
         outs: int,
         unseen_cards: int
     ) -> float:
-        """
-        Probability of hitting an out
-        on the next card.
-        """
+
 
         if unseen_cards <= 0:
 
             return 0.0
 
-        return outs / unseen_cards
 
-    # --------------------------------------------------
+        outs = Probability.calculate_outs(
 
-    @staticmethod
-    def one_card_draw_percentage(
-        outs: int,
-        unseen_cards: int
-    ) -> float:
+            outs,
 
-        return (
-
-            Probability.one_card_draw_probability(
-
-                outs,
-
-                unseen_cards
-
-            )
-
-            * 100
+            unseen_cards
 
         )
+
+
+        return outs / unseen_cards
+
+
 
     # --------------------------------------------------
 
@@ -197,24 +196,31 @@ class Probability:
         outs: int,
         unseen_cards: int
     ) -> float:
-        """
-        Probability of hitting at least one
-        out by the river.
 
-        Used when two cards remain.
-        """
 
-        if unseen_cards <= 0:
+        if unseen_cards <= 1:
 
             return 0.0
 
-        misses_first = (
+
+        outs = Probability.calculate_outs(
+
+            outs,
+
+            unseen_cards
+
+        )
+
+
+        miss_one = (
 
             unseen_cards - outs
 
         ) / unseen_cards
 
-        misses_second = (
+
+
+        miss_two = (
 
             unseen_cards - outs - 1
 
@@ -224,27 +230,24 @@ class Probability:
 
         )
 
+
         return 1 - (
 
-            misses_first * misses_second
+            miss_one * miss_two
 
         )
 
+
+
     # ==================================================
-    # Common Poker Draws
+    # Draw Helpers
     # ==================================================
 
     @staticmethod
     def flush_draw_outs(
-        known_cards: int,
         suit_cards: int
     ) -> int:
-        """
-        Calculate flush draw outs.
 
-        Standard:
-        13 cards in suit.
-        """
 
         return max(
 
@@ -254,20 +257,15 @@ class Probability:
 
         )
 
+
+
     # --------------------------------------------------
 
     @staticmethod
     def straight_draw_outs(
         possible_cards: int
     ) -> int:
-        """
-        Placeholder for straight draw
-        detection.
 
-        Full straight detection will be
-        handled after integrating with
-        Evaluator patterns.
-        """
 
         return max(
 
@@ -276,412 +274,18 @@ class Probability:
             possible_cards
 
         )
-        # ==================================================
-    # Equity
-    # ==================================================
 
-    def equity(
-        self,
-        player: Player,
-        opponents: list[Player],
-        community_cards: list[Card]
-    ) -> float:
-        """
-        Estimate player's equity.
 
-        Returns a value between:
-        0.0 and 1.0
-
-        Example:
-        0.65 means approximately 65% equity.
-        """
-
-        if not opponents:
-
-            return 1.0
-
-        player_result = self.evaluator.evaluate(
-
-            player.hand,
-
-            community_cards
-
-        )
-
-        opponent_results = [
-
-            self.evaluator.evaluate(
-
-                opponent.hand,
-
-                community_cards
-
-            )
-
-            for opponent in opponents
-
-        ]
-
-        wins = 0
-
-        ties = 0
-
-        total = len(opponent_results)
-
-        for result in opponent_results:
-
-            if player_result.score < result.score:
-
-                wins += 1
-
-            elif player_result.score == result.score:
-
-                ties += 1
-
-        return (
-
-            wins + (ties * 0.5)
-
-        ) / total
 
     # ==================================================
-    # Win Probability
-    # ==================================================
-
-    def win_probability(
-        self,
-        player: Player,
-        opponents: list[Player],
-        community_cards: list[Card]
-    ) -> float:
-        """
-        Return estimated chance of winning.
-        """
-
-        return self.equity(
-
-            player,
-
-            opponents,
-
-            community_cards
-
-        )
-
-    # ==================================================
-    # Hand Comparison
-    # ==================================================
-
-    def compare_players(
-        self,
-        players: list[Player],
-        community_cards: list[Card]
-    ) -> dict:
-        """
-        Compare all players.
-
-        Returns a mapping:
-
-        Player -> HandResult
-        """
-
-        results = {}
-
-        for player in players:
-
-            results[player] = (
-
-                self.evaluator.evaluate(
-
-                    player.hand,
-
-                    community_cards
-
-                )
-
-            )
-
-        return results
-
-    # --------------------------------------------------
-
-    def strongest_player(
-        self,
-        players: list[Player],
-        community_cards: list[Card]
-    ) -> Player | None:
-        """
-        Return the strongest hand among
-        provided players.
-        """
-
-        if not players:
-
-            return None
-
-        results = self.compare_players(
-
-            players,
-
-            community_cards
-
-        )
-
-        winner = min(
-
-            results,
-
-            key=lambda player:
-
-            results[player].score
-
-        )
-
-        return winner
-        # ==================================================
-    # Monte Carlo Simulation
-    # ==================================================
-
-    def monte_carlo(
-        self,
-        player: Player,
-        opponents: list[Player],
-        community_cards: list[Card],
-        deck,
-        simulations: int = 1000
-    ) -> float:
-        """
-        Estimate win probability using
-        Monte Carlo simulation.
-
-        Returns:
-            Probability between 0 and 1
-        """
-
-        if simulations <= 0:
-
-            return 0.0
-
-        wins = 0
-
-        ties = 0
-
-        for _ in range(simulations):
-
-            simulation_deck = deck.copy()
-
-            simulation_players = [
-
-                opponent
-
-                for opponent in opponents
-
-            ]
-
-            remaining_cards = (
-                simulation_deck.remaining_cards()
-            )
-
-            # --------------------------------------
-            # Assign random opponent cards
-            # --------------------------------------
-
-            for opponent in simulation_players:
-
-                opponent_cards = [
-
-                    remaining_cards.pop()
-
-                    for _ in range(2)
-
-                ]
-
-                opponent.hand = opponent_cards
-
-
-            # --------------------------------------
-            # Complete community cards
-            # --------------------------------------
-
-            simulated_board = list(
-                community_cards
-            )
-
-            while len(simulated_board) < 5:
-
-                simulated_board.append(
-
-                    remaining_cards.pop()
-
-                )
-
-
-            # --------------------------------------
-            # Evaluate hands
-            # --------------------------------------
-
-            player_result = self.evaluator.evaluate(
-
-                player.hand,
-
-                simulated_board
-
-            )
-
-            opponent_results = [
-
-                self.evaluator.evaluate(
-
-                    opponent.hand,
-
-                    simulated_board
-
-                )
-
-                for opponent in simulation_players
-
-            ]
-
-
-            best_opponent = min(
-
-                opponent_results,
-
-                key=lambda result:
-
-                result.score
-
-            )
-
-
-            if player_result.score < best_opponent.score:
-
-                wins += 1
-
-
-            elif player_result.score == best_opponent.score:
-
-                ties += 1
-
-
-        return (
-
-            wins + (ties * 0.5)
-
-        ) / simulations
-
-    # ==================================================
-    # Simulation Helpers
-    # ==================================================
-
-    @staticmethod
-    def required_board_cards(
-        community_cards: list[Card]
-    ) -> int:
-        """
-        Number of community cards still
-        required to complete the board.
-        """
-
-        return max(
-
-            0,
-
-            5 - len(community_cards)
-
-        )
-
-    # --------------------------------------------------
-
-    @staticmethod
-    def remaining_cards(
-        known_cards: int
-    ) -> int:
-        """
-        Number of unknown cards remaining
-        in a standard deck.
-        """
-
-        return max(
-
-            0,
-
-            52 - known_cards
-
-        )
-        # ==================================================
-    # Expected Value
-    # ==================================================
-
-    @staticmethod
-    def expected_value(
-        win_probability: float,
-        win_amount: int,
-        lose_amount: int
-    ) -> float:
-        """
-        Calculate expected value.
-
-        Formula:
-
-        EV =
-        (Win Probability × Win Amount)
-        -
-        (Lose Probability × Lose Amount)
-        """
-
-        lose_probability = (
-
-            1 - win_probability
-
-        )
-
-        return (
-
-            win_probability * win_amount
-
-        ) - (
-
-            lose_probability * lose_amount
-
-        )
-
-    # --------------------------------------------------
-
-    @staticmethod
-    def call_ev(
-        equity: float,
-        pot_size: int,
-        call_amount: int
-    ) -> float:
-        """
-        Calculate EV of calling a bet.
-        """
-
-        if call_amount <= 0:
-
-            return pot_size
-
-        return (
-
-            equity *
-
-            (pot_size + call_amount)
-
-        ) - call_amount
-
-    # ==================================================
-    # Utility Helpers
+    # Probability Helpers
     # ==================================================
 
     @staticmethod
     def normalize_probability(
         value: float
     ) -> float:
-        """
-        Keep probability between
-        0 and 1.
-        """
+
 
         return max(
 
@@ -697,27 +301,432 @@ class Probability:
 
         )
 
+
+
     # --------------------------------------------------
 
     @staticmethod
     def percentage(
         probability: float
     ) -> float:
+
+
+        return Probability.normalize_probability(
+
+            probability
+
+        ) * 100
+        # ==================================================
+    # Monte Carlo Equity
+    # ==================================================
+
+    def monte_carlo_equity(
+        self,
+        player: Player,
+        opponents: list[Player],
+        community_cards: list[Card],
+        deck,
+        simulations: int = 10000
+    ) -> dict:
         """
-        Convert probability to percentage.
+        Estimate hand equity using Monte Carlo.
+
+        Returns:
+
+        {
+            win,
+            tie,
+            lose,
+            equity
+        }
+
+        Does not modify:
+        - Player objects
+        - Opponent objects
+        - Original deck
         """
 
-        return (
+        if simulations <= 0:
 
-            Probability.normalize_probability(
+            raise ValueError(
+                "Simulations must be positive."
+            )
 
-                probability
+
+        if not opponents:
+
+            raise ValueError(
+                "At least one opponent is required."
+            )
+
+
+        wins = 0
+
+        ties = 0
+
+        losses = 0
+
+
+
+        for _ in range(simulations):
+
+
+            result = self._simulate_once(
+
+                player,
+
+                opponents,
+
+                community_cards,
+
+                deck
 
             )
 
-            * 100
+
+            if result == "win":
+
+                wins += 1
+
+
+            elif result == "tie":
+
+                ties += 1
+
+
+            else:
+
+                losses += 1
+
+
+
+        total = simulations
+
+
+
+        return {
+
+            "win": wins / total,
+
+            "tie": ties / total,
+
+            "lose": losses / total,
+
+            "equity": (
+
+                wins
+
+                +
+
+                ties
+
+                *
+
+                0.5
+
+            ) / total
+
+        }
+
+
+
+    # ==================================================
+    # Single Simulation
+    # ==================================================
+
+    def _simulate_once(
+        self,
+        player: Player,
+        opponents: list[Player],
+        community_cards: list[Card],
+        deck
+    ) -> str:
+        """
+        Run one simulation.
+
+        Uses copies only.
+        """
+
+        simulation_deck = deck.clone()
+
+
+
+        # ----------------------------------------------
+        # Remove known cards
+        # ----------------------------------------------
+
+        known_cards = []
+
+
+        known_cards.extend(
+
+            player.hand
 
         )
+
+
+        known_cards.extend(
+
+            community_cards
+
+        )
+
+
+        for opponent in opponents:
+
+            known_cards.extend(
+
+                opponent.hand
+
+            )
+
+
+        simulation_deck.remove_cards(
+
+            known_cards
+
+        )
+
+
+
+        # ----------------------------------------------
+        # Create simulated opponents
+        # ----------------------------------------------
+
+        simulated_opponents = []
+
+
+        for _ in opponents:
+
+
+            simulated_opponents.append(
+
+                simulation_deck.deal_many(
+
+                    2
+
+                )
+
+            )
+
+
+
+        # ----------------------------------------------
+        # Complete board
+        # ----------------------------------------------
+
+        simulated_board = community_cards.copy()
+
+
+        missing_cards = (
+
+            5
+
+            -
+
+            len(simulated_board)
+
+        )
+
+
+        if missing_cards > 0:
+
+
+            simulated_board.extend(
+
+                simulation_deck.deal_many(
+
+                    missing_cards
+
+                )
+
+            )
+
+
+
+        # ----------------------------------------------
+        # Evaluate hero
+        # ----------------------------------------------
+
+        hero_result = self.evaluator.evaluate(
+
+            player.hand,
+
+            simulated_board
+
+        )
+
+
+        hero_score = hero_result.score
+
+
+
+        # ----------------------------------------------
+        # Compare opponents
+        # ----------------------------------------------
+
+        hero_wins = True
+
+        hero_ties = 0
+
+
+
+        for opponent_hand in simulated_opponents:
+
+
+            opponent_result = self.evaluator.evaluate(
+
+                opponent_hand,
+
+                simulated_board
+
+            )
+
+
+            opponent_score = opponent_result.score
+
+
+
+            if hero_score > opponent_score:
+
+                hero_wins = False
+
+
+                return "lose"
+
+
+
+            elif hero_score == opponent_score:
+
+                hero_ties += 1
+
+
+
+        # Beat everyone
+
+        if hero_wins and hero_ties == 0:
+
+            return "win"
+
+
+
+        # Tie with all remaining players
+
+        return "tie"
+
+
+
+    # ==================================================
+    # Expected Value
+    # ==================================================
+
+    @staticmethod
+    def expected_value(
+        win_probability: float,
+        lose_probability: float,
+        pot_reward: int,
+        investment: int
+    ) -> float:
+
+
+        return (
+
+            win_probability
+
+            *
+
+            pot_reward
+
+        ) - (
+
+            lose_probability
+
+            *
+
+            investment
+
+        )
+
+
+
+    # --------------------------------------------------
+
+    @staticmethod
+    def call_ev(
+        equity: float,
+        pot_size: int,
+        call_amount: int
+    ) -> float:
+
+
+        return (
+
+            equity
+
+            *
+
+            (
+
+                pot_size
+
+                +
+
+                call_amount
+
+            )
+
+        ) - call_amount
+
+
+
+    # ==================================================
+    # AI Decision Helpers
+    # ==================================================
+
+    @staticmethod
+    def should_call(
+        equity: float,
+        pot_odds: float
+    ) -> bool:
+
+
+        return equity >= pot_odds
+
+
+
+    # --------------------------------------------------
+
+    @staticmethod
+    def hand_category_score(
+        hand_result
+    ) -> float:
+
+
+        if hand_result is None:
+
+            return 0.0
+
+
+
+        rank = hand_result.rank
+
+
+
+        score = (
+
+            10 - rank
+
+        ) / 10
+
+
+
+        return Probability.normalize_probability(
+
+            score
+
+        )
+
+
 
     # ==================================================
     # Debug
@@ -725,13 +734,9 @@ class Probability:
 
     def __repr__(self):
 
-        return (
+        return "Probability()"
 
-            "Probability("
 
-            "HandEvaluator)"
-
-        )
 
     # --------------------------------------------------
 
@@ -739,18 +744,8 @@ class Probability:
 
         return (
 
-            "========== PROBABILITY ==========\n"
+            "Texas Hold'em "
 
-            "Supports:\n"
-
-            "- Pot Odds\n"
-
-            "- Equity\n"
-
-            "- Outs\n"
-
-            "- Monte Carlo\n"
-
-            "- Expected Value"
+            "Probability Engine"
 
         )

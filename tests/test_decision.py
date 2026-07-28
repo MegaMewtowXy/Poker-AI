@@ -3,8 +3,6 @@ from AI.decision import (
     Action
 )
 
-from AI.hand_strength import HandStrength
-
 from AI.difficulty import (
     Difficulty,
     DifficultyManager
@@ -15,9 +13,6 @@ from AI.strategy import (
     StrategyManager
 )
 
-from AI.opponent_model import (
-    OpponentModel
-)
 
 
 def test_decision():
@@ -25,13 +20,12 @@ def test_decision():
     print("\n========== DECISION TEST ==========")
 
 
+
     # ==========================================
     # Hard Aggressive AI
     # ==========================================
 
     engine = DecisionEngine(
-
-        HandStrength(),
 
         DifficultyManager(
             Difficulty.HARD
@@ -44,33 +38,86 @@ def test_decision():
     )
 
 
+
     # ==========================================
     # Strong Hand
     # ==========================================
 
-    action = engine.decide(
+    strong_analysis = {
 
-        strength=85
+
+        "strength": 85,
+
+        "equity": 80,
+
+        "pot_odds": 20,
+
+
+        "position": {
+
+            "advantage": 5
+
+        },
+
+
+        "opponent": {
+
+            "threat_level": 3
+
+        },
+
+
+        "range": {
+
+            "range_strength": 40
+
+        },
+
+
+        "bluff": {
+
+            "should_bluff": False
+
+        },
+
+
+        "risk": {
+
+            "aggression_modifier": 1.2
+
+        }
+
+    }
+
+
+
+    decision = engine.decide(
+
+        strong_analysis
 
     )
 
 
     print(
+
         "\nStrong Hand:"
+
     )
 
-    print(
-        action.value
-    )
+    print(decision)
 
 
-    assert action in [
+
+    assert decision["action"] in [
 
         Action.RAISE,
 
-        Action.BET
+        Action.BET,
+
+        Action.ALL_IN
 
     ]
+
 
 
 
@@ -78,87 +125,172 @@ def test_decision():
     # Weak Hand
     # ==========================================
 
-    action = engine.decide(
+    weak_analysis = {
 
-        strength=10
+
+        "strength": 10,
+
+        "equity": 15,
+
+        "pot_odds": 40,
+
+
+        "position": {
+
+            "advantage": 0
+
+        },
+
+
+        "opponent": {
+
+            "threat_level": 8
+
+        },
+
+
+        "range": {
+
+            "range_strength": 80
+
+        },
+
+
+        "bluff": {
+
+            "should_bluff": False
+
+        },
+
+
+        "risk": {
+
+            "aggression_modifier": 1.0
+
+        }
+
+    }
+
+
+
+    decision = engine.decide(
+
+        weak_analysis
 
     )
 
 
     print(
+
         "\nWeak Hand:"
+
     )
 
-    print(
-        action.value
-    )
+    print(decision)
 
 
-    assert action in [
+
+    assert decision["action"] in [
 
         Action.FOLD,
 
-        Action.BET
+        Action.CALL
 
     ]
 
 
 
+
     # ==========================================
-    # Opponent Adaptation
+    # Bluff Situation
     # ==========================================
 
-    opponent = OpponentModel(
-        "Aggressive Bob"
-    )
+    bluff_analysis = {
 
 
-    for _ in range(20):
+        "strength": 25,
 
-        opponent.record_hand()
+        "equity": 35,
 
-        opponent.record_entry()
-
-        opponent.record_raise()
-
-        opponent.record_bet()
+        "pot_odds": 50,
 
 
+        "position": {
 
-    action = engine.decide(
+            "advantage": 10
 
-        strength=30,
+        },
 
-        opponent_model=opponent
+
+        "opponent": {
+
+            "threat_level": 2
+
+        },
+
+
+        "range": {
+
+            "range_strength": 30
+
+        },
+
+
+        "bluff": {
+
+            "should_bluff": True
+
+        },
+
+
+        "risk": {
+
+            "aggression_modifier": 1.3
+
+        }
+
+    }
+
+
+
+    decision = engine.decide(
+
+        bluff_analysis
 
     )
 
 
     print(
-        "\nAgainst Aggressive Opponent:"
+
+        "\nBluff Situation:"
+
     )
 
-    print(
-        action.value
-    )
+    print(decision)
 
 
-    assert action in [
 
-        Action.CALL,
+    assert decision["action"] in [
 
         Action.BET,
 
         Action.RAISE,
+
+        Action.CALL,
 
         Action.FOLD
 
     ]
 
 
+
     print(
+
         "\n========== DECISION TEST PASSED =========="
+
     )
+
+
 
 
 if __name__ == "__main__":
