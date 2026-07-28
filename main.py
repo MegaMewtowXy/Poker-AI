@@ -1,39 +1,26 @@
-from engine.dealer import Dealer
-from models.player import Player
-from models.table import Table
+from engine.evaluator import HandEvaluator
+from models.card import Card, Rank, Suit
 
+evaluator = HandEvaluator()
 
-dealer = Dealer()
-
-table = Table()
-
-players = [
-    Player("Kshitij"),
-    Player("Bot 1", is_ai=True),
-    Player("Bot 2", is_ai=True),
-    Player("Bot 3", is_ai=True)
+hole_cards = [
+    Card(Suit.SPADES, Rank.ACE),
+    Card(Suit.SPADES, Rank.KING)
 ]
 
-dealer.start_new_round()
+community_cards = [
+    Card(Suit.SPADES, Rank.QUEEN),
+    Card(Suit.SPADES, Rank.JACK),
+    Card(Suit.SPADES, Rank.TEN),
+    Card(Suit.HEARTS, Rank.TWO),
+    Card(Suit.CLUBS, Rank.THREE)
+]
 
-dealer.deal_hole_cards(players)
+result = evaluator.evaluate(
+    hole_cards,
+    community_cards
+)
 
-dealer.deal_flop(table)
-
-dealer.deal_turn(table)
-
-dealer.deal_river(table)
-
-print("========== PLAYERS ==========")
-
-for player in players:
-    print(player)
-    print(player.show_hand())
-    print()
-
-print("========== COMMUNITY ==========")
-print(table.show_community_cards())
-
-print()
-
-print("Cards Remaining:", dealer.deck.cards_remaining())
+print("Hand Name :", result.hand_name)
+print("Rank      :", result.rank)
+print("Score     :", result.score)
