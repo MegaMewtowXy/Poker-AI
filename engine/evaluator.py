@@ -44,6 +44,10 @@ class HandEvaluator:
     # Card Conversion
     # ==================================================
 
+        # ==================================================
+    # Card Conversion
+    # ==================================================
+
     def to_treys(
         self,
         cards: list[Card]
@@ -53,16 +57,60 @@ class HandEvaluator:
         Treys card integers.
         """
 
-        return [
+        rank_map = {
 
-            TreysCard.new(
-                card.treys
+            2: "2",
+            3: "3",
+            4: "4",
+            5: "5",
+            6: "6",
+            7: "7",
+            8: "8",
+            9: "9",
+            10: "T",
+            11: "J",
+            12: "Q",
+            13: "K",
+            14: "A"
+
+        }
+
+        suit_map = {
+
+            "HEARTS": "h",
+            "DIAMONDS": "d",
+            "CLUBS": "c",
+            "SPADES": "s"
+
+        }
+
+
+        treys_cards = []
+
+
+        for card in cards:
+
+            rank = rank_map[
+                card.rank.value
+            ]
+
+            suit = suit_map[
+                card.suit.name
+            ]
+
+
+            treys_cards.append(
+
+                TreysCard.new(
+
+                    rank + suit
+
+                )
+
             )
 
-            for card in cards
 
-        ]
-
+        return treys_cards
     # ==================================================
     # Validation
     # ==================================================
