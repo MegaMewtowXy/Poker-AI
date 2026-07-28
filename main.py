@@ -1,26 +1,20 @@
-from engine.evaluator import HandEvaluator
-from models.card import Card, Rank, Suit
+from engine.game import Game
 
-evaluator = HandEvaluator()
+from models.player import Player
 
-hole_cards = [
-    Card(Suit.SPADES, Rank.ACE),
-    Card(Suit.SPADES, Rank.KING)
+
+players = [
+
+    Player("You"),
+
+    Player("Bot 1", is_ai=True),
+
+    Player("Bot 2", is_ai=True),
+
+    Player("Bot 3", is_ai=True)
+
 ]
 
-community_cards = [
-    Card(Suit.SPADES, Rank.QUEEN),
-    Card(Suit.SPADES, Rank.JACK),
-    Card(Suit.SPADES, Rank.TEN),
-    Card(Suit.HEARTS, Rank.TWO),
-    Card(Suit.CLUBS, Rank.THREE)
-]
+game = Game(players)
 
-result = evaluator.evaluate(
-    hole_cards,
-    community_cards
-)
-
-print("Hand Name :", result.hand_name)
-print("Rank      :", result.rank)
-print("Score     :", result.score)
+game.start_round()

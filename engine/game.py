@@ -1,0 +1,154 @@
+from engine.betting import BettingEngine
+from engine.dealer import Dealer
+from engine.evaluator import HandEvaluator
+from engine.game_state import GameState
+
+from models.deck import Deck
+from models.table import Table
+
+
+class Game:
+    """
+    Main Texas Hold'em game controller.
+    """
+
+    def __init__(self, players):
+
+        self.players = players
+
+        self.table = Table()
+
+        self.deck = Deck()
+
+        self.dealer = Dealer(self.deck)
+
+        self.betting = BettingEngine(self.table)
+
+        self.evaluator = HandEvaluator()
+
+        self.state = GameState.WAITING
+
+    # -----------------------------------
+
+    def start_round(self):
+
+        print("\n========== NEW ROUND ==========\n")
+
+        self.reset_round()
+
+        self.post_blinds()
+
+        self.pre_flop()
+
+        self.flop()
+
+        self.turn()
+
+        self.river()
+
+        self.showdown()
+
+    # -----------------------------------
+
+    def reset_round(self):
+
+        self.deck = Deck()
+        self.deck.shuffle()
+
+        self.dealer = Dealer(self.deck)
+
+        self.table.reset_for_round()
+
+        for player in self.players:
+            player.reset_for_round()
+
+    # -----------------------------------
+
+    def post_blinds(self):
+
+        self.betting.post_small_blind(
+            self.players[1]
+        )
+
+        self.betting.post_big_blind(
+            self.players[2]
+        )
+
+    # -----------------------------------
+
+    def pre_flop(self):
+
+        self.state = GameState.PRE_FLOP
+
+        self.dealer.deal_hole_cards(self.players)
+
+        print("Hole cards dealt.")
+
+    # -----------------------------------
+
+    def flop(self):
+
+        self.state = GameState.FLOP
+
+        self.dealer.deal_flop(self.table)
+
+        print("Flop:", self.table.show_community_cards())
+
+    # -----------------------------------
+
+    def turn(self):
+
+        self.state = GameState.TURN
+
+        self.dealer.deal_turn(self.table)
+
+        print("Turn:", self.table.show_community_cards())
+
+    # -----------------------------------
+
+    def river(self):
+
+        self.state = GameState.RIVER
+
+        self.dealer.deal_river(self.table)
+
+        print("River:", self.table.show_community_cards())
+
+    # -----------------------------------
+
+    def showdown(self):
+
+        self.state = GameState.SHOWDOWN
+
+        print("\n========== SHOWDOWN ==========\n")
+
+        winner = None
+
+        for player in self.players:
+
+            result = self.evaluator.evaluate(
+                player.hand,
+                self.table.community_cards
+            )
+
+            print(
+    f"{player.name:<12}"
+    f"{result.hand_name:<20}"
+    f"Score: {result.score}"
+)
+
+            if winner is None:
+
+                winner = (player, result)
+
+            elif result.score < winner[1].score:
+
+                winner = (player, result)
+
+        print(
+            f"\nWinner : {winner[0].name}"
+        )
+
+        print(
+            f"Winning Hand : {winner[1].hand_name}"
+        )
