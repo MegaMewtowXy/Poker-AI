@@ -9,8 +9,6 @@ class Action(Enum):
 
     CALL = auto()
 
-    BET = auto()
-
     RAISE = auto()
 
     ALL_IN = auto()

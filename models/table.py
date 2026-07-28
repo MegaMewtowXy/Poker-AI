@@ -3,7 +3,7 @@ from models.card import Card
 
 class Table:
     """
-    Represents the poker table.
+    Represents the physical poker table.
     """
 
     def __init__(
@@ -11,103 +11,80 @@ class Table:
         small_blind: int = 10,
         big_blind: int = 20
     ):
+
+        # -------------------------
         # Community Cards
+        # -------------------------
+
         self.community_cards: list[Card] = []
 
-        # Pot
-        self.pot = 0
+        # -------------------------
+        # Dealer Button
+        # -------------------------
 
-        # Current highest bet in this betting round
-        self.current_bet = 0
-
-        # Dealer button position
         self.dealer_position = 0
 
-        # Blind values
+        # -------------------------
+        # Blinds
+        # -------------------------
+
         self.small_blind = small_blind
         self.big_blind = big_blind
 
-    # ------------------------------------
-    # Round Management
-    # ------------------------------------
-
-    def reset_for_round(self):
-        """
-        Reset the table for a new hand.
-        """
-
-        self.community_cards.clear()
-
-        self.pot = 0
+        # -------------------------
+        # Betting
+        # -------------------------
 
         self.current_bet = 0
 
-    # ------------------------------------
-    # Community Cards
-    # ------------------------------------
+        self.minimum_raise = big_blind
 
-    def add_community_card(self, card: Card):
-        """
-        Add a community card.
-        """
+    # =========================================
+
+    def reset_for_round(self):
+
+        self.community_cards.clear()
+
+        self.current_bet = 0
+
+        self.minimum_raise = self.big_blind
+
+    # =========================================
+
+    def add_community_card(
+        self,
+        card: Card
+    ):
 
         self.community_cards.append(card)
 
+    # =========================================
+
     def show_community_cards(self):
-        """
-        Return community cards.
-        """
 
         return " ".join(
             str(card)
             for card in self.community_cards
         )
 
-    # ------------------------------------
-    # Pot
-    # ------------------------------------
+    # =========================================
 
-    def add_to_pot(self, amount: int):
-        """
-        Add chips to the pot.
-        """
-
-        self.pot += amount
-
-    # ------------------------------------
-    # Betting
-    # ------------------------------------
-
-    def reset_betting_round(self):
-        """
-        Reset betting information for the
-        next betting street.
-        """
-
-        self.current_bet = 0
-
-    # ------------------------------------
-    # Dealer
-    # ------------------------------------
-
-    def rotate_dealer(self, total_players: int):
-        """
-        Move dealer button clockwise.
-        """
+    def rotate_dealer(
+        self,
+        total_players: int
+    ):
 
         self.dealer_position = (
             self.dealer_position + 1
         ) % total_players
 
-    # ------------------------------------
-    # String Representation
-    # ------------------------------------
+    # =========================================
 
     def __str__(self):
 
         return (
-            f"Pot: {self.pot}\n"
-            f"Current Bet: {self.current_bet}\n"
-            f"Dealer Position: {self.dealer_position}\n"
-            f"Community Cards: {self.show_community_cards()}"
+            f"Dealer Position : {self.dealer_position}\n"
+            f"Current Bet     : {self.current_bet}\n"
+            f"Minimum Raise   : {self.minimum_raise}\n"
+            f"Community Cards : {self.show_community_cards()}"
         )

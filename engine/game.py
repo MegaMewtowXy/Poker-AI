@@ -2,6 +2,7 @@ from engine.betting import BettingEngine
 from engine.dealer import Dealer
 from engine.evaluator import HandEvaluator
 from engine.game_state import GameState
+from engine.pot_manager import PotManager
 
 from models.deck import Deck
 from models.table import Table
@@ -18,17 +19,23 @@ class Game:
 
         self.table = Table()
 
+        self.pot_manager = PotManager()
+
         self.deck = Deck()
+        self.deck.shuffle()
 
         self.dealer = Dealer(self.deck)
 
-        self.betting = BettingEngine(self.table)
+        self.betting = BettingEngine(
+            self.table,
+            self.pot_manager
+        )
 
         self.evaluator = HandEvaluator()
 
         self.state = GameState.WAITING
 
-    # -----------------------------------
+    # ==================================================
 
     def start_round(self):
 
@@ -40,15 +47,23 @@ class Game:
 
         self.pre_flop()
 
+        self.betting_round()
+
         self.flop()
+
+        self.betting_round()
 
         self.turn()
 
+        self.betting_round()
+
         self.river()
+
+        self.betting_round()
 
         self.showdown()
 
-    # -----------------------------------
+    # ==================================================
 
     def reset_round(self):
 
@@ -59,62 +74,124 @@ class Game:
 
         self.table.reset_for_round()
 
+        self.pot_manager.reset()
+
         for player in self.players:
+
             player.reset_for_round()
 
-    # -----------------------------------
+    # ==================================================
 
     def post_blinds(self):
 
+        sb = (self.table.dealer_position + 1) % len(self.players)
+        bb = (self.table.dealer_position + 2) % len(self.players)
+
         self.betting.post_small_blind(
-            self.players[1]
+            self.players[sb]
         )
 
         self.betting.post_big_blind(
-            self.players[2]
+            self.players[bb]
         )
 
-    # -----------------------------------
+    # ==================================================
 
     def pre_flop(self):
 
         self.state = GameState.PRE_FLOP
 
-        self.dealer.deal_hole_cards(self.players)
+        self.dealer.deal_hole_cards(
+            self.players
+        )
 
         print("Hole cards dealt.")
 
-    # -----------------------------------
+    # ==================================================
+
+    def betting_round(self):
+
+        print("\n========== BETTING ==========\n")
+
+        print(
+            f"Total Pot : ${self.pot_manager.total_pot()}"
+        )
+
+        print(
+            f"Current Bet : ${self.table.current_bet}"
+        )
+
+        for player in self.players:
+
+            if player.folded:
+                continue
+
+            print("--------------------------------")
+
+            print(
+                f"Player : {player.name}"
+            )
+
+            print(
+                f"Cards : {player.show_hand()}"
+            )
+
+            print(
+                f"Chips : {player.chips}"
+            )
+
+            print(
+                f"Current Bet : {player.current_bet}"
+            )
+
+            print("--------------------------------")
+
+    # ==================================================
 
     def flop(self):
 
         self.state = GameState.FLOP
 
-        self.dealer.deal_flop(self.table)
+        self.dealer.deal_flop(
+            self.table
+        )
 
-        print("Flop:", self.table.show_community_cards())
+        print(
+            "\nFlop :",
+            self.table.show_community_cards()
+        )
 
-    # -----------------------------------
+    # ==================================================
 
     def turn(self):
 
         self.state = GameState.TURN
 
-        self.dealer.deal_turn(self.table)
+        self.dealer.deal_turn(
+            self.table
+        )
 
-        print("Turn:", self.table.show_community_cards())
+        print(
+            "\nTurn :",
+            self.table.show_community_cards()
+        )
 
-    # -----------------------------------
+    # ==================================================
 
     def river(self):
 
         self.state = GameState.RIVER
 
-        self.dealer.deal_river(self.table)
+        self.dealer.deal_river(
+            self.table
+        )
 
-        print("River:", self.table.show_community_cards())
+        print(
+            "\nRiver :",
+            self.table.show_community_cards()
+        )
 
-    # -----------------------------------
+    # ==================================================
 
     def showdown(self):
 
@@ -126,16 +203,19 @@ class Game:
 
         for player in self.players:
 
+            if player.folded:
+                continue
+
             result = self.evaluator.evaluate(
                 player.hand,
                 self.table.community_cards
             )
 
             print(
-    f"{player.name:<12}"
-    f"{result.hand_name:<20}"
-    f"Score: {result.score}"
-)
+                f"{player.name:<12}"
+                f"{result.hand_name:<20}"
+                f"Score: {result.score}"
+            )
 
             if winner is None:
 
