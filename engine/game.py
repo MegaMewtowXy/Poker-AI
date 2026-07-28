@@ -1,8 +1,8 @@
 from engine.betting import BettingEngine
 from engine.dealer import Dealer
-from engine.evaluator import HandEvaluator
 from engine.game_state import GameState
 from engine.pot_manager import PotManager
+from engine.showdown import Showdown
 
 from models.deck import Deck
 from models.table import Table
@@ -31,7 +31,7 @@ class Game:
             self.pot_manager
         )
 
-        self.evaluator = HandEvaluator()
+        self.showdown_engine = Showdown()
 
         self.state = GameState.WAITING
 
@@ -84,8 +84,13 @@ class Game:
 
     def post_blinds(self):
 
-        sb = (self.table.dealer_position + 1) % len(self.players)
-        bb = (self.table.dealer_position + 2) % len(self.players)
+        sb = (
+            self.table.dealer_position + 1
+        ) % len(self.players)
+
+        bb = (
+            self.table.dealer_position + 2
+        ) % len(self.players)
 
         self.betting.post_small_blind(
             self.players[sb]
@@ -128,21 +133,13 @@ class Game:
 
             print("--------------------------------")
 
-            print(
-                f"Player : {player.name}"
-            )
+            print(f"Player : {player.name}")
 
-            print(
-                f"Cards : {player.show_hand()}"
-            )
+            print(f"Cards : {player.show_hand()}")
 
-            print(
-                f"Chips : {player.chips}"
-            )
+            print(f"Chips : {player.chips}")
 
-            print(
-                f"Current Bet : {player.current_bet}"
-            )
+            print(f"Current Bet : {player.current_bet}")
 
             print("--------------------------------")
 
@@ -199,36 +196,26 @@ class Game:
 
         print("\n========== SHOWDOWN ==========\n")
 
-        winner = None
+        winner, result = self.showdown_engine.resolve(
+            self.players,
+            self.table.community_cards,
+            self.pot_manager
+        )
 
-        for player in self.players:
-
-            if player.folded:
-                continue
-
-            result = self.evaluator.evaluate(
-                player.hand,
-                self.table.community_cards
-            )
-
-            print(
-                f"{player.name:<12}"
-                f"{result.hand_name:<20}"
-                f"Score: {result.score}"
-            )
-
-            if winner is None:
-
-                winner = (player, result)
-
-            elif result.score < winner[1].score:
-
-                winner = (player, result)
+        print()
 
         print(
-            f"\nWinner : {winner[0].name}"
+            f"Winner       : {winner.name}"
         )
 
         print(
-            f"Winning Hand : {winner[1].hand_name}"
+            f"Winning Hand : {result.hand_name}"
+        )
+
+        print(
+            f"Score        : {result.score}"
+        )
+
+        print(
+            f"Pot Won      : ${self.pot_manager.total_pot()}"
         )

@@ -12,151 +12,179 @@ class Player:
         chips: int = 1000,
         is_ai: bool = False
     ):
+
         self.name = name
         self.chips = chips
         self.is_ai = is_ai
 
+        # -------------------------
         # Cards
+        # -------------------------
+
         self.hand: list[Card] = []
 
+        # -------------------------
         # Betting
+        # -------------------------
+
+        # Amount contributed during the CURRENT betting street
         self.current_bet = 0
+
+        # Amount contributed during the ENTIRE hand
         self.total_bet = 0
 
-        # Status
+        # -------------------------
+        # Player Status
+        # -------------------------
+
         self.folded = False
+
         self.all_in = False
+
         self.eliminated = False
 
-    # ----------------------------
+    # ==================================================
     # Round Management
-    # ----------------------------
+    # ==================================================
 
     def reset_for_round(self):
         """
-        Reset player state for a new round.
+        Prepare player for a new hand.
         """
 
         self.hand.clear()
 
         self.current_bet = 0
+
         self.total_bet = 0
 
         self.folded = False
+
         self.all_in = False
 
-    # ----------------------------
-    # Cards
-    # ----------------------------
+    def reset_betting_round(self):
+        """
+        Called after each betting street.
+        """
 
-    def receive_card(self, card: Card):
-        """
-        Add a dealt card to the player's hand.
-        """
+        self.current_bet = 0
+
+    # ==================================================
+    # Cards
+    # ==================================================
+
+    def receive_card(
+        self,
+        card: Card
+    ):
 
         self.hand.append(card)
 
     def show_hand(self):
-        """
-        Return the player's cards.
-        """
 
-        return " ".join(str(card) for card in self.hand)
+        return " ".join(
+            str(card)
+            for card in self.hand
+        )
 
-    # ----------------------------
+    # ==================================================
     # Betting
-    # ----------------------------
+    # ==================================================
 
-    def place_bet(self, amount: int) -> int:
+    def place_bet(
+        self,
+        amount: int
+    ) -> int:
         """
-        Place chips into the pot.
+        Put chips into the pot.
 
-        Returns
-        -------
-        int
-            Actual amount bet.
+        Returns the ACTUAL amount bet.
         """
 
         if amount <= 0:
             return 0
 
         if amount >= self.chips:
+
             amount = self.chips
+
             self.all_in = True
 
         self.chips -= amount
 
         self.current_bet += amount
+
         self.total_bet += amount
 
         if self.chips == 0:
+
             self.all_in = True
 
         return amount
 
-    def win_chips(self, amount: int):
-        """
-        Award chips to the player.
-        """
+    def win_chips(
+        self,
+        amount: int
+    ):
 
         self.chips += amount
 
     def fold(self):
-        """
-        Fold the current hand.
-        """
 
         self.folded = True
 
     def check(self):
-        """
-        Placeholder for a check action.
-        """
 
         pass
 
-    def call(self, amount: int):
-        """
-        Call the current bet.
-        """
+    def call(
+        self,
+        amount: int
+    ):
 
         return self.place_bet(amount)
 
-    def raise_bet(self, amount: int):
-        """
-        Raise the current bet.
-        """
+    def raise_bet(
+        self,
+        amount: int
+    ):
 
         return self.place_bet(amount)
 
-    # ----------------------------
+    def go_all_in(self):
+
+        return self.place_bet(
+            self.chips
+        )
+
+    # ==================================================
     # Status
-    # ----------------------------
+    # ==================================================
 
-    def is_active(self) -> bool:
-        """
-        Returns True if the player is still active in the current hand.
-        """
+    def is_active(self):
 
         return (
             not self.folded
             and not self.eliminated
         )
 
-    def is_busted(self) -> bool:
-        """
-        Returns True if the player has no chips left.
-        """
+    def is_busted(self):
 
-        return self.chips <= 0
+        return (
+            self.chips <= 0
+        )
 
-    # ----------------------------
+    # ==================================================
     # String Representation
-    # ----------------------------
+    # ==================================================
 
     def __str__(self):
 
-        player_type = "AI" if self.is_ai else "Human"
+        player_type = (
+            "AI"
+            if self.is_ai
+            else "Human"
+        )
 
         return (
             f"{self.name} "
