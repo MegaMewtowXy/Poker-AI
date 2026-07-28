@@ -1,36 +1,39 @@
-from models.deck import Deck
+from engine.dealer import Dealer
 from models.player import Player
 from models.table import Table
 
-deck = Deck()
-deck.shuffle()
+
+dealer = Dealer()
 
 table = Table()
 
-player1 = Player("Kshitij")
-player2 = Player("Bot 1", is_ai=True)
+players = [
+    Player("Kshitij"),
+    Player("Bot 1", is_ai=True),
+    Player("Bot 2", is_ai=True),
+    Player("Bot 3", is_ai=True)
+]
 
-# Deal hole cards
-for _ in range(2):
-    player1.receive_card(deck.deal_card())
-    player2.receive_card(deck.deal_card())
+dealer.start_new_round()
 
-# Simulate flop
-for _ in range(3):
-    table.add_community_card(deck.deal_card())
+dealer.deal_hole_cards(players)
 
-print(player1)
-print("Hand:", player1.show_hand())
+dealer.deal_flop(table)
+
+dealer.deal_turn(table)
+
+dealer.deal_river(table)
+
+print("========== PLAYERS ==========")
+
+for player in players:
+    print(player)
+    print(player.show_hand())
+    print()
+
+print("========== COMMUNITY ==========")
+print(table.show_community_cards())
 
 print()
 
-print(player2)
-print("Hand:", player2.show_hand())
-
-print()
-
-print(table)
-
-print()
-
-print("Cards Remaining:", deck.cards_remaining())
+print("Cards Remaining:", dealer.deck.cards_remaining())
