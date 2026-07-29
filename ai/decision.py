@@ -249,27 +249,28 @@ class DecisionEngine:
 
 
 
-        if equity >= 75:
+        if equity >= 80:
 
             value = 40
 
 
 
-        elif equity >= 55:
+        elif equity >= 65:
 
             value = 30
 
 
 
-        elif equity >= 40:
+        elif equity >= 55:
 
             value = 15
-
+        elif equity >= 45:
+            value = 0
 
 
         else:
 
-            value = -25
+            value = -15
 
 
 
@@ -293,7 +294,7 @@ class DecisionEngine:
 
         if equity >= pot_odds:
 
-            value = 20
+            value = 5
 
 
 
@@ -546,7 +547,7 @@ class DecisionEngine:
 
             *
 
-            20
+            10
 
         )
 
@@ -693,7 +694,7 @@ class DecisionEngine:
 
             *
 
-            25
+            10
 
         )
 
@@ -779,7 +780,10 @@ class DecisionEngine:
             "call_amount",
             0
         )
-
+        current_bet = analysis.get(
+    "current_bet",
+    0
+)
         if score < self.action_thresholds["fold"]:
 
             return Action.FOLD
@@ -790,7 +794,10 @@ class DecisionEngine:
 
         elif score < self.action_thresholds["bet"]:
 
-            return Action.RAISE if call_amount > 0 else Action.BET
+              if current_bet > 0:
+                    return Action.RAISE
+
+              return Action.BET
 
         elif score < self.action_thresholds["raise"]:
 

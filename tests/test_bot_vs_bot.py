@@ -16,10 +16,10 @@ def test_bot_vs_bot():
     # ==========================================
     # Create Simulation
     # ==========================================
-
+    hands=500
     simulation = BotVsBotSimulation(
 
-        hands=10,
+        hands=hands,
 
         starting_chips=1000,
 
@@ -63,7 +63,7 @@ def test_bot_vs_bot():
 
 
 
-    assert profile["hands"] == 10
+    assert profile["hands"] == hands
 
 
 
@@ -110,7 +110,7 @@ def test_bot_vs_bot():
 
 
 
-    assert result["hands_requested"] == 10
+    assert result["hands_requested"] == hands
 
 
 
@@ -144,7 +144,7 @@ def test_bot_vs_bot():
 
         <=
 
-        10
+        hands
 
     )
 
@@ -308,7 +308,7 @@ def test_bot_vs_bot():
 
 
 
-    assert summary["hands_requested"] == 10
+    assert summary["hands_requested"] == hands
 
 
 

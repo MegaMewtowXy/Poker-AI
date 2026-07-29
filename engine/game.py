@@ -6,6 +6,7 @@ from engine.pot_manager import PotManager
 from engine.showdown import Showdown
 
 
+from models import player
 from models.deck import Deck
 from models.player import Player
 from models.player_role import PlayerRole
@@ -483,7 +484,12 @@ class Game:
             self.table
 
         )
+        self.table.reset_betting()
 
+        for player in self.players:
+            player.reset_betting_round()
+
+       
 
 
         self.state = GameState.FLOP
@@ -534,8 +540,12 @@ class Game:
 
         )
 
+        self.table.reset_betting()
 
+        for player in self.players:
+            player.reset_betting_round()
 
+       
         self.state = GameState.TURN
 
 
@@ -588,6 +598,8 @@ class Game:
 
         )
 
+        for player in self.players:
+            player.reset_betting_round()
 
 
         self.state = GameState.RIVER
@@ -1101,7 +1113,13 @@ class Game:
 
             elif action == Action.BET:
 
-
+                print("\n========== BET DEBUG ==========")
+                print("Street            :", self.betting_round.street)
+                print("Table Current Bet :", self.table.current_bet)
+                print("Player Current Bet:", player.current_bet)
+                print("Call Amount       :", self.table.current_bet - player.current_bet)
+                print("Amount            :", amount)
+                print("===============================\n")
                 self.betting_engine.bet(
 
                     player,
