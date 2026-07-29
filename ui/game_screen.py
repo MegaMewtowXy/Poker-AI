@@ -192,7 +192,7 @@ class GameScreen:
             self.pause_ai_btn.bg_color = (16, 185, 129) if self.ai_paused else (180, 83, 9)
 
     def _update_action_button_labels(self):
-        curr_p = self.game.betting_round.current_player()
+        curr_p = self.game.betting_round.current_player_or_none()
         if not curr_p:
             return
 
@@ -454,7 +454,7 @@ class GameScreen:
             if self.muck_cards_btn and self.muck_cards_btn.handle_event(event):
                 return True
 
-        curr_acting = self.game.betting_round.current_player()
+        curr_acting = self.game.betting_round.current_player_or_none()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             sw, sh = self.screen.get_size()
             table_w = int(sw * 0.66)
@@ -541,7 +541,7 @@ class GameScreen:
             self.display_pot = current_pot
 
         pot_surf = font_pot.render(f"TOTAL POT: ${self.display_pot}", True, (254, 240, 138))
-        pot_rect = pot_surf.get_rect(center=(sw // 2, table_y + int(table_h * 0.18)))
+        pot_rect = pot_surf.get_rect(center=(sw // 2, table_y + int(table_h * 0.35)))
         pygame.draw.rect(self.screen, (15, 23, 42), pot_rect.inflate(20, 10), border_radius=10)
         pygame.draw.rect(self.screen, (234, 179, 8), pot_rect.inflate(20, 10), 2, border_radius=10)
         self.screen.blit(pot_surf, pot_rect)
@@ -550,7 +550,7 @@ class GameScreen:
         comm_cards = self.game.table.community_cards
         card_w, card_h = int(sw * 0.050), int(sh * 0.115)
         start_cx = sw // 2 - int(2.5 * card_w)
-        cy = table_y + int(table_h * 0.46)
+        cy = table_y + int(table_h * 0.42)
 
         for i in range(5):
             cx = start_cx + i * (card_w + 8)
@@ -564,7 +564,7 @@ class GameScreen:
             self.screen.blit(c_surf, (cx, cy))
 
         # Render Seats Dynamically Around Table Oval
-        curr_acting = self.game.betting_round.current_player()
+        curr_acting = self.game.betting_round.current_player_or_none()
         n_seats = len(self.players)
         cx_tab, cy_tab = sw // 2, table_y + table_h // 2
         rx, ry = table_w // 2 + 25, table_h // 2 + 20
