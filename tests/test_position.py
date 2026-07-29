@@ -1,7 +1,7 @@
 from AI.position import (
-    PositionAnalyzer,
-    Position
+    PositionAnalyzer
 )
+from models.player_position import PlayerPosition
 
 
 
@@ -17,14 +17,14 @@ def test_position():
 
     early = analyzer.analyze(
 
-        Position.UTG
+        PlayerPosition.UNDER_THE_GUN
 
     )
 
 
     button = analyzer.analyze(
 
-        Position.BUTTON
+        PlayerPosition.BUTTON
 
     )
 

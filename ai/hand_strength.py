@@ -115,6 +115,26 @@ class HandStrength:
 
         )
 
+    def preflop_strength(self, hole_cards) -> int:
+        """Return a stable, lightweight estimate for two-card starting hands."""
+        if len(hole_cards) != 2:
+            return 0
+
+        first, second = sorted(
+            (card.rank.strength for card in hole_cards), reverse=True
+        )
+        suited = hole_cards[0].suit == hole_cards[1].suit
+
+        if first == second:
+            return min(95, 45 + first * 3)
+
+        score = first * 3 + second
+        if suited:
+            score += 5
+        if first - second <= 2:
+            score += 4
+        return max(10, min(85, score))
+
 
 
     # ==========================================
@@ -994,6 +1014,9 @@ class HandStrength:
 
         )
 
+        if not community_cards:
+            base_strength = self.preflop_strength(hole_cards)
+
 
 
         category_bonus = self.category_modifier(
@@ -1169,6 +1192,11 @@ class HandStrength:
             "base_strength":
 
                 base_strength,
+
+
+            "intrinsic_strength":
+
+                max(0, min(100, base_strength + category_bonus + draw_value + pair_bonus + kicker_bonus + nuts_bonus)),
 
 
             "category_bonus":

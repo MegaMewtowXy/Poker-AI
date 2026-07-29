@@ -416,15 +416,15 @@ class BetSizer:
             # ======================================
 
             raise_increment = max(
-                context.min_raise,
-                int(context.call_amount * multiplier)
+                getattr(context, "min_raise", 0),
+                int(getattr(context, "call_amount", context.current_bet) * multiplier)
             )
 
             # Smallest legal raise-to amount
             minimum_raise_to = (
                 context.current_bet
                 +
-                context.min_raise
+                getattr(context, "min_raise", 0)
             )
 
             amount = (
@@ -437,7 +437,7 @@ class BetSizer:
                 amount = minimum_raise_to
 
             # Chips already committed this street
-            player_bet = context.player_current_bet
+            player_bet = getattr(context, "player_current_bet", 0)
 
             # Maximum legal raise-to
             max_raise_to = (
@@ -667,9 +667,17 @@ class BetSizer:
 
 
 
+        if hasattr(street, "name"):
+            street_name = street.name.lower()
+        else:
+            street_name = str(street).lower().replace(" ", "_")
+
+        # Accept both engine enum names (PRE_FLOP) and legacy strings.
+        street_name = street_name.replace("_", "")
+
         return modifiers.get(
 
-            str(street).lower(),
+            street_name,
 
             1.0
 

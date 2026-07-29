@@ -308,33 +308,40 @@ class BotPlayer:
         # Equity
         # ======================================
 
-        equity_result = self.equity.calculate(
+        if self.difficulty.can_use_probability():
 
-            context.hole_cards,
+            equity_result = self.equity.calculate(
 
-            context.community_cards,
+                context.hole_cards,
 
-            max(
+                context.community_cards,
 
-                context.players_remaining - 1,
+                max(
 
-                1
+                    context.players_remaining - 1,
 
-            ),
+                    1
 
-            simulations=self.difficulty.equity_simulations()
+                ),
 
-        )
+                simulations=self.difficulty.equity_simulations()
 
+            )
 
+            equity = equity_result.get(
 
-        equity = equity_result.get(
+                "equity",
 
-            "equity",
+                0
 
-            0
+            )
 
-        )
+        else:
+
+            # Easy mode intentionally avoids simulation while retaining a
+            # usable, percentage-based estimate for the rest of the pipeline.
+            equity_result = {"equity": strength, "estimated": True}
+            equity = strength
 
 
 
@@ -495,6 +502,7 @@ class BotPlayer:
             self.strategy.strategy.value
 
         )
+        risk["apply_to_decision"] = True
 
 
 
@@ -516,6 +524,11 @@ class BotPlayer:
             "equity":
 
                 equity,
+
+
+            "equity_details":
+
+                equity_result,
 
 
             "pot_odds":

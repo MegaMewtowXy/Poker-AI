@@ -470,6 +470,16 @@ class DecisionEngine:
 
         factors["board"] = value
 
+        # Risk profile is produced by BotPlayer and should influence how
+        # readily a short stack commits chips.  The modifier is deliberately
+        # bounded so it cannot override hand strength or equity.
+        risk = analysis.get("risk") or {}
+        risk_aggression = risk.get("aggression_modifier", 1.0)
+        risk_enabled = risk.get("apply_to_decision", False)
+        value = max(-10, min(10, (risk_aggression - 1.0) * 20)) if risk_enabled else 0
+        score += value
+        factors["risk"] = round(value, 2)
+
 
 
 
@@ -541,6 +551,11 @@ class DecisionEngine:
 
 
 
+        strategy_weight = self.get_difficulty_value(
+            "strategy_weight",
+            1.0
+        )
+
         value = (
 
             strategy_bonus
@@ -548,6 +563,10 @@ class DecisionEngine:
             *
 
             10
+
+            *
+
+            strategy_weight
 
         )
 

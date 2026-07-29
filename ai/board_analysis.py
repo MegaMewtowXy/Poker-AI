@@ -47,6 +47,15 @@ class BoardAnalyzer:
 
 
 
+        if community_cards is None:
+            community_cards = []
+
+        if len(community_cards) > 5:
+            raise ValueError("A Hold'em board cannot contain more than five cards.")
+
+        if len(set(community_cards)) != len(community_cards):
+            raise ValueError("Community cards cannot contain duplicates.")
+
         result = {
 
 
@@ -248,6 +257,11 @@ class BoardAnalyzer:
 
 
 
+        # An ace may also be used as the low end of A-2-3-4-5.
+        straight_values = values.copy()
+        if 14 in straight_values:
+            straight_values.insert(0, 1)
+
         connected = 0
 
 
@@ -284,18 +298,18 @@ class BoardAnalyzer:
 
         for i in range(
 
-            len(values) - 2
+            len(straight_values) - 2
 
         ):
 
 
             if (
 
-                values[i + 2]
+                straight_values[i + 2]
 
                 -
 
-                values[i]
+                straight_values[i]
 
                 <= 4
 

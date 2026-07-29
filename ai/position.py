@@ -262,16 +262,7 @@ class PositionAnalyzer:
     ) -> bool:
 
 
-        return position in {
-
-
-            PlayerPosition.UNDER_THE_GUN,
-
-
-            PlayerPosition.UNDER_THE_GUN_PLUS_ONE
-
-
-        }
+        return isinstance(position, PlayerPosition) and position.is_early_position()
 
 
 
@@ -288,16 +279,7 @@ class PositionAnalyzer:
     ) -> bool:
 
 
-        return position in {
-
-
-            PlayerPosition.MIDDLE_POSITION,
-
-
-            PlayerPosition.MIDDLE_POSITION_PLUS_ONE
-
-
-        }
+        return isinstance(position, PlayerPosition) and position.is_middle_position()
         # --------------------------------------------------
 
     def is_late_position(
@@ -309,19 +291,7 @@ class PositionAnalyzer:
     ) -> bool:
 
 
-        return position in {
-
-
-            PlayerPosition.HIJACK,
-
-
-            PlayerPosition.CUTOFF,
-
-
-            PlayerPosition.BUTTON
-
-
-        }
+        return isinstance(position, PlayerPosition) and position.is_late_position()
 
 
 

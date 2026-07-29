@@ -576,7 +576,7 @@ class RangeModel:
         Estimate opponent range strength.
 
         Scale:
-        0 - 10
+        0 - 100
         """
 
         weights = {
@@ -658,7 +658,7 @@ class RangeModel:
 
         return round(
 
-            total / probability_total,
+            (total / probability_total) * 10,
 
             2
 

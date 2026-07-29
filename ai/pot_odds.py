@@ -129,6 +129,19 @@ class PotOddsCalculator:
         True
         """
 
+        # Preserve compatibility with the percentage values returned by
+        # calculate(), while also accepting decimal equity values.
+        if 1 < equity <= 100:
+            equity /= 100
+        if 1 < pot_odds <= 100:
+            pot_odds /= 100
+
+        if not 0 <= equity <= 1:
+            raise ValueError("equity must be between 0..1 or 0..100")
+
+        if not 0 <= pot_odds <= 1:
+            raise ValueError("pot_odds must be between 0..1 or 0..100")
+
         return equity >= pot_odds
 
 
@@ -158,6 +171,15 @@ class PotOddsCalculator:
         Negative EV:
             losing
         """
+
+        if 1 < equity <= 100:
+            equity /= 100
+
+        if not 0 <= equity <= 1:
+            raise ValueError("equity must be between 0..1 or 0..100")
+
+        if pot_size < 0:
+            raise ValueError("Pot size cannot be negative.")
 
         if call_amount <= 0:
 

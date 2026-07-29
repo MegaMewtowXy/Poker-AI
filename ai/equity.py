@@ -26,9 +26,11 @@ class EquityCalculator:
 
 
 
-    def __init__(self):
+    def __init__(self, seed: int | None = None):
 
         self.evaluator = HandEvaluator()
+        self.seed = seed
+        self._simulation_index = 0
 
 
 
@@ -54,6 +56,16 @@ class EquityCalculator:
             Number of Monte Carlo trials.
         """
 
+        if len(hero_cards) != 2:
+            raise ValueError("Hero must have exactly two hole cards.")
+
+        if len(community_cards) > 5:
+            raise ValueError("Community cards cannot exceed five cards.")
+
+        known_cards = hero_cards + community_cards
+        if len(set(known_cards)) != len(known_cards):
+            raise ValueError("Known cards cannot contain duplicates.")
+
         if opponent_count <= 0:
 
             raise ValueError(
@@ -68,9 +80,16 @@ class EquityCalculator:
             )
 
 
+        available_cards = 52 - len(known_cards)
+        cards_needed = opponent_count * 2 + (5 - len(community_cards))
+        if cards_needed > available_cards:
+            raise ValueError("Not enough cards available for the requested simulation.")
+
         wins = 0
 
         ties = 0
+
+        tie_equity = 0.0
 
         losses = 0
 
@@ -100,6 +119,8 @@ class EquityCalculator:
             elif result == "tie":
 
                 ties += 1
+
+                tie_equity += 1 / self._last_tied_players
 
 
             else:
@@ -170,7 +191,7 @@ class EquityCalculator:
 
                         (
 
-                            ties * 0.5
+                            tie_equity
 
                         )
 
@@ -217,7 +238,11 @@ class EquityCalculator:
 
         simulation_deck = deck.clone()
 
-        simulation_deck.shuffle()
+        shuffle_seed = None
+        if self.seed is not None:
+            shuffle_seed = self.seed + self._simulation_index
+            self._simulation_index += 1
+        simulation_deck.shuffle(shuffle_seed)
 
         # ----------------------------------------------
         # Remove known cards
@@ -314,7 +339,7 @@ class EquityCalculator:
 
 
 
-        tied = False
+        tied_players = 1
 
 
 
@@ -342,22 +367,25 @@ class EquityCalculator:
 
             if opponent_score < hero_score:
 
+                self._last_tied_players = 0
                 return "lose"
 
 
 
             if opponent_score == hero_score:
 
-                tied = True
+                tied_players += 1
 
 
 
-        if tied:
+        if tied_players > 1:
+
+            self._last_tied_players = tied_players
 
             return "tie"
 
 
-
+        self._last_tied_players = 1
         return "win"
 
 

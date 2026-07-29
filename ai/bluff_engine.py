@@ -132,11 +132,14 @@ class BluffEngine:
         Late position improves bluff success.
         """
 
-        position = str(
+        if hasattr(position, "short_name"):
+            position = position.short_name()
+        elif hasattr(position, "name"):
+            position = position.name
+        else:
+            position = str(position)
 
-            position
-
-        ).upper()
+        position = position.upper()
 
 
 
@@ -146,7 +149,7 @@ class BluffEngine:
 
 
 
-        if "CO" in position:
+        if "CO" in position or "CUTOFF" in position:
 
             return 2
 
@@ -158,7 +161,7 @@ class BluffEngine:
 
 
 
-        if "UTG" in position:
+        if "UTG" in position or "UNDER_THE_GUN" in position:
 
             return -2
 

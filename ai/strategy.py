@@ -337,7 +337,14 @@ class StrategyManager:
 
 
 
-        self.overrides[name] = value
+        if name not in self.config():
+            raise ValueError(f"Unknown strategy parameter: {name}")
+
+        if not isinstance(value, (int, float)):
+            raise ValueError(f"Strategy parameter {name} must be numeric")
+
+        # All current tunable strategy parameters are normalized values.
+        self.overrides[name] = max(0.0, min(1.0, float(value)))
 
 
         return True

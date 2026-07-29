@@ -276,6 +276,8 @@ def test_decision():
 
         Action.RAISE,
 
+        Action.CHECK,
+
         Action.CALL,
 
         Action.FOLD

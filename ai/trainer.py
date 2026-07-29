@@ -1,6 +1,7 @@
 import json
 
 import os
+import tempfile
 
 from datetime import datetime
 
@@ -73,6 +74,7 @@ class Trainer:
         # ======================================
 
         self.experiences = []
+        self._processed_experiences = 0
 
 
 
@@ -240,13 +242,15 @@ class Trainer:
 
 
 
-        if not self.experiences:
+        pending_experiences = self.experiences[self._processed_experiences:]
+
+        if not pending_experiences:
 
             return
 
 
 
-        for experience in self.experiences:
+        for experience in pending_experiences:
 
 
             reward = experience.get(
@@ -373,6 +377,7 @@ class Trainer:
 
 
         self.normalize_weights()
+        self._processed_experiences = len(self.experiences)
 
 
 
@@ -652,24 +657,21 @@ class Trainer:
 
 
 
-        with open(
-
-            path,
-
-            "w"
-
-        ) as file:
-
-
-            json.dump(
-
-                data,
-
-                file,
-
-                indent=4
-
-            )
+        # Write then replace so an interrupted save cannot corrupt the
+        # previous training file.
+        file_descriptor, temporary_path = tempfile.mkstemp(
+            dir=directory or None,
+            prefix="trainer_",
+            suffix=".json"
+        )
+        try:
+            with os.fdopen(file_descriptor, "w", encoding="utf-8") as file:
+                json.dump(data, file, indent=4, default=str)
+            os.replace(temporary_path, path)
+        except Exception:
+            if os.path.exists(temporary_path):
+                os.unlink(temporary_path)
+            raise
 
 
 
@@ -747,6 +749,8 @@ class Trainer:
             []
 
         )
+        # Saved experiences may not have been applied in a previous process.
+        self._processed_experiences = 0
 
 
 
@@ -784,6 +788,7 @@ class Trainer:
 
 
         self.experiences.clear()
+        self._processed_experiences = 0
 
 
 

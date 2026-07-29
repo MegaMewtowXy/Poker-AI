@@ -592,6 +592,9 @@ class DifficultyManager:
         Change AI difficulty.
         """
 
+        if not isinstance(difficulty, Difficulty):
+            raise ValueError("difficulty must be a Difficulty value")
+
         self.difficulty = difficulty
 
 
