@@ -776,7 +776,10 @@ class BotPlayer:
         self,
         opponent_name,
         action,
-        position=None
+        position=None,
+        street=None,
+        *args,
+        **kwargs
     ):
         """
         Learn opponent behaviour.
@@ -811,46 +814,30 @@ class BotPlayer:
 
 
 
-        action = action.lower()
+        if hasattr(action, "value"):
+            action_str = str(action.value).lower()
+        else:
+            action_str = str(action).lower()
 
-
-
-
-        if action == "raise":
-
+        if action_str == "raise":
             opponent.record_raise()
-
-
-
-        elif action == "bet":
-
+        elif action_str == "bet":
             opponent.record_bet()
-
-
-
-        elif action == "call":
-
+        elif action_str == "call":
             opponent.record_call()
-
-
-
-        elif action == "fold":
-
+        elif action_str == "fold":
             opponent.record_fold()
-
-
-
-
+        elif action_str in ("all_in", "all-in"):
+            opponent.record_raise()
+        elif action_str == "check":
+            opponent.observations += 1
 
         if opponent_range:
-
             opponent_range.observe_action(
-
-                action,
-
+                action_str,
                 position
-
             )
+
 
 
 

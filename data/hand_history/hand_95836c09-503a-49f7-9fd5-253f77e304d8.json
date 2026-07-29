@@ -1,0 +1,82 @@
+{
+    "hand_id": "95836c09-503a-49f7-9fd5-253f77e304d8",
+    "created_at": "2026-07-29 16:49:16.006351",
+    "game_type": "Texas Hold'em",
+    "small_blind": 10,
+    "big_blind": 20,
+    "dealer_position": "DeepBot",
+    "players": [
+        {
+            "name": "DeepBot",
+            "position": null,
+            "starting_chips": 1040,
+            "ending_chips": 1080
+        },
+        {
+            "name": "AggroBot",
+            "position": null,
+            "starting_chips": 1960,
+            "ending_chips": 1920
+        }
+    ],
+    "hole_cards": {
+        "DeepBot": [
+            "2\u2666",
+            "9\u2665"
+        ],
+        "AggroBot": [
+            "K\u2665",
+            "7\u2663"
+        ]
+    },
+    "community_cards": [
+        "9\u2666",
+        "7\u2660",
+        "T\u2665",
+        "A\u2666",
+        "6\u2663"
+    ],
+    "actions": [
+        {
+            "player": "DeepBot",
+            "action": "POST_BLIND",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:49:16.006387"
+        },
+        {
+            "player": "AggroBot",
+            "action": "POST_BLIND",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:49:16.006393"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:49:16.178851"
+        },
+        {
+            "player": "AggroBot",
+            "action": "RAISE",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:49:16.222585"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:49:16.382034"
+        }
+    ],
+    "winner": {
+        "name": "DeepBot",
+        "chips": 1080
+    },
+    "pot": 80,
+    "completed": true
+}

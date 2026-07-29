@@ -1,0 +1,96 @@
+{
+    "hand_id": "49644dd9-4009-45f2-8c47-0c755433780f",
+    "created_at": "2026-07-29 16:50:09.176193",
+    "game_type": "Texas Hold'em",
+    "small_blind": 10,
+    "big_blind": 20,
+    "dealer_position": "DeepBot",
+    "players": [
+        {
+            "name": "DeepBot",
+            "position": null,
+            "starting_chips": 2304,
+            "ending_chips": 0
+        },
+        {
+            "name": "AggroBot",
+            "position": null,
+            "starting_chips": 19696,
+            "ending_chips": 22000
+        }
+    ],
+    "hole_cards": {
+        "DeepBot": [
+            "T\u2665",
+            "7\u2665"
+        ],
+        "AggroBot": [
+            "Q\u2660",
+            "T\u2660"
+        ]
+    },
+    "community_cards": [
+        "K\u2666",
+        "J\u2663",
+        "K\u2660",
+        "J\u2660",
+        "T\u2666"
+    ],
+    "actions": [
+        {
+            "player": "DeepBot",
+            "action": "POST_BLIND",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:09.176241"
+        },
+        {
+            "player": "AggroBot",
+            "action": "POST_BLIND",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:09.176249"
+        },
+        {
+            "player": "DeepBot",
+            "action": "RAISE",
+            "amount": 46,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:09.370897"
+        },
+        {
+            "player": "AggroBot",
+            "action": "RAISE",
+            "amount": 189,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:09.416863"
+        },
+        {
+            "player": "DeepBot",
+            "action": "RAISE",
+            "amount": 716,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:09.620850"
+        },
+        {
+            "player": "AggroBot",
+            "action": "RAISE",
+            "amount": 2955,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:09.710727"
+        },
+        {
+            "player": "DeepBot",
+            "action": "ALL_IN",
+            "amount": 1532,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:10.014140"
+        }
+    ],
+    "winner": {
+        "name": "AggroBot",
+        "chips": 22000
+    },
+    "pot": 5468,
+    "completed": true
+}

@@ -1,0 +1,82 @@
+{
+    "hand_id": "2127a4c8-0424-4b7a-9ded-8b0fb58b65fb",
+    "created_at": "2026-07-29 16:50:53.194175",
+    "game_type": "Texas Hold'em",
+    "small_blind": 10,
+    "big_blind": 20,
+    "dealer_position": "DeepBot",
+    "players": [
+        {
+            "name": "DeepBot",
+            "position": null,
+            "starting_chips": 3656,
+            "ending_chips": 3616
+        },
+        {
+            "name": "AggroBot",
+            "position": null,
+            "starting_chips": 56344,
+            "ending_chips": 56384
+        }
+    ],
+    "hole_cards": {
+        "DeepBot": [
+            "9\u2660",
+            "6\u2665"
+        ],
+        "AggroBot": [
+            "8\u2666",
+            "A\u2665"
+        ]
+    },
+    "community_cards": [
+        "K\u2666",
+        "Q\u2660",
+        "A\u2663",
+        "T\u2663",
+        "8\u2665"
+    ],
+    "actions": [
+        {
+            "player": "DeepBot",
+            "action": "POST_BLIND",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:53.194236"
+        },
+        {
+            "player": "AggroBot",
+            "action": "POST_BLIND",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:53.194251"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:53.574409"
+        },
+        {
+            "player": "AggroBot",
+            "action": "RAISE",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:53.657013"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:50:54.000315"
+        }
+    ],
+    "winner": {
+        "name": "AggroBot",
+        "chips": 56384
+    },
+    "pot": 80,
+    "completed": true
+}

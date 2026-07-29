@@ -183,6 +183,9 @@ class Game:
         # Reset players
         for player in self.players:
             player.reset_for_round()
+            if hasattr(player, "new_hand"):
+                player.new_hand()
+
 
         # Shuffle
 
@@ -232,16 +235,13 @@ class Game:
 
 
 
-        for player in self.players:
-
-
+        if self.logger:
+            for player in self.players:
                 self.logger.log_hole_cards(
-
                     player,
-
                     player.hand
-
                 )
+
 
 
 
@@ -312,114 +312,34 @@ class Game:
 
 
 
-        # ======================================
-        # Heads Up (2 Players)
-        # ======================================
+        n = len(self.players)
+        btn_idx = (self.hand_number - 1) % n
 
-        if len(self.players) == 2:
+        if n == 2:
+            dealer = self.players[btn_idx]
+            big_blind = self.players[(btn_idx + 1) % n]
 
+            dealer.set_position(PlayerPosition.BUTTON)
+            dealer.add_role(PlayerRole.DEALER)
+            dealer.add_role(PlayerRole.SMALL_BLIND)
 
-            dealer = self.players[0]
+            big_blind.set_position(PlayerPosition.BIG_BLIND)
+            big_blind.add_role(PlayerRole.BIG_BLIND)
+            self.dealer.dealer_position = dealer.name
+        else:
+            dealer = self.players[btn_idx]
+            sb_player = self.players[(btn_idx + 1) % n]
+            bb_player = self.players[(btn_idx + 2) % n]
 
-            big_blind = self.players[1]
+            dealer.set_position(PlayerPosition.BUTTON)
+            dealer.add_role(PlayerRole.DEALER)
 
-
-
-            dealer.set_position(
-
-                PlayerPosition.BUTTON
-
-            )
-
-
-            dealer.add_role(
-
-                PlayerRole.DEALER
-
-            )
-
-
-            dealer.add_role(
-
-                PlayerRole.SMALL_BLIND
-
-            )
-
-
-
-            big_blind.set_position(
-
-                PlayerPosition.BIG_BLIND
-
-            )
-
-
-            big_blind.add_role(
-
-                PlayerRole.BIG_BLIND
-
-            )
-
-
+            sb_player.add_role(PlayerRole.SMALL_BLIND)
+            bb_player.add_role(PlayerRole.BIG_BLIND)
+            bb_player.set_position(PlayerPosition.BIG_BLIND)
 
             self.dealer.dealer_position = dealer.name
 
-
-
-            return
-
-
-
-
-
-        # ======================================
-        # Normal Multi Player
-        # ======================================
-
-        self.players[0].set_position(
-
-            PlayerPosition.BUTTON
-
-        )
-
-
-        self.players[0].add_role(
-
-            PlayerRole.DEALER
-
-        )
-
-
-
-        self.players[1].add_role(
-
-            PlayerRole.SMALL_BLIND
-
-        )
-
-
-
-        self.players[2].add_role(
-
-            PlayerRole.BIG_BLIND
-
-        )
-
-
-
-        self.players[2].set_position(
-
-            PlayerPosition.BIG_BLIND
-
-        )
-
-
-
-        self.dealer.dealer_position = (
-
-            self.players[0].name
-
-        )
     # ==========================================
     # Post Blinds
     # ==========================================
@@ -744,26 +664,26 @@ class Game:
         # ======================================
 
         if hasattr(
-
             player,
-
             "decide"
-
         ):
-
-
             context = self.create_context(
-
                 player
-
             )
 
+            # Determine primary opponent name
+            opponent_name = None
+            active_opponents = [p.name for p in self.players if p != player and not getattr(p, "folded", False)]
+            if not active_opponents:
+                active_opponents = [p.name for p in self.players if p != player]
+            if active_opponents:
+                opponent_name = active_opponents[0]
 
             return player.decide(
-
-                context
-
+                context,
+                opponent_name=opponent_name
             )
+
 
 
 
@@ -1154,18 +1074,21 @@ class Game:
 
 
             else:
-
                 raise ValueError(
-
                     f"Unknown action: {action}"
-
                 )
 
-
-
-
+            # Broadcast action to other players for real-time tracking
+            for other in self.players:
+                if other != player and hasattr(other, "record_opponent_action"):
+                    other.record_opponent_action(
+                        player.name,
+                        action,
+                        getattr(player, "position", None)
+                    )
 
             self.betting_round.next_player()
+
 
 
 

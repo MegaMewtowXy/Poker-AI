@@ -82,6 +82,49 @@ class AIPlayer(Player):
         )
 
 
+    # ==========================================
+    # Opponent Learning & Hand Forwarding
+    # ==========================================
+
+    def record_opponent_action(
+        self,
+        opponent_name: str,
+        action,
+        position=None,
+        street=None,
+        *args,
+        **kwargs
+    ):
+        """
+        Forward opponent action observation to AI brain.
+        """
+        if hasattr(self.bot, "record_opponent_action"):
+            try:
+                self.bot.record_opponent_action(
+                    opponent_name,
+                    action,
+                    position,
+                    street
+                )
+            except TypeError:
+                self.bot.record_opponent_action(
+                    opponent_name,
+                    action,
+                    position
+                )
+
+
+    def new_hand(
+        self
+    ):
+        """
+        Forward hand reset notification to AI brain.
+        """
+        if hasattr(self.bot, "new_hand"):
+            self.bot.new_hand()
+
+
+
 
 
 

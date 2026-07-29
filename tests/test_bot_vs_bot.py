@@ -242,16 +242,16 @@ def test_bot_vs_bot():
     # Chip Conservation
     # ==========================================
 
+    total_rebuy_chips = sum(
+        stats.get("busts", 0) for stats in results.values()
+    ) * simulation.starting_chips
 
     assert (
-
         final_chip_count
-
         ==
-
-        starting_total_chips
-
+        starting_total_chips + total_rebuy_chips
     )
+
 
 
 

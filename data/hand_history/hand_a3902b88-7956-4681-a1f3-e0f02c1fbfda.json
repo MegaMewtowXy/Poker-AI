@@ -1,0 +1,82 @@
+{
+    "hand_id": "a3902b88-7956-4681-a1f3-e0f02c1fbfda",
+    "created_at": "2026-07-29 16:48:54.880037",
+    "game_type": "Texas Hold'em",
+    "small_blind": 10,
+    "big_blind": 20,
+    "dealer_position": "DeepBot",
+    "players": [
+        {
+            "name": "DeepBot",
+            "position": null,
+            "starting_chips": 1000,
+            "ending_chips": 1040
+        },
+        {
+            "name": "AggroBot",
+            "position": null,
+            "starting_chips": 25000,
+            "ending_chips": 24960
+        }
+    ],
+    "hole_cards": {
+        "DeepBot": [
+            "3\u2666",
+            "9\u2665"
+        ],
+        "AggroBot": [
+            "9\u2663",
+            "K\u2663"
+        ]
+    },
+    "community_cards": [
+        "A\u2666",
+        "Q\u2660",
+        "T\u2666",
+        "2\u2660",
+        "3\u2660"
+    ],
+    "actions": [
+        {
+            "player": "DeepBot",
+            "action": "POST_BLIND",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:48:54.880074"
+        },
+        {
+            "player": "AggroBot",
+            "action": "POST_BLIND",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:48:54.880084"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:48:55.126530"
+        },
+        {
+            "player": "AggroBot",
+            "action": "RAISE",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:48:55.187766"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:48:55.434591"
+        }
+    ],
+    "winner": {
+        "name": "DeepBot",
+        "chips": 1040
+    },
+    "pot": 80,
+    "completed": true
+}

@@ -1,0 +1,82 @@
+{
+    "hand_id": "8ce6b55e-d7ec-40d2-b0a5-aa7d5071a2a2",
+    "created_at": "2026-07-29 16:37:52.835614",
+    "game_type": "Texas Hold'em",
+    "small_blind": 10,
+    "big_blind": 20,
+    "dealer_position": "DeepBot",
+    "players": [
+        {
+            "name": "DeepBot",
+            "position": null,
+            "starting_chips": 60,
+            "ending_chips": 20
+        },
+        {
+            "name": "AggroBot",
+            "position": null,
+            "starting_chips": 1940,
+            "ending_chips": 1980
+        }
+    ],
+    "hole_cards": {
+        "DeepBot": [
+            "6\u2666",
+            "3\u2666"
+        ],
+        "AggroBot": [
+            "T\u2665",
+            "A\u2665"
+        ]
+    },
+    "community_cards": [
+        "2\u2660",
+        "7\u2665",
+        "4\u2665",
+        "9\u2663",
+        "2\u2663"
+    ],
+    "actions": [
+        {
+            "player": "DeepBot",
+            "action": "POST_BLIND",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:37:52.835636"
+        },
+        {
+            "player": "AggroBot",
+            "action": "POST_BLIND",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:37:52.835641"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:37:52.977943"
+        },
+        {
+            "player": "AggroBot",
+            "action": "RAISE",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:37:53.022054"
+        },
+        {
+            "player": "DeepBot",
+            "action": "CALL",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:37:53.164250"
+        }
+    ],
+    "winner": {
+        "name": "AggroBot",
+        "chips": 1980
+    },
+    "pot": 80,
+    "completed": true
+}

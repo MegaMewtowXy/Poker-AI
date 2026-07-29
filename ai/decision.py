@@ -348,35 +348,45 @@ class DecisionEngine:
 
 
         # ======================================
-        # Opponent Threat
+        # Opponent Threat & Exploitative Counter-Play
         # ======================================
 
         opponent = analysis.get("opponent") or {}
 
-
-
-
         threat = opponent.get(
-
             "threat_level",
-
             5
-
         )
 
+        op_type = opponent.get("type", "unknown")
+        confidence = opponent.get("confidence", 0.0)
 
+        # Baseline threat adjustment
+        base_threat_val = (5 - threat) * 1.5
 
-        value = (
+        # Exploitative counter-play based on opponent tendencies
+        exploit_val = 0.0
+        if op_type == "loose_aggressive" or (opponent.get("VPIP", 0) >= 40 and opponent.get("aggression", 0) >= 1.5):
+            # LAG bets wide: boost decision score on made hands / equity so bot doesn't overfold (bluff catch)
+            if strength >= 35 or equity >= 45:
+                exploit_val = 15.0 * (0.5 + 0.5 * confidence)
+            elif strength >= 25:
+                exploit_val = 8.0 * (0.5 + 0.5 * confidence)
+        elif op_type == "calling_station" or (opponent.get("VPIP", 0) >= 40 and opponent.get("aggression", 0) < 1.0):
+            # Calling station calls wide: boost value betting with decent hands
+            if strength >= 40 or equity >= 50:
+                exploit_val = 12.0 * (0.5 + 0.5 * confidence)
+        elif op_type in ("tight_passive", "tight_aggressive") and opponent.get("fold_percentage", 0) >= 50:
+            # Nit / folder: boost aggression to steal pots
+            if strength < 40 and equity < 45:
+                exploit_val = 10.0 * (0.5 + 0.5 * confidence)
 
-            5 - threat
-
-        ) * 2
-
-
+        value = base_threat_val + exploit_val
 
         score += value
 
-        factors["opponent"] = value
+        factors["opponent"] = round(value, 2)
+
 
 
 

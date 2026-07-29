@@ -60,7 +60,8 @@ class BotVsBotSimulation:
         starting_chips=1000,
         seed=None,
         players=None,
-        enable_logging=True
+        enable_logging=True,
+        auto_rebuy=True
     ):
 
 
@@ -81,6 +82,8 @@ class BotVsBotSimulation:
 
 
         self.enable_logging = enable_logging
+
+        self.auto_rebuy = auto_rebuy
 
 
 
@@ -511,31 +514,16 @@ class BotVsBotSimulation:
 
 
 
-            if (
-
-                player.chips <= 0
-
-                and
-
-                not self.results[player.name]["busted"]
-
-            ):
-
-
-
+            if player.chips <= 0:
+                if not self.results[player.name]["busted"]:
+                    self.results[player.name]["busted"] = True
                 self.results[player.name]["busts"] += 1
-
-
-                self.results[player.name]["busted"] = True
-
-
-
-
-
-
+                if self.auto_rebuy:
+                    player.chips = self.starting_chips
+                    self.results[player.name]["chips"] = player.chips
 
         return winner
-    
+
     # ==========================================
     # Run Simulation
     # ==========================================
@@ -547,35 +535,24 @@ class BotVsBotSimulation:
         Execute complete AI simulation.
         """
 
-
-
         for hand in range(
-
             self.hands
-
         ):
+            if self.auto_rebuy:
+                for player in self.players:
+                    if player.chips <= 0:
+                        player.chips = self.starting_chips
+            else:
+                # Stop if tournament is over
+                active_players = [
+                    player
+                    for player in self.players
+                    if player.chips > 0
+                ]
 
+                if len(active_players) < 2:
+                    break
 
-
-            # Stop if tournament is over
-
-            active_players = [
-
-                player
-
-                for player in self.players
-
-                if player.chips > 0
-
-            ]
-
-
-
-
-
-            if len(active_players) < 2:
-
-                break
 
 
 
@@ -643,9 +620,26 @@ class BotVsBotSimulation:
 
 
 
+    def run_parallel(
+        self,
+        num_workers=None
+    ):
+        """
+        Execute simulation across multiple threads/cores in parallel.
+        """
+        from simulation.parallel_runner import ParallelSimulationRunner
+        runner = ParallelSimulationRunner(
+            hands=self.hands,
+            starting_chips=self.starting_chips,
+            enable_logging=self.enable_logging,
+            num_workers=num_workers
+        )
+        return runner.run()
+
     # ==========================================
     # Calculate Statistics
     # ==========================================
+
 
     def calculate_statistics(
         self

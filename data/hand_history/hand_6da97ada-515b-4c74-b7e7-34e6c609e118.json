@@ -1,0 +1,82 @@
+{
+    "hand_id": "6da97ada-515b-4c74-b7e7-34e6c609e118",
+    "created_at": "2026-07-29 16:45:47.849231",
+    "game_type": "Texas Hold'em",
+    "small_blind": 10,
+    "big_blind": 20,
+    "dealer_position": "DeepBot",
+    "players": [
+        {
+            "name": "DeepBot",
+            "position": null,
+            "starting_chips": 1162,
+            "ending_chips": 0
+        },
+        {
+            "name": "AggroBot",
+            "position": null,
+            "starting_chips": 9838,
+            "ending_chips": 11000
+        }
+    ],
+    "hole_cards": {
+        "DeepBot": [
+            "J\u2665",
+            "T\u2665"
+        ],
+        "AggroBot": [
+            "K\u2660",
+            "K\u2665"
+        ]
+    },
+    "community_cards": [
+        "J\u2660",
+        "4\u2666",
+        "6\u2663",
+        "4\u2665",
+        "3\u2665"
+    ],
+    "actions": [
+        {
+            "player": "DeepBot",
+            "action": "POST_BLIND",
+            "amount": 10,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:45:47.849255"
+        },
+        {
+            "player": "AggroBot",
+            "action": "POST_BLIND",
+            "amount": 20,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:45:47.849259"
+        },
+        {
+            "player": "DeepBot",
+            "action": "RAISE",
+            "amount": 56,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:45:47.998598"
+        },
+        {
+            "player": "AggroBot",
+            "action": "ALL_IN",
+            "amount": 9818,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:45:48.036804"
+        },
+        {
+            "player": "DeepBot",
+            "action": "ALL_IN",
+            "amount": 1096,
+            "street": "Pre Flop",
+            "time": "2026-07-29 16:45:48.176586"
+        }
+    ],
+    "winner": {
+        "name": "AggroBot",
+        "chips": 11000
+    },
+    "pot": 11000,
+    "completed": true
+}

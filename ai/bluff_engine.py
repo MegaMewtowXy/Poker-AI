@@ -788,6 +788,14 @@ class BluffEngine:
 
         )
 
+        # Exploitative suppression: never pure bluff a Calling Station
+        op_type = opponent_profile.get("type") if opponent_profile else None
+        if op_type == "calling_station" or (opponent_profile and opponent_profile.get("VPIP", 0) >= 40 and opponent_profile.get("aggression", 0) < 1.0):
+            if equity < 35:  # Pure bluff
+                should_bluff = False
+                frequency = 0.0
+
+
 
 
 
