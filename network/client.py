@@ -20,7 +20,7 @@ class NetworkClient:
         self.is_host = False
 
     def connect(self, host=None, port=9999):
-        if host is None or host == "127.0.0.1":
+        if host is None:
             host = self.CLOUD_SERVER_HOST
         try:
             target_ip = socket.gethostbyname(host)
