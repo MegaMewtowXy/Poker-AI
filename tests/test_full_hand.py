@@ -153,10 +153,10 @@ def test_full_hand():
     )
 
 
-    for player, result in results.items():
+    for player_name, result in results["results"].items():
 
         print(
-            f"{player.name}: {result}"
+            f"{player_name}: {result}"
         )
 
 

@@ -42,6 +42,10 @@ dist/
 *.tmp
 *.bak
 
+# Game data & hand history
+data/hand_history/
+saves/
+
 # Game assets (optional if generated)
 ui/assets/cards/generated/
 ui/assets/sounds/generated/

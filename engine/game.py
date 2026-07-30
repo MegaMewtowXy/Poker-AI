@@ -152,7 +152,20 @@ class Game:
 
 
         self.running = False
-        # ==========================================
+
+    def start_game(self):
+        self.running = True
+
+    def stop_game(self):
+        self.running = False
+
+    def is_running(self):
+        return self.running
+
+    def current_hand(self):
+        return self.hand_number
+
+    # ==========================================
     # Start Hand
     # ==========================================
 

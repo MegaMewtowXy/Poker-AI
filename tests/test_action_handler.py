@@ -127,6 +127,10 @@ class FakeTable:
 
         self.pot = 200
 
+        self.current_bet = 50
+
+        self.minimum_raise = 100
+
         self.min_raise = 100
 
         self.big_blind = 50

@@ -168,10 +168,10 @@ def test_tie_split():
 
     print("\nResults")
 
-    for player, result in results.items():
+    for player_name, result in results["results"].items():
 
         print(
-            player.name,
+            player_name,
             result
         )
 
