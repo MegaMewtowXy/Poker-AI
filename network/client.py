@@ -9,6 +9,8 @@ class NetworkClient:
     Listens on a background daemon thread and enqueues events for the main Pygame loop.
     """
 
+    CLOUD_SERVER_HOST = "poker-ai-c4ar.onrender.com"
+
     def __init__(self):
         self.sock = None
         self.is_connected = False
@@ -17,10 +19,13 @@ class NetworkClient:
         self.current_room_code = None
         self.is_host = False
 
-    def connect(self, host="127.0.0.1", port=9999):
+    def connect(self, host=None, port=9999):
+        if host is None or host == "127.0.0.1":
+            host = self.CLOUD_SERVER_HOST
         try:
+            target_ip = socket.gethostbyname(host)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect((host, port))
+            self.sock.connect((target_ip, port))
             self.is_connected = True
             self.thread = threading.Thread(target=self._listen_loop, daemon=True)
             self.thread.start()
