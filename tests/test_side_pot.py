@@ -2,17 +2,11 @@ from models.player import Player
 
 from engine.pot_manager import PotManager
 
-
-
-
 def test_side_pots():
-
 
     print(
         "\n========== SIDE POT TEST =========="
     )
-
-
 
     # ==========================================
     # Players
@@ -26,7 +20,6 @@ def test_side_pots():
 
     )
 
-
     bob = Player(
 
         "Bob",
@@ -35,7 +28,6 @@ def test_side_pots():
 
     )
 
-
     charlie = Player(
 
         "Charlie",
@@ -43,8 +35,6 @@ def test_side_pots():
         1000
 
     )
-
-
 
     players = [
 
@@ -56,16 +46,11 @@ def test_side_pots():
 
     ]
 
-
-
     pot_manager = PotManager()
-
-
 
     # ==========================================
     # Contributions
     # ==========================================
-
 
     contributions = [
 
@@ -77,17 +62,13 @@ def test_side_pots():
 
     ]
 
-
-
     for player, amount in contributions:
-
 
         player.place_bet(
 
             amount
 
         )
-
 
         pot_manager.add_to_main_pot(
 
@@ -97,41 +78,27 @@ def test_side_pots():
 
         )
 
-
-
     print("\nBefore Building Pots")
 
     pot_manager.print_contributions()
-
-
 
     # ==========================================
     # Build Pots
     # ==========================================
 
-
     pot_manager.build_side_pots()
-
-
 
     print("\nGenerated Pots")
 
     pot_manager.print_pots()
 
-
-
     pots = pot_manager.get_all_pots()
-
-
 
     # ==========================================
     # Amount Validation
     # ==========================================
 
-
     assert len(pots) == 3
-
-
 
     assert pots[0].amount == 300
 
@@ -139,16 +106,11 @@ def test_side_pots():
 
     assert pots[2].amount == 200
 
-
-
     assert pot_manager.total_pot() == 900
-
-
 
     # ==========================================
     # Eligibility Validation
     # ==========================================
-
 
     main_players = pot_manager.eligible_players(
 
@@ -158,7 +120,6 @@ def test_side_pots():
 
     )
 
-
     side_one_players = pot_manager.eligible_players(
 
         pots[1],
@@ -167,7 +128,6 @@ def test_side_pots():
 
     )
 
-
     side_two_players = pot_manager.eligible_players(
 
         pots[2],
@@ -175,8 +135,6 @@ def test_side_pots():
         players
 
     )
-
-
 
     assert set(main_players) == {
 
@@ -188,8 +146,6 @@ def test_side_pots():
 
     }
 
-
-
     assert set(side_one_players) == {
 
         bob,
@@ -198,15 +154,11 @@ def test_side_pots():
 
     }
 
-
-
     assert set(side_two_players) == {
 
         charlie
 
     }
-
-
 
     print("\nTotal Pot:")
 
@@ -216,16 +168,11 @@ def test_side_pots():
 
     )
 
-
-
     print(
 
         "\n========== SIDE POT TEST PASSED =========="
 
     )
-
-
-
 
 if __name__ == "__main__":
 

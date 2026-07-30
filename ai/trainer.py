@@ -5,10 +5,6 @@ import tempfile
 
 from datetime import datetime
 
-
-
-
-
 class Trainer:
     """
     Rule-based reinforcement trainer.
@@ -30,19 +26,12 @@ class Trainer:
     • Make decisions
     """
 
-
-
-
-
     def __init__(
         self,
         learning_rate=0.01
     ):
 
-
         self.learning_rate = learning_rate
-
-
 
         # ======================================
         # Learned Parameters
@@ -50,24 +39,19 @@ class Trainer:
 
         self.weights = {
 
-
             "aggression":
 
                 0.5,
 
-
             "bluff_frequency":
 
                 0.2,
-
 
             "risk_tolerance":
 
                 0.5
 
         }
-
-
 
         # ======================================
         # Experience Memory
@@ -76,29 +60,23 @@ class Trainer:
         self.experiences = []
         self._processed_experiences = 0
 
-
-
         # ======================================
         # Statistics
         # ======================================
 
         self.stats = {
 
-
             "games":
 
                 0,
-
 
             "wins":
 
                 0,
 
-
             "losses":
 
                 0,
-
 
             "total_reward":
 
@@ -106,17 +84,11 @@ class Trainer:
 
         }
 
-
-
         self.created = str(
 
             datetime.now()
 
         )
-
-
-
-
 
     # ==========================================
     # Record Experience
@@ -135,34 +107,27 @@ class Trainer:
         Store one AI decision experience.
         """
 
-
         experience = {
-
 
             "state":
 
                 state,
 
-
             "action":
 
                 action,
-
 
             "reward":
 
                 reward,
 
-
             "confidence":
 
                 confidence,
 
-
             "equity":
 
                 equity,
-
 
             "result":
 
@@ -170,15 +135,11 @@ class Trainer:
 
         }
 
-
-
         self.experiences.append(
 
             experience
 
         )
-
-
 
         self.stats["total_reward"] += reward
     
@@ -197,7 +158,6 @@ class Trainer:
         -1.0 to +1.0
         """
 
-
         if chips_change > 0:
 
             return min(
@@ -207,8 +167,6 @@ class Trainer:
                 chips_change / 1000
 
             )
-
-
 
         if chips_change < 0:
 
@@ -220,13 +178,7 @@ class Trainer:
 
             )
 
-
-
         return 0.0
-
-
-
-
 
     # ==========================================
     # Learning
@@ -240,18 +192,13 @@ class Trainer:
         based on previous experiences.
         """
 
-
-
         pending_experiences = self.experiences[self._processed_experiences:]
 
         if not pending_experiences:
 
             return
 
-
-
         for experience in pending_experiences:
-
 
             reward = experience.get(
 
@@ -261,7 +208,6 @@ class Trainer:
 
             )
 
-
             action = experience.get(
 
                 "action",
@@ -269,8 +215,6 @@ class Trainer:
                 ""
 
             ).lower()
-
-
 
             adjustment = (
 
@@ -282,18 +226,13 @@ class Trainer:
 
             )
 
-
-
             # ==================================
             # Positive Reinforcement
             # ==================================
 
             if reward > 0:
 
-
                 self.stats["wins"] += 1
-
-
 
                 if action in [
 
@@ -305,17 +244,11 @@ class Trainer:
 
                 ]:
 
-
                     self.weights["aggression"] += adjustment
-
-
 
                 if action == "bluff":
 
-
                     self.weights["bluff_frequency"] += adjustment
-
-
 
                 if action in [
 
@@ -325,10 +258,7 @@ class Trainer:
 
                 ]:
 
-
                     self.weights["risk_tolerance"] += adjustment
-
-
 
             # ==================================
             # Negative Reinforcement
@@ -336,10 +266,7 @@ class Trainer:
 
             elif reward < 0:
 
-
                 self.stats["losses"] += 1
-
-
 
                 if action in [
 
@@ -351,17 +278,11 @@ class Trainer:
 
                 ]:
 
-
                     self.weights["aggression"] -= adjustment
-
-
 
                 if action == "bluff":
 
-
                     self.weights["bluff_frequency"] -= adjustment
-
-
 
                 if action in [
 
@@ -371,17 +292,10 @@ class Trainer:
 
                 ]:
 
-
                     self.weights["risk_tolerance"] -= adjustment
-
-
 
         self.normalize_weights()
         self._processed_experiences = len(self.experiences)
-
-
-
-
 
     # ==========================================
     # Weight Normalization
@@ -394,10 +308,7 @@ class Trainer:
         Keep learned values stable.
         """
 
-
-
         for key in self.weights:
-
 
             self.weights[key] = max(
 
@@ -412,10 +323,6 @@ class Trainer:
                 )
 
             )
-
-
-
-
 
     # ==========================================
     # Apply Learned Weights
@@ -434,14 +341,9 @@ class Trainer:
         It does not make decisions.
         """
 
-
-
         if strategy_manager is None:
 
             return False
-
-
-
 
         if hasattr(
 
@@ -451,7 +353,6 @@ class Trainer:
 
         ):
 
-
             strategy_manager.set_parameter(
 
                 "aggression",
@@ -459,7 +360,6 @@ class Trainer:
                 self.weights["aggression"]
 
             )
-
 
             strategy_manager.set_parameter(
 
@@ -469,7 +369,6 @@ class Trainer:
 
             )
 
-
             strategy_manager.set_parameter(
 
                 "risk_tolerance",
@@ -478,17 +377,9 @@ class Trainer:
 
             )
 
-
             return True
 
-
-
-
         return False
-
-
-
-
 
     # ==========================================
     # Get Learned Weights
@@ -501,12 +392,7 @@ class Trainer:
         Return learned AI parameters.
         """
 
-
         return self.weights.copy()
-
-
-
-
 
     # ==========================================
     # Training Summary
@@ -519,19 +405,13 @@ class Trainer:
         Return training performance.
         """
 
-
-
         total = len(
 
             self.experiences
 
         )
 
-
-
         average_reward = 0
-
-
 
         if total > 0:
 
@@ -545,30 +425,23 @@ class Trainer:
 
             )
 
-
-
         return {
-
 
             "experiences":
 
                 total,
 
-
             "games":
 
                 self.stats["games"],
-
 
             "wins":
 
                 self.stats["wins"],
 
-
             "losses":
 
                 self.stats["losses"],
-
 
             "average_reward":
 
@@ -579,7 +452,6 @@ class Trainer:
                     3
 
                 ),
-
 
             "weights":
 
@@ -599,18 +471,13 @@ class Trainer:
         Save trainer memory.
         """
 
-
-
         directory = os.path.dirname(
 
             path
 
         )
 
-
-
         if directory:
-
 
             os.makedirs(
 
@@ -620,42 +487,29 @@ class Trainer:
 
             )
 
-
-
-
-
         data = {
-
 
             "version":
 
                 1,
 
-
             "created":
 
                 self.created,
-
 
             "weights":
 
                 self.weights,
 
-
             "statistics":
 
                 self.stats,
-
 
             "experiences":
 
                 self.experiences
 
         }
-
-
-
-
 
         # Write then replace so an interrupted save cannot corrupt the
         # previous training file.
@@ -673,10 +527,6 @@ class Trainer:
                 os.unlink(temporary_path)
             raise
 
-
-
-
-
     # ==========================================
     # Load Training Data
     # ==========================================
@@ -689,8 +539,6 @@ class Trainer:
         Load previous learning.
         """
 
-
-
         if not os.path.exists(
 
             path
@@ -698,10 +546,6 @@ class Trainer:
         ):
 
             return False
-
-
-
-
 
         with open(
 
@@ -711,16 +555,11 @@ class Trainer:
 
         ) as file:
 
-
             data = json.load(
 
                 file
 
             )
-
-
-
-
 
         self.weights = data.get(
 
@@ -730,8 +569,6 @@ class Trainer:
 
         )
 
-
-
         self.stats = data.get(
 
             "statistics",
@@ -739,8 +576,6 @@ class Trainer:
             self.stats
 
         )
-
-
 
         self.experiences = data.get(
 
@@ -752,8 +587,6 @@ class Trainer:
         # Saved experiences may not have been applied in a previous process.
         self._processed_experiences = 0
 
-
-
         self.created = data.get(
 
             "created",
@@ -762,17 +595,9 @@ class Trainer:
 
         )
 
-
-
         self.normalize_weights()
 
-
-
         return True
-
-
-
-
 
     # ==========================================
     # Reset Training
@@ -785,25 +610,18 @@ class Trainer:
         Clear all learned behaviour.
         """
 
-
-
         self.experiences.clear()
         self._processed_experiences = 0
 
-
-
         self.weights = {
-
 
             "aggression":
 
                 0.5,
 
-
             "bluff_frequency":
 
                 0.2,
-
 
             "risk_tolerance":
 
@@ -811,25 +629,19 @@ class Trainer:
 
         }
 
-
-
         self.stats = {
-
 
             "games":
 
                 0,
 
-
             "wins":
 
                 0,
 
-
             "losses":
 
                 0,
-
 
             "total_reward":
 
@@ -837,17 +649,11 @@ class Trainer:
 
         }
 
-
-
         self.created = str(
 
             datetime.now()
 
         )
-
-
-
-
 
     # ==========================================
     # Profile
@@ -860,10 +666,7 @@ class Trainer:
         Trainer information.
         """
 
-
-
         return {
-
 
             "experiences":
 
@@ -873,29 +676,19 @@ class Trainer:
 
                 ),
 
-
-
             "learning_rate":
 
                 self.learning_rate,
 
-
-
             "weights":
 
                 self.weights.copy(),
-
-
 
             "statistics":
 
                 self.statistics()
 
         }
-
-
-
-
 
     # ==========================================
     # Debug
@@ -910,10 +703,6 @@ class Trainer:
             "Trainer()"
 
         )
-
-
-
-
 
     def __str__(
         self

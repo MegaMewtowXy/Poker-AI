@@ -3,13 +3,9 @@ from AI.strategy import (
     StrategyManager
 )
 
-
-
 def test_strategy():
 
     print("\n========== STRATEGY TEST ==========")
-
-
 
     # ==========================================
     # Tight Aggressive
@@ -21,7 +17,6 @@ def test_strategy():
 
     )
 
-
     print("\nTight Aggressive")
 
     print(
@@ -29,7 +24,6 @@ def test_strategy():
         tag.config()
 
     )
-
 
     assert tag.range_width() == 0.20
 
@@ -41,9 +35,6 @@ def test_strategy():
 
     assert tag.pressure_factor() == 0.80
 
-
-
-
     # ==========================================
     # Loose Aggressive
     # ==========================================
@@ -54,7 +45,6 @@ def test_strategy():
 
     )
 
-
     print("\nLoose Aggressive")
 
     print(
@@ -62,7 +52,6 @@ def test_strategy():
         lag.config()
 
     )
-
 
     assert lag.range_width() == 0.45
 
@@ -74,9 +63,6 @@ def test_strategy():
 
     assert lag.pressure_factor() == 1.00
 
-
-
-
     # ==========================================
     # Tight Passive
     # ==========================================
@@ -87,7 +73,6 @@ def test_strategy():
 
     )
 
-
     print("\nTight Passive")
 
     print(
@@ -96,15 +81,11 @@ def test_strategy():
 
     )
 
-
     assert tp.aggression() == 0.30
 
     assert tp.risk_tolerance() == 0.25
 
     assert tp.pressure_factor() == 0.30
-
-
-
 
     # ==========================================
     # Balanced
@@ -116,7 +97,6 @@ def test_strategy():
 
     )
 
-
     print("\nBalanced")
 
     print(
@@ -124,7 +104,6 @@ def test_strategy():
         balanced.config()
 
     )
-
 
     assert balanced.range_width() == 0.30
 
@@ -134,36 +113,25 @@ def test_strategy():
 
     assert balanced.pressure_factor() == 0.55
 
-
-
-
     # ==========================================
     # Profile Test
     # ==========================================
 
     profile = balanced.profile()
 
-
     print("\nBalanced Profile")
 
     print(profile)
 
-
-
     assert profile["strategy"] == "balanced"
 
     assert profile["description"] != ""
-
-
 
     print(
 
         "\n========== STRATEGY TEST PASSED =========="
 
     )
-
-
-
 
 if __name__ == "__main__":
 

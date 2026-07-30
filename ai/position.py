@@ -1,7 +1,6 @@
 from models.player_position import PlayerPosition
 from models.player_role import PlayerRole
 
-
 class PositionAnalyzer:
 
     """
@@ -20,142 +19,89 @@ class PositionAnalyzer:
     • Make decisions
     """
 
-
-
     POSITION_VALUES = {
-
-
 
         PlayerPosition.UNDER_THE_GUN: {
 
-
             "advantage": 1,
-
 
             "aggression_modifier": 0.8,
 
-
             "range_modifier": 0.8
 
-
         },
-
-
 
         PlayerPosition.UNDER_THE_GUN_PLUS_ONE: {
 
-
             "advantage": 1,
-
 
             "aggression_modifier": 0.85,
 
-
             "range_modifier": 0.85
 
-
         },
-
-
 
         PlayerPosition.MIDDLE_POSITION: {
 
-
             "advantage": 2,
-
 
             "aggression_modifier": 0.9,
 
-
             "range_modifier": 0.9
 
-
         },
-
-
 
         PlayerPosition.MIDDLE_POSITION_PLUS_ONE: {
 
-
             "advantage": 3,
-
 
             "aggression_modifier": 1.0,
 
-
             "range_modifier": 1.0
 
-
         },
-
-
 
         PlayerPosition.HIJACK: {
 
-
             "advantage": 4,
-
 
             "aggression_modifier": 1.1,
 
-
             "range_modifier": 1.1
 
-
         },
-
-
 
         PlayerPosition.CUTOFF: {
 
-
             "advantage": 4,
-
 
             "aggression_modifier": 1.2,
 
-
             "range_modifier": 1.2
 
-
         },
-
-
 
         PlayerPosition.BUTTON: {
 
-
             "advantage": 5,
-
 
             "aggression_modifier": 1.3,
 
-
             "range_modifier": 1.3
-
 
         },
 
-
-
         PlayerPosition.BIG_BLIND: {
-
 
             "advantage": 2,
 
-
             "aggression_modifier": 1.0,
 
-
             "range_modifier": 1.0
-
 
         }
 
     }
-
-
-
 
     # ==================================================
     # Analysis
@@ -175,25 +121,15 @@ class PositionAnalyzer:
         Return AI position information.
         """
 
-
-
         if position not in self.POSITION_VALUES:
-
 
             return self.unknown()
 
-
-
-
         data = self.POSITION_VALUES[position]
-
-
 
         aggression_modifier = data["aggression_modifier"]
 
         range_modifier = data["range_modifier"]
-
-
 
         # Small Blind adjustment
         if (
@@ -210,48 +146,29 @@ class PositionAnalyzer:
 
             range_modifier *= 0.8
 
-
-
         return {
-
-
 
             "position":
 
-
                 position.name,
-
-
 
             "advantage":
 
-
                 data["advantage"],
-
-
 
             "aggression_modifier":
 
-
                 aggression_modifier,
-
-
 
             "range_modifier":
 
-
                 range_modifier
 
-
         }
-
-
-
 
     # ==================================================
     # Helpers
     # ==================================================
-
 
     def is_early_position(
 
@@ -261,14 +178,9 @@ class PositionAnalyzer:
 
     ) -> bool:
 
-
         return isinstance(position, PlayerPosition) and position.is_early_position()
 
-
-
-
     # --------------------------------------------------
-
 
     def is_middle_position(
 
@@ -277,7 +189,6 @@ class PositionAnalyzer:
         position: PlayerPosition
 
     ) -> bool:
-
 
         return isinstance(position, PlayerPosition) and position.is_middle_position()
         # --------------------------------------------------
@@ -290,11 +201,7 @@ class PositionAnalyzer:
 
     ) -> bool:
 
-
         return isinstance(position, PlayerPosition) and position.is_late_position()
-
-
-
 
     # --------------------------------------------------
 
@@ -316,12 +223,9 @@ class PositionAnalyzer:
         Small Blind is represented by PlayerRole.
         """
 
-
         if position == PlayerPosition.BIG_BLIND:
 
             return True
-
-
 
         if (
 
@@ -335,66 +239,42 @@ class PositionAnalyzer:
 
             return True
 
-
-
         return False
-
-
-
 
     # ==================================================
     # Unknown Handling
     # ==================================================
 
-
     @staticmethod
 
     def unknown():
 
-
         return {
-
 
             "position": "UNKNOWN",
 
-
             "advantage": 0,
-
 
             "aggression_modifier": 1.0,
 
-
             "range_modifier": 1.0
 
-
         }
-
-
-
 
     # ==================================================
     # Debug
     # ==================================================
 
-
     def __repr__(self):
-
 
         return "PositionAnalyzer()"
 
-
-
-
     def __str__(self):
-
 
         return (
 
-
             "Texas Hold'em "
 
-
             "Position Analyzer"
-
 
         )

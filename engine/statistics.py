@@ -2,8 +2,6 @@ from collections import defaultdict
 
 from models.player import Player
 
-
-
 class Statistics:
     """
     Tracks Texas Hold'em statistics.
@@ -18,8 +16,6 @@ class Statistics:
     This class only records data.
     It never changes gameplay.
     """
-
-
 
     def __init__(self):
 
@@ -39,8 +35,6 @@ class Statistics:
 
         self.total_all_ins = 0
 
-
-
         # ==================================================
         # Player Statistics
         # ==================================================
@@ -57,13 +51,11 @@ class Statistics:
 
                 "chips_lost": 0,
 
-
                 # Poker metrics
 
                 "vpip": 0,
 
                 "pfr": 0,
-
 
                 # Actions
 
@@ -79,7 +71,6 @@ class Statistics:
 
                 "all_ins": 0,
 
-
                 # Internal hand flags
 
                 "vpip_recorded": False,
@@ -89,8 +80,6 @@ class Statistics:
             }
 
         )
-
-
 
     # ==================================================
     # Tournament Tracking
@@ -105,8 +94,6 @@ class Statistics:
 
         self.total_pot += pot_size
 
-
-
         if (
 
             self.smallest_pot == 0
@@ -119,13 +106,9 @@ class Statistics:
 
             self.smallest_pot = pot_size
 
-
-
         if pot_size > self.biggest_pot:
 
             self.biggest_pot = pot_size
-
-
 
     # --------------------------------------------------
 
@@ -133,15 +116,11 @@ class Statistics:
 
         self.total_showdowns += 1
 
-
-
     # --------------------------------------------------
 
     def record_all_in(self):
 
         self.total_all_ins += 1
-
-
 
     # ==================================================
     # Hand Tracking
@@ -157,17 +136,13 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         stats["hands_played"] += 1
-
 
         # Reset hand flags
 
         stats["vpip_recorded"] = False
 
         stats["pfr_recorded"] = False
-
-
 
     # ==================================================
     # Result Tracking
@@ -181,12 +156,9 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         stats["hands_won"] += 1
 
         stats["chips_won"] += chips
-
-
 
     # --------------------------------------------------
 
@@ -201,8 +173,6 @@ class Statistics:
             "chips_lost"
 
         ] += chips
-
-
 
     # ==================================================
     # Action Tracking
@@ -219,8 +189,6 @@ class Statistics:
 
         ] += 1
 
-
-
     # --------------------------------------------------
 
     def record_check(
@@ -234,8 +202,6 @@ class Statistics:
 
         ] += 1
 
-
-
     # --------------------------------------------------
 
     def record_call(
@@ -245,17 +211,13 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         stats["calls"] += 1
-
 
         self._record_vpip(
 
             stats
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -266,17 +228,13 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         stats["bets"] += 1
-
 
         self._record_vpip(
 
             stats
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -288,16 +246,13 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         stats["raises"] += 1
-
 
         self._record_vpip(
 
             stats
 
         )
-
 
         if preflop:
 
@@ -306,8 +261,6 @@ class Statistics:
                 stats
 
             )
-
-
 
     # --------------------------------------------------
 
@@ -322,10 +275,7 @@ class Statistics:
 
         ] += 1
 
-
         self.total_all_ins += 1
-
-
 
     # ==================================================
     # Internal Helpers
@@ -341,8 +291,6 @@ class Statistics:
             stats["vpip"] += 1
 
             stats["vpip_recorded"] = True
-
-
 
     # --------------------------------------------------
 
@@ -369,7 +317,6 @@ class Statistics:
 
             return 0.0
 
-
         return (
 
             self.total_pot
@@ -380,8 +327,6 @@ class Statistics:
 
         )
 
-
-
     # --------------------------------------------------
 
     def win_percentage(
@@ -391,14 +336,11 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         hands = stats["hands_played"]
-
 
         if hands == 0:
 
             return 0.0
-
 
         return (
 
@@ -410,8 +352,6 @@ class Statistics:
 
         ) * 100
 
-
-
     # --------------------------------------------------
 
     def vpip_percentage(
@@ -421,14 +361,11 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         hands = stats["hands_played"]
-
 
         if hands == 0:
 
             return 0.0
-
 
         return (
 
@@ -440,8 +377,6 @@ class Statistics:
 
         ) * 100
 
-
-
     # --------------------------------------------------
 
     def pfr_percentage(
@@ -451,14 +386,11 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         hands = stats["hands_played"]
-
 
         if hands == 0:
 
             return 0.0
-
 
         return (
 
@@ -469,8 +401,6 @@ class Statistics:
             hands
 
         ) * 100
-
-
 
     # --------------------------------------------------
 
@@ -484,14 +414,11 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         hands = stats["hands_played"]
-
 
         if hands == 0:
 
             return 0.0
-
 
         return (
 
@@ -502,8 +429,6 @@ class Statistics:
             hands
 
         ) * 100
-
-
 
     # --------------------------------------------------
 
@@ -521,9 +446,7 @@ class Statistics:
 
         stats = self.player_stats[player]
 
-
         calls = stats["calls"]
-
 
         if calls == 0:
 
@@ -537,7 +460,6 @@ class Statistics:
 
             )
 
-
         return (
 
             stats["bets"]
@@ -547,8 +469,6 @@ class Statistics:
             stats["raises"]
 
         ) / calls
-
-
 
     # ==================================================
     # Player Report
@@ -564,7 +484,6 @@ class Statistics:
 
         stats = self.player_stats[player].copy()
 
-
         stats.update(
 
             {
@@ -572,18 +491,14 @@ class Statistics:
                 "win_percentage":
                     self.win_percentage(player),
 
-
                 "vpip_percentage":
                     self.vpip_percentage(player),
-
 
                 "pfr_percentage":
                     self.pfr_percentage(player),
 
-
                 "fold_percentage":
                     self.fold_percentage(player),
-
 
                 "aggression_factor":
                     self.aggression_factor(player)
@@ -592,10 +507,7 @@ class Statistics:
 
         )
 
-
         return stats
-
-
 
     # ==================================================
     # Ranking Helpers
@@ -612,7 +524,6 @@ class Statistics:
 
             return None
 
-
         return max(
 
             self.player_stats,
@@ -622,8 +533,6 @@ class Statistics:
             self.player_stats[player]["chips_won"]
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -638,7 +547,6 @@ class Statistics:
 
             return None
 
-
         return max(
 
             self.player_stats,
@@ -648,8 +556,6 @@ class Statistics:
             self.player_stats[player]["chips_lost"]
 
         )
-
-
 
     # ==================================================
     # Reset
@@ -672,10 +578,7 @@ class Statistics:
 
         self.total_all_ins = 0
 
-
         self.player_stats.clear()
-
-
 
     # ==================================================
     # Debug
@@ -694,8 +597,6 @@ class Statistics:
             ")"
 
         )
-
-
 
     # --------------------------------------------------
 

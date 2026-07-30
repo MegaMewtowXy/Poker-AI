@@ -5,7 +5,6 @@ from engine.game_state import GameState
 from engine.pot_manager import PotManager
 from engine.showdown import Showdown
 
-
 from models import player
 from models.deck import Deck
 from models.player import Player
@@ -19,10 +18,6 @@ from AI.game_context import GameContext
 
 from simulation.logger import GameLogger
 
-
-
-
-
 class Game:
     """
     Main Texas Hold'em game controller.
@@ -34,14 +29,12 @@ class Game:
     - AI vs Human
     - AI vs AI
 
-
     Responsibilities:
 
     • Manage hand lifecycle
     • Control streets
     • Request player decisions
     • Coordinate engine systems
-
 
     Does NOT:
 
@@ -50,16 +43,11 @@ class Game:
     • Move chips directly
     """
 
-
-
-
-
     def __init__(
         self,
         players: list[Player],
         logger: GameLogger = None
     ):
-
 
         if len(players) < 2:
 
@@ -67,27 +55,17 @@ class Game:
                 "At least two players are required."
             )
 
-
-
         self.players = players
 
-
         self.logger = logger
-
-
-
-
 
         # ==========================================
         # Core Systems
         # ==========================================
 
-
         self.table = Table()
 
-
         self.deck = Deck()
-
 
         self.dealer = Dealer(
 
@@ -95,12 +73,7 @@ class Game:
 
         )
 
-
         self.pot_manager = PotManager()
-
-
-
-
 
         # BettingRound first
 
@@ -114,10 +87,6 @@ class Game:
 
         )
 
-
-
-
-
         # BettingEngine connects to round
 
         self.betting_engine = BettingEngine(
@@ -130,26 +99,15 @@ class Game:
 
         )
 
-
-
-
-
         self.showdown = Showdown()
-
-
-
-
 
         # ==========================================
         # State
         # ==========================================
 
-
         self.state = GameState.WAITING
 
-
         self.hand_number = 0
-
 
         self.running = False
 
@@ -178,10 +136,7 @@ class Game:
 
         self.hand_number += 1
 
-
         self.state = GameState.PRE_FLOP
-
-
 
         # Reset systems
 
@@ -199,12 +154,9 @@ class Game:
             if hasattr(player, "new_hand"):
                 player.new_hand()
 
-
         # Shuffle
 
         self.deck.shuffle()
-
-
 
         # Assign seats
 
@@ -226,7 +178,6 @@ class Game:
         
                     )
 
-
         # Post blinds
 
         self.post_blinds()
@@ -240,13 +191,7 @@ class Game:
 
         )
 
-
-
-
-
         
-
-
 
         if self.logger:
             for player in self.players:
@@ -254,13 +199,6 @@ class Game:
                     player,
                     player.hand
                 )
-
-
-
-
-
-
-
 
     # ==========================================
     # Reset Hand
@@ -273,35 +211,19 @@ class Game:
         Reset current hand only.
         """
 
-
-
         for player in self.players:
-
 
             player.reset_for_round()
 
-
-
-
-
         self.table.reset()
-
 
         self.deck.reset()
 
-
         self.pot_manager.reset()
-
 
         self.betting_round.reset()
 
-
-
         self.state = GameState.WAITING
-
-
-
-
 
     # ==========================================
     # Assign Positions
@@ -315,15 +237,11 @@ class Game:
         blinds and roles.
         """
 
-
-
         # Clear previous roles
 
         for player in self.players:
 
             player.clear_roles()
-
-
 
         n = len(self.players)
         btn_idx = (self.hand_number - 1) % n
@@ -410,8 +328,6 @@ class Game:
         Deal first three community cards.
         """
 
-
-
         self.dealer.deal_flop(
 
             self.table
@@ -424,10 +340,7 @@ class Game:
 
        
 
-
         self.state = GameState.FLOP
-
-
 
         self.betting_round.set_street(
 
@@ -435,24 +348,13 @@ class Game:
 
         )
 
-
-
-
-
         if self.logger:
-
 
             self.logger.log_community_cards(
 
                 self.table.community_cards
 
             )
-
-
-
-
-
-
 
     # ==========================================
     # Deal Turn
@@ -464,8 +366,6 @@ class Game:
         """
         Deal fourth community card.
         """
-
-
 
         self.dealer.deal_turn(
 
@@ -481,20 +381,13 @@ class Game:
        
         self.state = GameState.TURN
 
-
-
         self.betting_round.set_street(
 
             Street.TURN
 
         )
 
-
-
-
-
         if self.logger:
-
 
             self.logger.log_community_cards(
 
@@ -505,12 +398,6 @@ class Game:
                 ]
 
             )
-
-
-
-
-
-
 
     # ==========================================
     # Deal River
@@ -523,8 +410,6 @@ class Game:
         Deal fifth community card.
         """
 
-
-
         self.dealer.deal_river(
 
             self.table
@@ -534,10 +419,7 @@ class Game:
         for player in self.players:
             player.reset_betting_round()
 
-
         self.state = GameState.RIVER
-
-
 
         self.betting_round.set_street(
 
@@ -545,12 +427,7 @@ class Game:
 
         )
 
-
-
-
-
         if self.logger:
-
 
             self.logger.log_community_cards(
 
@@ -561,12 +438,6 @@ class Game:
                 ]
 
             )
-
-
-
-
-
-
 
     # ==========================================
     # Create AI Context
@@ -581,8 +452,6 @@ class Game:
         to AI player.
         """
 
-
-
         call_amount = max(
 
             0,
@@ -595,17 +464,11 @@ class Game:
 
         )
 
-
-
-
-
         return GameContext(
 
             hole_cards=player.hand,
 
-
             community_cards=self.table.community_cards,
-
 
             position=getattr(
 
@@ -617,12 +480,9 @@ class Game:
 
             ),
 
-
             street=self.betting_round.street,
 
-
             pot_size=self.pot_manager.total_pot(),
-
 
             current_bet=self.table.current_bet,
 
@@ -630,15 +490,11 @@ class Game:
 
             call_amount=call_amount,
 
-
             min_raise=self.table.minimum_raise,
-
 
             big_blind=self.table.big_blind,
 
-
             player_stack=player.chips,
-
 
             players_remaining=len(
 
@@ -654,7 +510,6 @@ class Game:
 
             ),
 
-
             betting_history=self.betting_round.action_history.copy()
 
         )
@@ -669,8 +524,6 @@ class Game:
         """
         Get action from human or AI player.
         """
-
-
 
         # ======================================
         # AI Player
@@ -697,11 +550,6 @@ class Game:
                 opponent_name=opponent_name
             )
 
-
-
-
-
-
         # ======================================
         # Human Player
         # ======================================
@@ -711,10 +559,6 @@ class Game:
             player
 
         )
-
-
-
-
 
     # ==========================================
     # Human Input
@@ -733,8 +577,6 @@ class Game:
         - Mobile
         """
 
-
-
         print()
 
         print(
@@ -742,7 +584,6 @@ class Game:
             f"{player.name}'s turn"
 
         )
-
 
         print(
 
@@ -780,10 +621,6 @@ class Game:
 
         )
 
-
-
-
-
         choice = int(
 
             input(
@@ -793,10 +630,6 @@ class Game:
             )
 
         )
-
-
-
-
 
         if choice == 1:
 
@@ -808,10 +641,6 @@ class Game:
 
             }
 
-
-
-
-
         elif choice == 2:
 
             return {
@@ -822,10 +651,6 @@ class Game:
 
             }
 
-
-
-
-
         elif choice == 3:
 
             return {
@@ -835,10 +660,6 @@ class Game:
                 "amount": 0
 
             }
-
-
-
-
 
         elif choice == 4:
 
@@ -852,7 +673,6 @@ class Game:
 
             )
 
-
             return {
 
                 "action": Action.BET,
@@ -860,10 +680,6 @@ class Game:
                 "amount": amount
 
             }
-
-
-
-
 
         elif choice == 5:
 
@@ -877,7 +693,6 @@ class Game:
 
             )
 
-
             return {
 
                 "action": Action.RAISE,
@@ -885,10 +700,6 @@ class Game:
                 "amount": amount
 
             }
-
-
-
-
 
         elif choice == 6:
 
@@ -900,10 +711,6 @@ class Game:
 
             }
 
-
-
-
-
         else:
 
             raise ValueError(
@@ -911,12 +718,6 @@ class Game:
                 "Invalid action."
 
             )
-
-
-
-
-
-
 
     # ==========================================
     # Execute Betting Round
@@ -929,52 +730,27 @@ class Game:
         Execute one complete betting street.
         """
 
-
-
         self.betting_round.start()
-
-
-
-
 
         while not self.betting_round.betting_complete():
 
-
-
             player = self.betting_round.current_player()
-
-
-
-
 
             if player is None:
 
                 break
 
-
-
-
-
             if not player.can_act():
-
 
                 self.betting_round.next_player()
 
                 continue
-
-
-
-
 
             decision = self.get_player_action(
 
                 player
 
             )
-
-
-
-
 
             if decision is None:
 
@@ -984,16 +760,11 @@ class Game:
 
                 )
 
-
-
-
-
             action = decision.get(
 
                 "action"
 
             )
-
 
             amount = decision.get(
 
@@ -1003,16 +774,11 @@ class Game:
 
             )
 
-
-
-
-
             # ==================================
             # Send to Betting Engine
             # ==================================
 
             if action == Action.FOLD:
-
 
                 self.betting_engine.fold(
 
@@ -1020,10 +786,7 @@ class Game:
 
                 )
 
-
-
             elif action == Action.CHECK:
-
 
                 self.betting_engine.check(
 
@@ -1031,18 +794,13 @@ class Game:
 
                 )
 
-
-
             elif action == Action.CALL:
-
 
                 self.betting_engine.call(
 
                     player
 
                 )
-
-
 
             elif action == Action.BET:
 
@@ -1061,8 +819,6 @@ class Game:
 
                 )
 
-
-
             elif action == Action.RAISE:
                 
                 self.betting_engine.raise_bet(
@@ -1073,18 +829,13 @@ class Game:
 
                 )
 
-
-
             elif action == Action.ALL_IN:
-
 
                 self.betting_engine.all_in(
 
                     player
 
                 )
-
-
 
             else:
                 raise ValueError(
@@ -1102,29 +853,15 @@ class Game:
 
             self.betting_round.next_player()
 
-
-
-
-
-
         self.betting_round.finish()
 
-
-
-
-
         if self.logger:
-
 
             self.logger.log_pot(
 
                 self.pot_manager.total_pot()
 
             )
-
-
-
-
 
         return True
         # ==========================================
@@ -1138,13 +875,7 @@ class Game:
         Run one complete Texas Hold'em hand.
         """
 
-
-
         self.start_hand()
-
-
-
-
 
         # ------------------------------
         # Pre Flop
@@ -1156,12 +887,7 @@ class Game:
 
         )
 
-
         self.play_betting_round()
-
-
-
-
 
         # ------------------------------
         # Flop
@@ -1169,12 +895,7 @@ class Game:
 
         self.deal_flop()
 
-
         self.play_betting_round()
-
-
-
-
 
         # ------------------------------
         # Turn
@@ -1182,12 +903,7 @@ class Game:
 
         self.deal_turn()
 
-
         self.play_betting_round()
-
-
-
-
 
         # ------------------------------
         # River
@@ -1195,21 +911,9 @@ class Game:
 
         self.deal_river()
 
-
         self.play_betting_round()
 
-
-
-
-
         return self.finish_hand()
-
-
-
-
-
-
-
 
     # ==========================================
     # Finish Hand
@@ -1223,8 +927,6 @@ class Game:
         complete hand.
         """
 
-
-
         active_players = [
 
             player
@@ -1235,20 +937,13 @@ class Game:
 
         ]
 
-
-
-
-
         # ======================================
         # Everyone folded except one
         # ======================================
 
         if len(active_players) == 1:
 
-
             winner = active_players[0]
-
-
 
             winner.chips += (
 
@@ -1256,12 +951,7 @@ class Game:
 
             )
 
-
-
-
-
             if self.logger:
-
 
                 self.logger.log_winner(
 
@@ -1269,40 +959,25 @@ class Game:
 
                 )
 
-
                 self.logger.finish_hand(
 
                     self.players
 
                 )
 
-
-
-
-
             self.state = GameState.HAND_COMPLETE
 
-
-
-
-
             return {
-
 
                 "winner":
 
                     winner,
-
 
                 "method":
 
                     "fold"
 
             }
-
-
-
-
 
         # ======================================
         # Showdown
@@ -1314,10 +989,6 @@ class Game:
 
         )
 
-
-
-
-
         result = self.showdown.resolve(
 
             active_players,
@@ -1327,10 +998,6 @@ class Game:
 
         )
 
-
-
-
-
         winners = result.get(
 
             "winners",
@@ -1339,22 +1006,11 @@ class Game:
 
         )
 
-
-
-
-
         winner = None
-
-
-
-
 
         if winners:
 
             winner = winners[0] if winners else None
-
-
-
 
         # ======================================
         # Logger
@@ -1362,9 +1018,7 @@ class Game:
 
         if self.logger:
 
-
             if winner:
-
 
                 self.logger.log_winner(
 
@@ -1372,48 +1026,29 @@ class Game:
 
                 )
 
-
-
             self.logger.finish_hand(
 
                 self.players
 
             )
 
-
-
-
-
         self.state = GameState.HAND_COMPLETE
 
-
-
-
-
         return {
-
 
             "winner":
 
                 winner,
 
-
             "method":
 
                 "showdown",
-
 
             "result":
 
                 result
 
         }
-
-
-
-
-
-
 
     # ==========================================
     # Current State
@@ -1428,12 +1063,6 @@ class Game:
 
         return self.state
 
-
-
-
-
-
-
     # ==========================================
     # Players
     # ==========================================
@@ -1447,12 +1076,6 @@ class Game:
 
         return self.players.copy()
 
-
-
-
-
-
-
     # ==========================================
     # Reset Game
     # ==========================================
@@ -1464,49 +1087,25 @@ class Game:
         Reset complete game.
         """
 
-
-
         self.table.reset()
-
 
         self.deck.reset()
 
-
         self.pot_manager.reset()
 
-
         self.betting_round.reset()
-
-
 
         if self.logger:
 
             self.logger.clear()
 
-
-
-
-
         for player in self.players:
-
 
             player.reset_for_round()
 
-
-
-
-
         self.state = GameState.WAITING
 
-
         self.hand_number = 0
-
-
-
-
-
-
-
 
     # ==========================================
     # Profile
@@ -1519,10 +1118,7 @@ class Game:
         Return game information.
         """
 
-
-
         return {
-
 
             "players":
 
@@ -1533,8 +1129,6 @@ class Game:
                     for player in self.players
 
                 ],
-
-
 
             "state":
 
@@ -1550,25 +1144,15 @@ class Game:
 
                 else self.state,
 
-
-
             "hands_played":
 
                 self.hand_number,
-
-
 
             "logger_enabled":
 
                 self.logger is not None
 
         }
-
-
-
-
-
-
 
     # ==========================================
     # Debug
@@ -1585,10 +1169,6 @@ class Game:
             f"Players: {len(self.players)}"
 
         )
-
-
-
-
 
     def __repr__(
         self

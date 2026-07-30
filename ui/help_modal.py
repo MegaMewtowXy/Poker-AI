@@ -10,16 +10,16 @@ class HelpModal:
     """
 
     HAND_RANKINGS = [
-        ("1. ROYAL FLUSH", "A, K, Q, J, 10 of the SAME suit", (234, 179, 8)),
-        ("2. STRAIGHT FLUSH", "5 consecutive cards of the SAME suit", (250, 204, 21)),
-        ("3. FOUR OF A KIND", "4 cards of the exact same rank", (168, 85, 247)),
-        ("4. FULL HOUSE", "3 of a Kind + 1 Pair combined", (192, 132, 252)),
-        ("5. FLUSH", "Any 5 cards of the SAME suit", (59, 130, 246)),
-        ("6. STRAIGHT", "5 consecutive cards of any suit", (96, 165, 250)),
-        ("7. THREE OF A KIND", "3 cards of the exact same rank", (45, 212, 191)),
-        ("8. TWO PAIR", "2 different pairs of matching ranks", (52, 211, 153)),
-        ("9. ONE PAIR", "2 cards of matching rank", (148, 163, 184)),
-        ("10. HIGH CARD", "No pair; highest single card counts", (203, 213, 225)),
+        ("1. ROYAL FLUSH", "[A♠ K♠ Q♠ J♠ T♠] • Highest possible hand of the same suit", (234, 179, 8)),
+        ("2. STRAIGHT FLUSH", "[9♥ 8♥ 7♥ 6♥ 5♥] • 5 consecutive cards of the same suit", (250, 204, 21)),
+        ("3. FOUR OF A KIND", "[A♣ A♦ A♥ A♠ K♦] • 4 cards of the exact same rank", (168, 85, 247)),
+        ("4. FULL HOUSE", "[K♣ K♦ K♠ 8♥ 8♦] • 3 of a Kind + 1 Pair combined", (192, 132, 252)),
+        ("5. FLUSH", "[A♦ J♦ 8♦ 4♦ 2♦] • Any 5 cards of the same suit", (59, 130, 246)),
+        ("6. STRAIGHT", "[T♣ 9♦ 8♠ 7♥ 6♦] • 5 consecutive cards of any suit", (96, 165, 250)),
+        ("7. THREE OF A KIND", "[Q♣ Q♦ Q♠ 9♥ 4♦] • 3 cards of the exact same rank", (45, 212, 191)),
+        ("8. TWO PAIR", "[J♣ J♦ 7♠ 7♥ K♦] • 2 different matching pairs", (52, 211, 153)),
+        ("9. ONE PAIR", "[10♣ 10♦ A♠ 8♥ 3♦] • 2 cards of matching rank", (148, 163, 184)),
+        ("10. HIGH CARD", "[A♠ K♦ 9♣ 7♥ 4♦] • Highest single card counts", (203, 213, 225)),
     ]
 
     AI_DICTIONARY = [

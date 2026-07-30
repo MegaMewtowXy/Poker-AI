@@ -2,8 +2,6 @@ from matplotlib.style import context
 
 from models.action import Action
 
-
-
 class BetSizer:
     """
     Final poker bet sizing engine.
@@ -30,8 +28,6 @@ class BetSizer:
     • Manage chips
     """
 
-
-
     def __init__(
         self,
         strategy=None,
@@ -41,9 +37,6 @@ class BetSizer:
         self.strategy = strategy
 
         self.difficulty = difficulty
-
-
-
 
     # ==========================================
     # Safe Parameter Access
@@ -62,8 +55,6 @@ class BetSizer:
 
             return default
 
-
-
         function = getattr(
 
             self.strategy,
@@ -74,21 +65,13 @@ class BetSizer:
 
         )
 
-
-
         if callable(function):
 
             return function()
 
-
-
         return default
 
-
-
-
     # ------------------------------------------
-
 
     def get_difficulty_value(
         self,
@@ -103,8 +86,6 @@ class BetSizer:
 
             return default
 
-
-
         function = getattr(
 
             self.difficulty,
@@ -115,18 +96,11 @@ class BetSizer:
 
         )
 
-
-
         if callable(function):
 
             return function()
 
-
-
         return default
-
-
-
 
     # ==========================================
     # Stack / Pot Information
@@ -150,8 +124,6 @@ class BetSizer:
 
             return 0
 
-
-
         return round(
 
             context.player_stack
@@ -163,9 +135,6 @@ class BetSizer:
             2
 
         )
-
-
-
 
     # ==========================================
     # Normal Bet
@@ -181,17 +150,11 @@ class BetSizer:
         Calculate opening/value bet size.
         """
 
-
         if equity is None:
 
             equity = strength
 
-
-
         pot = context.pot_size
-
-
-
 
         # ======================================
         # Base Percentage
@@ -199,40 +162,27 @@ class BetSizer:
 
         if equity >= 75:
 
-
             percentage = 1.0
 
             reason = "strong_value_bet"
 
-
-
         elif equity >= 55:
-
 
             percentage = 0.75
 
             reason = "medium_value_bet"
 
-
-
         elif equity >= 35:
-
 
             percentage = 0.50
 
             reason = "small_value_bet"
 
-
-
         else:
-
 
             percentage = 0.40
 
             reason = "bluff_bet"
-
-
-
 
         # ======================================
         # Strategy Adjustment
@@ -246,8 +196,6 @@ class BetSizer:
 
         )
 
-
-
         percentage *= (
 
             0.75
@@ -257,9 +205,6 @@ class BetSizer:
             aggression
 
         )
-
-
-
 
         # ======================================
         # Difficulty Adjustment
@@ -273,12 +218,7 @@ class BetSizer:
 
         )
 
-
-
         percentage *= difficulty_modifier
-
-
-
 
         # ======================================
         # Street Adjustment
@@ -298,9 +238,6 @@ class BetSizer:
 
             )
 
-
-
-
         amount = int(
 
             pot
@@ -311,26 +248,18 @@ class BetSizer:
 
         )
 
-
-
         if amount > context.player_stack:
             amount = context.player_stack
 
-
-
-
         return {
-
 
             "amount":
 
                 amount,
 
-
             "reason":
 
                 reason,
-
 
             "percentage":
 
@@ -487,36 +416,23 @@ class BetSizer:
         Stronger than normal raises.
         """
 
-
-
         if equity >= 75:
-
 
             multiplier = 4.0
 
             reason = "premium_3bet"
 
-
-
         elif equity >= 55:
-
 
             multiplier = 3.0
 
             reason = "standard_3bet"
 
-
-
         else:
-
 
             multiplier = 2.5
 
             reason = "light_3bet"
-
-
-
-
 
         multiplier *= self.get_strategy_value(
 
@@ -525,9 +441,6 @@ class BetSizer:
             0.5
 
         )
-
-
-
 
         amount = int(
 
@@ -539,9 +452,6 @@ class BetSizer:
 
         )
 
-
-
-
         amount = self.clamp(
 
             amount,
@@ -550,21 +460,15 @@ class BetSizer:
 
         )
 
-
-
-
         return {
-
 
             "amount":
 
                 amount,
 
-
             "reason":
 
                 reason,
-
 
             "multiplier":
 
@@ -578,10 +482,6 @@ class BetSizer:
 
         }
 
-
-
-
-
     # ==========================================
     # All In
     # ==========================================
@@ -594,25 +494,17 @@ class BetSizer:
         Return complete stack commitment.
         """
 
-
-
         return {
-
 
             "amount":
 
                 context.player_stack,
-
 
             "reason":
 
                 "all_in"
 
         }
-
-
-
-
 
     # ==========================================
     # Street Adjustment
@@ -638,34 +530,25 @@ class BetSizer:
         Maximum value extraction
         """
 
-
-
         modifiers = {
-
 
             "preflop":
 
                 1.0,
 
-
             "flop":
 
                 0.65,
 
-
             "turn":
 
                 0.85,
-
 
             "river":
 
                 1.0
 
         }
-
-
-
 
         if hasattr(street, "name"):
             street_name = street.name.lower()
@@ -682,10 +565,6 @@ class BetSizer:
             1.0
 
         )
-
-
-
-
 
     # ==========================================
     # Opponent Adjustment
@@ -705,14 +584,9 @@ class BetSizer:
         Smaller bluff sizing
         """
 
-
-
         if opponent is None:
 
             return 1.0
-
-
-
 
         threat = opponent.get(
 
@@ -722,8 +596,6 @@ class BetSizer:
 
         )
 
-
-
         opponent_type = opponent.get(
 
             "type",
@@ -732,17 +604,11 @@ class BetSizer:
 
         )
 
-
-
-
         # Calling stations
 
         if opponent_type == "calling_station":
 
             return 1.25
-
-
-
 
         # Aggressive opponents
 
@@ -750,23 +616,13 @@ class BetSizer:
 
             return 1.15
 
-
-
-
         # Tight dangerous players
 
         if threat >= 8:
 
             return 0.85
 
-
-
-
         return 1.0
-
-
-
-
 
     # ==========================================
     # Pot Pressure Modifier
@@ -786,29 +642,19 @@ class BetSizer:
         Avoid unnecessary inflation
         """
 
-
-
         spr = self.stack_to_pot_ratio(
 
             context
 
         )
 
-
-
         if spr <= 2:
 
             return 1.2
 
-
-
-
         elif spr >= 8:
 
             return 0.85
-
-
-
 
         return 1.0
         # ==========================================
@@ -899,8 +745,6 @@ class BetSizer:
 
             return result
 
-
-
     # ==========================================
     # Validate Bet
     # ==========================================
@@ -914,25 +758,15 @@ class BetSizer:
         Ensure bet amount is legal.
         """
 
-
-
         if amount < 0:
 
             return 0
-
-
 
         if amount > stack:
 
             return stack
 
-
-
         return int(amount)
-
-
-
-
 
     # ==========================================
     # Profile
@@ -945,30 +779,21 @@ class BetSizer:
         Return sizing engine information.
         """
 
-
-
         return {
-
 
             "strategy":
 
                 str(self.strategy),
 
-
             "difficulty":
 
                 str(self.difficulty),
-
 
             "engine":
 
                 "advanced_bet_sizing"
 
         }
-
-
-
-
 
     # ==========================================
     # Safety
@@ -983,25 +808,15 @@ class BetSizer:
         Prevent illegal chip amounts.
         """
 
-
-
         if amount < 0:
 
             return 0
-
-
 
         if amount > stack:
 
             return int(stack)
 
-
-
         return int(amount)
-
-
-
-
 
     # ==========================================
     # Debug
@@ -1014,8 +829,6 @@ class BetSizer:
             "BetSizer()"
 
         )
-
-
 
     def __str__(self):
 

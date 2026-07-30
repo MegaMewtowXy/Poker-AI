@@ -2,14 +2,9 @@ from datetime import datetime
 
 import uuid
 
-
-
-
-
 class HandHistory:
     """
     Complete poker hand recorder.
-
 
     Responsibilities
     ----------------
@@ -20,12 +15,10 @@ class HandHistory:
     • Store winner
     • Export hand data
 
-
     Supports
     --------
     • Human players
     • AI players
-
 
     Does NOT
     --------
@@ -33,10 +26,6 @@ class HandHistory:
     • Run poker rules
     • Calculate statistics
     """
-
-
-
-
 
     def __init__(
         self,
@@ -53,89 +42,53 @@ class HandHistory:
 
         )
 
-
-
         self.created_at = str(
 
             datetime.now()
 
         )
 
-
-
         # ======================================
         # Hand Information
         # ======================================
 
-
         self.game_type = "Texas Hold'em"
-
 
         self.small_blind = 0
 
-
         self.big_blind = 0
 
-
         self.dealer_position = None
-
-
-
-
 
         # ======================================
         # Players
         # ======================================
 
-
         self.players = []
-
-
-
-
 
         # ======================================
         # Cards
         # ======================================
 
-
         self.hole_cards = {}
 
-
         self.community_cards = []
-
-
-
-
 
         # ======================================
         # Actions
         # ======================================
 
-
         self.actions = []
-
-
-
-
 
         # ======================================
         # Result
         # ======================================
 
-
         self.winner = None
-
 
         self.pot = 0
 
-
         self.completed = False
-
-
-
-
-
 
     # ==========================================
     # Card Serialization
@@ -154,14 +107,9 @@ class HandHistory:
         - Strings
         """
 
-
-
         serialized = []
 
-
-
         for card in cards:
-
 
             if isinstance(
 
@@ -177,8 +125,6 @@ class HandHistory:
 
                 )
 
-
-
             else:
 
                 serialized.append(
@@ -186,8 +132,6 @@ class HandHistory:
                     str(card)
 
                 )
-
-
 
         return serialized
     
@@ -208,28 +152,19 @@ class HandHistory:
         - AIPlayer
         """
 
-
-
         player_data = {
-
 
             "name":
 
                 player.name,
 
-
-
             "position":
 
                 position,
 
-
-
             "starting_chips":
 
                 player.chips,
-
-
 
             "ending_chips":
 
@@ -237,19 +172,11 @@ class HandHistory:
 
         }
 
-
-
-
-
         self.players.append(
 
             player_data
 
         )
-
-
-
-
 
     # ==========================================
     # Set Blinds
@@ -264,16 +191,9 @@ class HandHistory:
         Store blind values.
         """
 
-
-
         self.small_blind = small_blind
 
-
         self.big_blind = big_blind
-
-
-
-
 
     # ==========================================
     # Store Hole Cards
@@ -290,8 +210,6 @@ class HandHistory:
         Converted into JSON-safe format.
         """
 
-
-
         self.hole_cards[player.name] = (
 
             self.serialize_cards(
@@ -301,10 +219,6 @@ class HandHistory:
             )
 
         )
-
-
-
-
 
     # ==========================================
     # Add Community Cards
@@ -320,8 +234,6 @@ class HandHistory:
         Converted into JSON-safe format.
         """
 
-
-
         self.community_cards.extend(
 
             self.serialize_cards(
@@ -331,10 +243,6 @@ class HandHistory:
             )
 
         )
-
-
-
-
 
     # ==========================================
     # Record Action
@@ -356,8 +264,6 @@ class HandHistory:
         Player calls 100
         """
 
-
-
         if hasattr(
 
             action,
@@ -368,42 +274,27 @@ class HandHistory:
 
             action_value = action.name
 
-
-
         else:
 
             action_value = action
 
-
-
-
-
         action_data = {
-
 
             "player":
 
                 player.name,
 
-
-
             "action":
 
                 action_value,
-
-
 
             "amount":
 
                 amount,
 
-
-
             "street":
 
                 street,
-
-
 
             "time":
 
@@ -411,19 +302,11 @@ class HandHistory:
 
         }
 
-
-
-
-
         self.actions.append(
 
             action_data
 
         )
-
-
-
-
 
     # ==========================================
     # Action Count
@@ -437,17 +320,11 @@ class HandHistory:
         recorded in this hand.
         """
 
-
-
         return len(
 
             self.actions
 
         )
-
-
-
-
 
     # ==========================================
     # Update Pot
@@ -461,13 +338,7 @@ class HandHistory:
         Update current pot size.
         """
 
-
-
         self.pot = amount
-
-
-
-
 
     # ==========================================
     # Set Winner
@@ -481,38 +352,23 @@ class HandHistory:
         Store winning player.
         """
 
-
-
         if player is None:
-
 
             self.winner = None
 
-
             return
 
-
-
-
-
         self.winner = {
-
 
             "name":
 
                 player.name,
-
-
 
             "chips":
 
                 player.chips
 
         }
-
-
-
-
 
     # ==========================================
     # Finish Hand
@@ -525,13 +381,7 @@ class HandHistory:
         Mark hand as completed.
         """
 
-
-
         self.completed = True
-
-
-
-
 
     # ==========================================
     # Update Ending Chips
@@ -545,16 +395,11 @@ class HandHistory:
         Store final chip counts.
         """
 
-
-
         for player_data in self.players:
-
 
             for player in players:
 
-
                 if player.name == player_data["name"]:
-
 
                     player_data["ending_chips"] = (
 
@@ -579,92 +424,61 @@ class HandHistory:
         - Database
         """
 
-
-
         return {
-
 
             "hand_id":
 
                 self.hand_id,
 
-
-
             "created_at":
 
                 self.created_at,
-
-
 
             "game_type":
 
                 self.game_type,
 
-
-
             "small_blind":
 
                 self.small_blind,
-
-
 
             "big_blind":
 
                 self.big_blind,
 
-
-
             "dealer_position":
 
                 self.dealer_position,
-
-
 
             "players":
 
                 self.players,
 
-
-
             "hole_cards":
 
                 self.hole_cards,
-
-
 
             "community_cards":
 
                 self.community_cards,
 
-
-
             "actions":
 
                 self.actions,
-
-
 
             "winner":
 
                 self.winner,
 
-
-
             "pot":
 
                 self.pot,
-
-
 
             "completed":
 
                 self.completed
 
         }
-
-
-
-
 
     # ==========================================
     # Load From Dictionary
@@ -679,8 +493,6 @@ class HandHistory:
         from saved JSON data.
         """
 
-
-
         self.hand_id = data.get(
 
             "hand_id",
@@ -688,8 +500,6 @@ class HandHistory:
             self.hand_id
 
         )
-
-
 
         self.created_at = data.get(
 
@@ -699,8 +509,6 @@ class HandHistory:
 
         )
 
-
-
         self.game_type = data.get(
 
             "game_type",
@@ -708,8 +516,6 @@ class HandHistory:
             "Texas Hold'em"
 
         )
-
-
 
         self.small_blind = data.get(
 
@@ -719,8 +525,6 @@ class HandHistory:
 
         )
 
-
-
         self.big_blind = data.get(
 
             "big_blind",
@@ -729,15 +533,11 @@ class HandHistory:
 
         )
 
-
-
         self.dealer_position = data.get(
 
             "dealer_position"
 
         )
-
-
 
         self.players = data.get(
 
@@ -747,8 +547,6 @@ class HandHistory:
 
         )
 
-
-
         self.hole_cards = data.get(
 
             "hole_cards",
@@ -756,8 +554,6 @@ class HandHistory:
             {}
 
         )
-
-
 
         self.community_cards = data.get(
 
@@ -767,8 +563,6 @@ class HandHistory:
 
         )
 
-
-
         self.actions = data.get(
 
             "actions",
@@ -777,15 +571,11 @@ class HandHistory:
 
         )
 
-
-
         self.winner = data.get(
 
             "winner"
 
         )
-
-
 
         self.pot = data.get(
 
@@ -795,8 +585,6 @@ class HandHistory:
 
         )
 
-
-
         self.completed = data.get(
 
             "completed",
@@ -805,15 +593,7 @@ class HandHistory:
 
         )
 
-
-
-
-
         return self
-
-
-
-
 
     # ==========================================
     # Profile
@@ -826,16 +606,11 @@ class HandHistory:
         Basic hand information.
         """
 
-
-
         return {
-
 
             "hand_id":
 
                 self.hand_id,
-
-
 
             "players":
 
@@ -845,13 +620,9 @@ class HandHistory:
 
                 ),
 
-
-
             "actions":
 
                 self.action_count(),
-
-
 
             "community_cards":
 
@@ -861,29 +632,19 @@ class HandHistory:
 
                 ),
 
-
-
             "winner":
 
                 self.winner,
 
-
-
             "pot":
 
                 self.pot,
-
-
 
             "completed":
 
                 self.completed
 
         }
-
-
-
-
 
     # ==========================================
     # Debug
@@ -900,10 +661,6 @@ class HandHistory:
             f"{self.hand_id})"
 
         )
-
-
-
-
 
     def __repr__(
         self

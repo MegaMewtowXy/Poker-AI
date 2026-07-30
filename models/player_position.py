@@ -1,6 +1,5 @@
 from enum import Enum, auto
 
-
 class PlayerPosition(Enum):
     """
     Poker table positions.
@@ -38,8 +37,6 @@ class PlayerPosition(Enum):
 
     UNKNOWN = auto()
 
-
-
     # ==================================================
     # Position Categories
     # ==================================================
@@ -57,8 +54,6 @@ class PlayerPosition(Enum):
 
         }
 
-
-
     # --------------------------------------------------
 
     def is_middle_position(self) -> bool:
@@ -73,8 +68,6 @@ class PlayerPosition(Enum):
             PlayerPosition.MIDDLE_POSITION_PLUS_ONE
 
         }
-
-
 
     # --------------------------------------------------
 
@@ -96,8 +89,6 @@ class PlayerPosition(Enum):
 
         }
 
-
-
     # --------------------------------------------------
 
     def is_blind_position(self) -> bool:
@@ -110,23 +101,17 @@ class PlayerPosition(Enum):
 
         return self == PlayerPosition.BIG_BLIND
 
-
-
     # --------------------------------------------------
 
     def is_button(self) -> bool:
 
         return self == PlayerPosition.BUTTON
 
-
-
     # --------------------------------------------------
 
     def is_unknown(self) -> bool:
 
         return self == PlayerPosition.UNKNOWN
-
-
 
     # ==================================================
     # Display Helpers
@@ -168,10 +153,7 @@ class PlayerPosition(Enum):
 
         }
 
-
         return names[self]
-
-
 
     # ==================================================
     # Debug
@@ -183,8 +165,6 @@ class PlayerPosition(Enum):
             "_",
             " "
         ).title()
-
-
 
     def __repr__(self):
 

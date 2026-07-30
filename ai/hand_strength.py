@@ -4,8 +4,6 @@ from models.player_position import PlayerPosition
 from models.player_role import PlayerRole
 from engine.evaluator import HandEvaluator
 
-
-
 class HandStrength:
     """
     Final AI hand strength analyzer.
@@ -25,13 +23,9 @@ class HandStrength:
         • Control betting
     """
 
-
-
     def __init__(self):
 
         self.evaluator = HandEvaluator()
-
-
 
     # ==========================================
     # Hand Evaluation
@@ -64,7 +58,6 @@ class HandStrength:
             hole_cards,
             community_cards
         )
-
 
     # ==========================================
     # Base Strength
@@ -106,7 +99,6 @@ class HandStrength:
 
         }
 
-
         return scores.get(
 
             result.hand_name,
@@ -134,8 +126,6 @@ class HandStrength:
         if first - second <= 2:
             score += 4
         return max(10, min(85, score))
-
-
 
     # ==========================================
     # Category Modifier
@@ -173,7 +163,6 @@ class HandStrength:
 
         }
 
-
         return modifiers.get(
 
             hand_name,
@@ -181,8 +170,6 @@ class HandStrength:
             0
 
         )
-
-
 
     # ==========================================
     # Card Helper
@@ -207,8 +194,6 @@ class HandStrength:
             community_cards
 
         )
-
-
 
     # ==========================================
     # Flush Draw
@@ -255,7 +240,6 @@ class HandStrength:
             for count in suits.values()
         )
 
-
     # ==========================================
     # Straight Sequences
     # ==========================================
@@ -289,8 +273,6 @@ class HandStrength:
             [10,11,12,13,14]
 
         ]
-
-
 
     # ==========================================
     # Straight Draw
@@ -399,7 +381,6 @@ class HandStrength:
 
         return False
 
-
     # ==========================================
     # Backdoor Draw
     # ==========================================
@@ -421,10 +402,7 @@ class HandStrength:
 
         )
 
-
         suits = {}
-
-
 
         for card in cards:
 
@@ -444,8 +422,6 @@ class HandStrength:
 
             )
 
-
-
         return any(
 
             count == 3
@@ -453,8 +429,6 @@ class HandStrength:
             for count in suits.values()
 
         )
-
-
 
     # ==========================================
     # Draw Strength
@@ -474,8 +448,6 @@ class HandStrength:
 
         strength = 0
 
-
-
         if self.flush_draw(
 
             hole_cards,
@@ -485,8 +457,6 @@ class HandStrength:
         ):
 
             strength += 10
-
-
 
         if self.straight_draw(
 
@@ -498,8 +468,6 @@ class HandStrength:
 
             strength += 10
 
-
-
         elif self.gutshot_draw(
 
             hole_cards,
@@ -509,8 +477,6 @@ class HandStrength:
         ):
 
             strength += 5
-
-
 
         if self.backdoor_draw(
 
@@ -522,8 +488,6 @@ class HandStrength:
 
             strength += 2
 
-
-
         return min(
 
             strength,
@@ -531,8 +495,6 @@ class HandStrength:
             25
 
         )
-
-
 
     # ==========================================
     # Pair Quality
@@ -591,7 +553,6 @@ class HandStrength:
             15
         )
 
-
     # ==========================================
     # Kicker Strength
     # ==========================================
@@ -611,8 +572,6 @@ class HandStrength:
 
             return 0
 
-
-
         ranks = sorted(
 
             [
@@ -627,38 +586,25 @@ class HandStrength:
 
         )
 
-
         highest = ranks[0]
-
-
 
         if highest == 14:
 
             return 8
 
-
-
         if highest >= 13:
 
             return 6
-
-
 
         if highest >= 11:
 
             return 4
 
-
-
         if highest >= 9:
 
             return 2
 
-
-
         return 0
-
-
 
     # ==========================================
     # Nuts Detection
@@ -728,15 +674,11 @@ class HandStrength:
 
         danger = 0
 
-
         suits = {}
 
         ranks = []
 
-
-
         for card in community_cards:
-
 
             suits[card.suit] = (
 
@@ -754,14 +696,11 @@ class HandStrength:
 
             )
 
-
             ranks.append(
 
                 card.rank.strength
 
             )
-
-
 
         # Flush possibilities
 
@@ -775,8 +714,6 @@ class HandStrength:
 
             danger += 10
 
-
-
         # Straight possibilities
 
         ranks = sorted(
@@ -785,14 +722,11 @@ class HandStrength:
 
         )
 
-
-
         for i in range(
 
             len(ranks) - 2
 
         ):
-
 
             if (
 
@@ -807,8 +741,6 @@ class HandStrength:
                 danger += 5
 
                 break
-
-
 
         return -min(
 
@@ -856,8 +788,6 @@ class HandStrength:
 
         return bonus
 
-
-
     # ==========================================
     # Opponent Modifier
     # ==========================================
@@ -881,23 +811,15 @@ class HandStrength:
 
             return 10
 
-
-
         if opponent_count <= 3:
 
             return 0
-
-
 
         if opponent_count <= 5:
 
             return -10
 
-
-
         return -20
-
-
 
     # ==========================================
     # Final Strength Calculation
@@ -960,7 +882,6 @@ class HandStrength:
 
         )
 
-
         return max(
 
             0,
@@ -974,8 +895,6 @@ class HandStrength:
             )
 
         )
-
-
 
     # ==========================================
     # Complete Hand Analysis
@@ -1006,8 +925,6 @@ class HandStrength:
 
         )
 
-
-
         base_strength = self.strength_score(
 
             result
@@ -1017,15 +934,11 @@ class HandStrength:
         if not community_cards:
             base_strength = self.preflop_strength(hole_cards)
 
-
-
         category_bonus = self.category_modifier(
 
             result.hand_name
 
         )
-
-
 
         draw_value = self.draw_strength(
 
@@ -1035,8 +948,6 @@ class HandStrength:
 
         )
 
-
-
         pair_bonus = self.pair_quality(
 
             hole_cards,
@@ -1045,15 +956,11 @@ class HandStrength:
 
         )
 
-
-
         kicker_bonus = self.kicker_strength(
 
             hole_cards
 
         )
-
-
 
         nuts_bonus = self.nuts_bonus(
 
@@ -1063,8 +970,6 @@ class HandStrength:
 
         )
 
-
-
         position_bonus = self.position_modifier(
 
             position,
@@ -1072,23 +977,17 @@ class HandStrength:
 
         )
 
-
-
         opponent_bonus = self.opponent_modifier(
 
             opponent_count
 
         )
 
-
-
         board_penalty = self.board_danger(
 
             community_cards
 
         )
-
-
 
         final_strength = self.calculate_final_strength(
 
@@ -1112,11 +1011,7 @@ class HandStrength:
 
         )
 
-
-
         draws = []
-
-
 
         if self.flush_draw(
 
@@ -1132,8 +1027,6 @@ class HandStrength:
 
             )
 
-
-
         if self.straight_draw(
 
             hole_cards,
@@ -1147,8 +1040,6 @@ class HandStrength:
                 "Straight Draw"
 
             )
-
-
 
         elif self.gutshot_draw(
 
@@ -1164,8 +1055,6 @@ class HandStrength:
 
             )
 
-
-
         if self.backdoor_draw(
 
             hole_cards,
@@ -1180,72 +1069,57 @@ class HandStrength:
 
             )
 
-
-
         return {
 
             "hand_name":
 
                 result.hand_name,
 
-
             "base_strength":
 
                 base_strength,
-
 
             "intrinsic_strength":
 
                 max(0, min(100, base_strength + category_bonus + draw_value + pair_bonus + kicker_bonus + nuts_bonus)),
 
-
             "category_bonus":
 
                 category_bonus,
-
 
             "draw_strength":
 
                 draw_value,
 
-
             "pair_bonus":
 
                 pair_bonus,
-
 
             "kicker_bonus":
 
                 kicker_bonus,
 
-
             "nuts_bonus":
 
                 nuts_bonus,
-
 
             "equity":
 
                 equity,
 
-
             "final_strength":
 
                 final_strength,
 
-
             "draws":
 
                 draws,
-
 
             "score":
 
                 result.score
 
         }
-
-
 
     # ==========================================
     # Debug
@@ -1254,8 +1128,6 @@ class HandStrength:
     def __repr__(self):
 
         return "HandStrength()"
-
-
 
     def __str__(self):
 

@@ -3,8 +3,6 @@ from collections import defaultdict
 from models.player import Player
 from models.pot import Pot
 
-
-
 class PotManager:
     """
     Manages poker pots.
@@ -18,19 +16,14 @@ class PotManager:
     • Award chips
     """
 
-
-
     def __init__(self):
 
         self.main_pot = Pot()
 
         self.side_pots: list[Pot] = []
 
-
         # Player -> chips invested
         self.contributions: dict[Player, int] = defaultdict(int)
-
-
 
     # =====================================================
     # Reset
@@ -47,8 +40,6 @@ class PotManager:
 
         self.contributions.clear()
 
-
-
     # =====================================================
     # Validation
     # =====================================================
@@ -63,8 +54,6 @@ class PotManager:
             raise ValueError(
                 "Chip amount cannot be negative."
             )
-
-
 
     # =====================================================
     # Contributions
@@ -88,12 +77,9 @@ class PotManager:
 
         )
 
-
         if amount == 0:
 
             return
-
-
 
         self.main_pot.add_chips(
 
@@ -101,17 +87,13 @@ class PotManager:
 
         )
 
-
         self.main_pot.add_player(
 
             player
 
         )
 
-
         self.contributions[player] += amount
-
-
 
     # -----------------------------------------------------
 
@@ -122,8 +104,6 @@ class PotManager:
 
         return self.contributions[player]
 
-
-
     # -----------------------------------------------------
 
     def all_players(self):
@@ -133,8 +113,6 @@ class PotManager:
             self.contributions.keys()
 
         )
-
-
 
     # -----------------------------------------------------
 
@@ -161,7 +139,6 @@ class PotManager:
         Bob     -> 300
         Charlie -> 500
 
-
         Result:
 
         Main Pot  : 300
@@ -175,8 +152,6 @@ class PotManager:
 
         self.side_pots.clear()
 
-
-
         contributors = [
 
             (player, chips)
@@ -189,13 +164,9 @@ class PotManager:
 
         ]
 
-
-
         if not contributors:
 
             return
-
-
 
         # Lowest contribution first
 
@@ -205,11 +176,7 @@ class PotManager:
 
         )
 
-
-
         previous_level = 0
-
-
 
         remaining_players = [
 
@@ -221,14 +188,9 @@ class PotManager:
 
         ]
 
-
-
         first_pot = True
 
-
-
         for player, contribution in contributors:
-
 
             layer = (
 
@@ -240,7 +202,6 @@ class PotManager:
 
             )
 
-
             if layer <= 0:
 
                 remaining_players.remove(
@@ -250,8 +211,6 @@ class PotManager:
                 )
 
                 continue
-
-
 
             pot_amount = (
 
@@ -263,19 +222,13 @@ class PotManager:
 
             )
 
-
-
             if first_pot:
-
 
                 pot = self.main_pot
 
                 first_pot = False
 
-
-
             else:
-
 
                 pot = Pot()
 
@@ -285,10 +238,7 @@ class PotManager:
 
                 )
 
-
-
             pot.amount = pot_amount
-
 
             pot.eligible_players = (
 
@@ -296,19 +246,13 @@ class PotManager:
 
             )
 
-
-
             previous_level = contribution
-
-
 
             remaining_players.remove(
 
                 player
 
             )
-
-
 
     # =====================================================
     # Pot Access
@@ -321,8 +265,6 @@ class PotManager:
 
         return self.main_pot
 
-
-
     # -----------------------------------------------------
 
     def get_side_pots(self) -> list[Pot]:
@@ -331,8 +273,6 @@ class PotManager:
         """
 
         return self.side_pots
-
-
 
     # -----------------------------------------------------
 
@@ -347,8 +287,6 @@ class PotManager:
 
         ] + self.side_pots
 
-
-
     # =====================================================
     # Pot Information
     # =====================================================
@@ -360,17 +298,11 @@ class PotManager:
 
         total = self.main_pot.amount
 
-
-
         for pot in self.side_pots:
 
             total += pot.amount
 
-
-
         return total
-
-
 
     # -----------------------------------------------------
 
@@ -404,8 +336,6 @@ class PotManager:
 
         ]
 
-
-
     # -----------------------------------------------------
 
     def eligible_for_pot(
@@ -425,8 +355,6 @@ class PotManager:
 
         )
 
-
-
     # =====================================================
     # Pot Awarding
     # =====================================================
@@ -444,22 +372,17 @@ class PotManager:
 
             return
 
-
-
         winner.win_chips(
 
             pot.amount
 
         )
 
-
         self.clear_pot(
 
             pot
 
         )
-
-
 
     # -----------------------------------------------------
 
@@ -479,13 +402,9 @@ class PotManager:
 
             return
 
-
-
         if pot.amount <= 0:
 
             return
-
-
 
         share = (
 
@@ -497,7 +416,6 @@ class PotManager:
 
         )
 
-
         remainder = (
 
             pot.amount
@@ -508,10 +426,7 @@ class PotManager:
 
         )
 
-
-
         for player in winners:
-
 
             player.win_chips(
 
@@ -519,10 +434,7 @@ class PotManager:
 
             )
 
-
-
         for i in range(remainder):
-
 
             winners[i].win_chips(
 
@@ -530,15 +442,11 @@ class PotManager:
 
             )
 
-
-
         self.clear_pot(
 
             pot
 
         )
-
-
 
     # =====================================================
     # Pot Clearing
@@ -554,8 +462,6 @@ class PotManager:
 
         pot.clear()
 
-
-
     # -----------------------------------------------------
 
     def clear_all_pots(self):
@@ -564,7 +470,6 @@ class PotManager:
         """
 
         self.main_pot.clear()
-
 
         for pot in self.side_pots:
 
@@ -584,7 +489,6 @@ class PotManager:
                 "Main pot cannot be negative."
             )
 
-
         for pot in self.side_pots:
 
             if pot.amount < 0:
@@ -593,8 +497,6 @@ class PotManager:
                     "Side pot cannot be negative."
                 )
 
-
-
         for player, amount in self.contributions.items():
 
             if amount < 0:
@@ -602,8 +504,6 @@ class PotManager:
                 raise RuntimeError(
                     f"Invalid contribution for {player.name}"
                 )
-
-
 
     # =====================================================
     # Debug Helpers
@@ -615,7 +515,6 @@ class PotManager:
 
         print("----------------------------")
 
-
         for player, chips in self.contributions.items():
 
             print(
@@ -623,8 +522,6 @@ class PotManager:
                 f"{player.name:<15}${chips}"
 
             )
-
-
 
     # -----------------------------------------------------
 
@@ -634,14 +531,11 @@ class PotManager:
 
         print("----------------------------")
 
-
         print(
 
             f"Main Pot : ${self.main_pot.amount}"
 
         )
-
-
 
         for index, pot in enumerate(
 
@@ -659,8 +553,6 @@ class PotManager:
 
             )
 
-
-
             print()
 
             print(
@@ -669,21 +561,17 @@ class PotManager:
 
             )
 
-
             print(
 
                 f"Amount : ${pot.amount}"
 
             )
 
-
             print(
 
                 f"Eligible : {names}"
 
             )
-
-
 
     # =====================================================
     # Information
@@ -696,23 +584,17 @@ class PotManager:
 
         return 1 + len(self.side_pots)
 
-
-
     # -----------------------------------------------------
 
     def has_side_pots(self) -> bool:
 
         return len(self.side_pots) > 0
 
-
-
     # -----------------------------------------------------
 
     def is_empty(self) -> bool:
 
         return self.total_pot() == 0
-
-
 
     # =====================================================
     # String Representation
@@ -722,13 +604,11 @@ class PotManager:
 
         lines = []
 
-
         lines.append(
 
             f"Main Pot : ${self.main_pot.amount}"
 
         )
-
 
         for index, pot in enumerate(
 
@@ -744,13 +624,10 @@ class PotManager:
 
             )
 
-
-
         lines.append(
 
             f"Total Pot : ${self.total_pot()}"
 
         )
-
 
         return "\n".join(lines)

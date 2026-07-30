@@ -2,16 +2,11 @@ from AI.equity import EquityCalculator
 
 from models.card import Card, Suit, Rank
 
-
-
 def test_equity():
 
     print("\n========== EQUITY TEST ==========")
 
-
     calculator = EquityCalculator()
-
-
 
     hero_cards = [
 
@@ -26,8 +21,6 @@ def test_equity():
         )
 
     ]
-
-
 
     community_cards = [
 
@@ -48,8 +41,6 @@ def test_equity():
 
     ]
 
-
-
     result = calculator.calculate(
 
         hero_cards,
@@ -62,10 +53,7 @@ def test_equity():
 
     )
 
-
     print(result)
-
-
 
     assert "win_percentage" in result
 
@@ -73,13 +61,9 @@ def test_equity():
 
     assert "lose_percentage" in result
 
-
-
     print(
         "\n========== EQUITY TEST PASSED =========="
     )
-
-
 
 if __name__ == "__main__":
 

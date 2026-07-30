@@ -4,10 +4,6 @@ from models.action import Action
 from models.street import Street
 from simulation.logger import GameLogger
 
-
-
-
-
 class BettingRound:
     """
     Controls a single betting street in Texas Hold'em.
@@ -21,7 +17,6 @@ class BettingRound:
     • Maintain action history
     • Send actions to logger
 
-
     This class does NOT:
 
         • Move chips
@@ -29,10 +24,6 @@ class BettingRound:
         • Award pots
         • Deal cards
     """
-
-
-
-
 
     def __init__(
         self,
@@ -49,14 +40,11 @@ class BettingRound:
 
         self.table = table
 
-
         # ==========================================
         # Logger
         # ==========================================
 
         self.logger = logger
-
-
 
         # ==========================================
         # Round State
@@ -73,28 +61,21 @@ class BettingRound:
 
         self.street = Street.PRE_FLOP
 
-
         # ==========================================
         # Turn State
         # ==========================================
 
         self.current_index = -1
 
-
         self.starting_player: Player | None = None
 
-
         self.last_aggressor: Player | None = None
-
-
 
         # ==========================================
         # Betting State
         # ==========================================
 
         self.players_to_act: set[Player] = set()
-
-
 
         # ==========================================
         # History
@@ -110,38 +91,25 @@ class BettingRound:
         Prepare betting round for a new street.
         """
 
-
-
         self.started = False
 
         self.first_action_taken = False
 
         self.betting_closed = False
 
-
         self.current_index = -1
-
 
         self.starting_player = None
 
-
         self.last_aggressor = None
-
 
         self.players_to_act.clear()
 
-
         self.action_history.clear()
-
-
-
-
 
         for player in self.players:
 
-
             player.reset_betting_round()
-
 
             if player.can_act():
 
@@ -151,10 +119,6 @@ class BettingRound:
 
                 )
 
-
-
-
-
     # --------------------------------------------------
 
     def reset_for_new_street(
@@ -162,10 +126,6 @@ class BettingRound:
     ):
 
         self.reset()
-
-
-
-
 
     # --------------------------------------------------
     def start(
@@ -192,10 +152,6 @@ class BettingRound:
                 first
             )
 
-
-
-
-
     # --------------------------------------------------
 
     def finish(
@@ -205,11 +161,6 @@ class BettingRound:
         self.started = False
 
         self.betting_closed = True
-
-
-
-
-
 
     # ==================================================
     # Current Player
@@ -222,8 +173,6 @@ class BettingRound:
         Return current acting player.
         """
 
-
-
         if self.current_index == -1:
 
             raise RuntimeError(
@@ -232,19 +181,11 @@ class BettingRound:
 
             )
 
-
-
-
-
         return self.players[
 
             self.current_index
 
         ]
-
-
-
-
 
     # --------------------------------------------------
 
@@ -255,25 +196,15 @@ class BettingRound:
         Return current player if available.
         """
 
-
-
         if self.current_index == -1:
 
             return None
-
-
-
-
 
         return self.players[
 
             self.current_index
 
         ]
-
-
-
-
 
     # --------------------------------------------------
 
@@ -285,8 +216,6 @@ class BettingRound:
         Set current acting player.
         """
 
-
-
         if player not in self.players:
 
             raise ValueError(
@@ -295,19 +224,11 @@ class BettingRound:
 
             )
 
-
-
-
-
         self.current_index = self.players.index(
 
             player
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -319,8 +240,6 @@ class BettingRound:
         Set first player to act.
         """
 
-
-
         if player not in self.players:
 
             raise ValueError(
@@ -328,10 +247,6 @@ class BettingRound:
                 "Player is not part of this betting round."
 
             )
-
-
-
-
 
         if not player.can_act():
 
@@ -341,25 +256,13 @@ class BettingRound:
 
             )
 
-
-
-
-
         self.starting_player = player
-
-
-
-
 
         self.set_current_player(
 
             player
 
         )
-
-
-
-
 
     # ==================================================
     # Navigation
@@ -373,15 +276,9 @@ class BettingRound:
         who can act.
         """
 
-
-
         if not self.players:
 
             return None
-
-
-
-
 
         total = len(
 
@@ -389,12 +286,7 @@ class BettingRound:
 
         )
 
-
-
-
-
         for _ in range(total):
-
 
             self.current_index = (
 
@@ -402,33 +294,17 @@ class BettingRound:
 
             ) % total
 
-
-
-
-
             player = self.players[
 
                 self.current_index
 
             ]
 
-
-
-
-
             if player.can_act():
 
                 return player
 
-
-
-
-
         return None
-
-
-
-
 
     # --------------------------------------------------
 
@@ -440,15 +316,9 @@ class BettingRound:
         player who can act.
         """
 
-
-
         if not self.players:
 
             return None
-
-
-
-
 
         total = len(
 
@@ -456,12 +326,7 @@ class BettingRound:
 
         )
 
-
-
-
-
         for _ in range(total):
-
 
             self.current_index = (
 
@@ -469,27 +334,15 @@ class BettingRound:
 
             ) % total
 
-
-
-
-
             player = self.players[
 
                 self.current_index
 
             ]
 
-
-
-
-
             if player.can_act():
 
                 return player
-
-
-
-
 
         return None
     
@@ -506,8 +359,6 @@ class BettingRound:
         given player.
         """
 
-
-
         if player not in self.players:
 
             raise ValueError(
@@ -516,15 +367,7 @@ class BettingRound:
 
             )
 
-
-
-
-
         old_index = self.current_index
-
-
-
-
 
         self.current_index = self.players.index(
 
@@ -532,27 +375,11 @@ class BettingRound:
 
         )
 
-
-
-
-
         result = self.next_player()
-
-
-
-
 
         self.current_index = old_index
 
-
-
-
-
         return result
-
-
-
-
 
     # --------------------------------------------------
 
@@ -564,8 +391,6 @@ class BettingRound:
         Find previous acting player.
         """
 
-
-
         if player not in self.players:
 
             raise ValueError(
@@ -574,15 +399,7 @@ class BettingRound:
 
             )
 
-
-
-
-
         old_index = self.current_index
-
-
-
-
 
         self.current_index = self.players.index(
 
@@ -590,27 +407,11 @@ class BettingRound:
 
         )
 
-
-
-
-
         result = self.previous_player()
-
-
-
-
 
         self.current_index = old_index
 
-
-
-
-
         return result
-
-
-
-
 
     # --------------------------------------------------
 
@@ -624,24 +425,13 @@ class BettingRound:
         using poker rules.
         """
 
-
-
         for player in self.players:
-
 
             if player.can_act():
 
                 return player
 
-
-
-
-
         return None
-
-
-
-
 
     # --------------------------------------------------
 
@@ -649,24 +439,13 @@ class BettingRound:
         self
     ) -> Player | None:
 
-
         for player in reversed(self.players):
-
 
             if player.can_act():
 
                 return player
 
-
-
-
-
         return None
-
-
-
-
-
 
     # ==================================================
     # Player Queries
@@ -687,8 +466,6 @@ class BettingRound:
         - Eliminated
         """
 
-
-
         return [
 
             player
@@ -699,10 +476,6 @@ class BettingRound:
 
         ]
 
-
-
-
-
     # --------------------------------------------------
 
     def active_players(
@@ -711,8 +484,6 @@ class BettingRound:
         """
         Players who can still act.
         """
-
-
 
         return [
 
@@ -724,16 +495,11 @@ class BettingRound:
 
         ]
 
-
-
-
-
     # --------------------------------------------------
 
     def folded_players(
         self
     ) -> list[Player]:
-
 
         return [
 
@@ -745,16 +511,11 @@ class BettingRound:
 
         ]
 
-
-
-
-
     # --------------------------------------------------
 
     def all_in_players(
         self
     ) -> list[Player]:
-
 
         return [
 
@@ -766,16 +527,11 @@ class BettingRound:
 
         ]
 
-
-
-
-
     # --------------------------------------------------
 
     def eliminated_players(
         self
     ) -> list[Player]:
-
 
         return [
 
@@ -786,10 +542,6 @@ class BettingRound:
             if player.eliminated
 
         ]
-
-
-
-
 
     # ==================================================
     # Counts
@@ -805,10 +557,6 @@ class BettingRound:
 
         )
 
-
-
-
-
     # --------------------------------------------------
 
     def active_player_count(
@@ -820,10 +568,6 @@ class BettingRound:
             self.active_players()
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -837,10 +581,6 @@ class BettingRound:
 
         )
 
-
-
-
-
     # --------------------------------------------------
 
     def all_in_player_count(
@@ -852,10 +592,6 @@ class BettingRound:
             self.all_in_players()
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -885,10 +621,6 @@ class BettingRound:
 
         )
 
-
-
-
-
     # --------------------------------------------------
 
     def has_active_players(
@@ -903,10 +635,6 @@ class BettingRound:
 
         )
 
-
-
-
-
     # --------------------------------------------------
 
     def is_player_in_hand(
@@ -918,8 +646,6 @@ class BettingRound:
         for the pot.
         """
 
-
-
         return (
 
             not player.folded
@@ -929,10 +655,6 @@ class BettingRound:
             not player.eliminated
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -947,10 +669,6 @@ class BettingRound:
 
         )
 
-
-
-
-
     # ==================================================
     # Betting Logic
     # ==================================================
@@ -963,20 +681,13 @@ class BettingRound:
         Mark player as completed action.
         """
 
-
-
         self.first_action_taken = True
-
 
         self.players_to_act.discard(
 
             player
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -996,8 +707,6 @@ class BettingRound:
         - External logging
         """
 
-
-
         action_name = (
 
             action.name
@@ -1014,40 +723,25 @@ class BettingRound:
 
         )
 
-
-
-
-
         action_data = {
-
 
             "player":
 
                 player.name,
 
-
-
             "action":
 
                 action_name,
 
-
-
             "amount":
 
                 amount,
-
-
 
             "street":
 
                 self.street
 
         }
-
-
-
-
 
         # Internal history
 
@@ -1057,14 +751,9 @@ class BettingRound:
 
         )
 
-
-
-
-
         # External Game Logger
 
         if self.logger:
-
 
             self.logger.log_action(
 
@@ -1077,10 +766,6 @@ class BettingRound:
                 self.street
 
             )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1095,8 +780,6 @@ class BettingRound:
         aggressor must respond again.
         """
 
-
-
         if aggressor not in self.players:
 
             raise ValueError(
@@ -1105,24 +788,13 @@ class BettingRound:
 
             )
 
-
-
-
-
         self.last_aggressor = aggressor
-
 
         self.first_action_taken = True
 
-
         self.players_to_act.clear()
 
-
-
-
-
         for player in self.players:
-
 
             if (
 
@@ -1140,10 +812,6 @@ class BettingRound:
 
                 )
 
-
-
-
-
     # --------------------------------------------------
 
     def amount_to_call(
@@ -1153,8 +821,6 @@ class BettingRound:
         """
         Return chips required to call.
         """
-
-
 
         return max(
 
@@ -1167,10 +833,6 @@ class BettingRound:
             player.current_bet
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1186,10 +848,6 @@ class BettingRound:
 
         )
 
-
-
-
-
     # --------------------------------------------------
 
     def everyone_matched_bet(
@@ -1200,38 +858,19 @@ class BettingRound:
         current bet.
         """
 
-
-
         current_bet = self.table.current_bet
 
-
-
-
-
         for player in self.players_in_hand():
-
 
             if player.all_in:
 
                 continue
 
-
-
-
-
             if player.current_bet != current_bet:
 
                 return False
 
-
-
-
-
         return True
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1243,21 +882,11 @@ class BettingRound:
         are all-in.
         """
 
-
-
         players = self.players_in_hand()
-
-
-
-
 
         if not players:
 
             return False
-
-
-
-
 
         return all(
 
@@ -1266,10 +895,6 @@ class BettingRound:
             for player in players
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1285,10 +910,6 @@ class BettingRound:
 
         )
 
-
-
-
-
     # --------------------------------------------------
 
     def betting_complete(
@@ -1298,23 +919,13 @@ class BettingRound:
         Determine if street ended.
         """
 
-
-
         if self.only_one_player_left():
 
             return True
 
-
-
-
-
         if self.everyone_all_in():
 
             return True
-
-
-
-
 
         if (
 
@@ -1328,15 +939,7 @@ class BettingRound:
 
             return True
 
-
-
-
-
         return False
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1356,8 +959,6 @@ class BettingRound:
         Validate betting round state.
         """
 
-
-
         if not self.players:
 
             raise ValueError(
@@ -1366,12 +967,7 @@ class BettingRound:
 
             )
 
-
-
-
-
         for player in self.players:
-
 
             if player is None:
 
@@ -1381,15 +977,7 @@ class BettingRound:
 
                 )
 
-
-
-
-
         return True
-
-
-
-
 
     # ==================================================
     # Status Helpers
@@ -1403,17 +991,11 @@ class BettingRound:
         for action.
         """
 
-
-
         return len(
 
             self.players_to_act
 
         )
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1424,13 +1006,7 @@ class BettingRound:
         Check if betting round started.
         """
 
-
-
         return self.started
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1441,13 +1017,7 @@ class BettingRound:
         Check if betting round ended.
         """
 
-
-
         return self.betting_closed
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1458,13 +1028,7 @@ class BettingRound:
         Check current player availability.
         """
 
-
-
         return self.current_index != -1
-
-
-
-
 
     # --------------------------------------------------
 
@@ -1476,8 +1040,6 @@ class BettingRound:
         for an action.
         """
 
-
-
         return (
 
             self.has_started()
@@ -1487,8 +1049,6 @@ class BettingRound:
             self.pending_player_count() > 0
 
         )
-
-
 
     # ==================================================
     # Street Management
@@ -1507,7 +1067,6 @@ class BettingRound:
             raise ValueError(
                 "Invalid street type."
             )
-
 
         self.street = street
 
@@ -1528,10 +1087,6 @@ class BettingRound:
             f"pending={len(self.players_to_act)})"
 
         )
-
-
-
-
 
     def __repr__(
         self

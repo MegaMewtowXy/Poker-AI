@@ -1,6 +1,5 @@
 from enum import Enum, auto
 
-
 class PlayerRole(Enum):
 
     DEALER = auto()
@@ -8,7 +7,6 @@ class PlayerRole(Enum):
     SMALL_BLIND = auto()
 
     BIG_BLIND = auto()
-
 
     def __str__(self):
 

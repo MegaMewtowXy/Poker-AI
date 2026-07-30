@@ -5,18 +5,14 @@ from AI.bot_player import BotPlayer
 from integration.ai_player import AIPlayer
 from models.player import Player
 from ui.help_modal import HelpModal
-from ui.widgets import Button, TextInput
+from ui.widgets import Button, TextInput, draw_glass_panel
+
+from network.server import RoomServer
+from network.client import NetworkClient
 
 class LobbyScreen:
     """
-    Sleek & Modern Responsive Full Ring Lobby Screen.
-    Features:
-    - AI Strategy Dictionary Guide ([AI DICTIONARY] button).
-    - Perfect Vertical Layout Alignment with Clean Header-Pill Spacing.
-    - Configurable Starting Stack ($500, $1000, $2000, $5000, $10000).
-    - Configurable Blinds ($10/$20, $25/$50, $50/$100).
-    - Auto-Rebuy Mode (ON/OFF).
-    - Dynamic 2 to 9 Full Ring Seats with custom names & AI personalities.
+    Sleek & Modern Responsive Full Ring Lobby Screen with Online/LAN Room-Code Multiplayer.
     """
 
     DIFFICULTIES = [("EASY", "EASY"), ("MEDIUM", "MED"), ("HARD", "HARD"), ("EXPERT", "EXPRT")]
@@ -36,6 +32,16 @@ class LobbyScreen:
         self.on_start_game = on_start_game
         self.num_seats = 6
         self.help_modal = HelpModal(self.screen)
+
+        # Network Multiplayer System
+        self.server = RoomServer()
+        self.client = NetworkClient()
+        self.active_room_code = None
+        self.local_ip = self.server.get_local_ip()
+        self.show_join_modal = False
+        self.join_code_input = None
+        self.join_ip_input = None
+        self.network_status_msg = ""
 
         # Table Configuration Values
         self.starting_chips = 1000
@@ -138,12 +144,42 @@ class LobbyScreen:
             inp = TextInput((x + 75, y + 8, card_w - 170, 26), initial_text=self.seats[i]["name"], on_change=lambda text, idx=i: self._update_seat_name(idx, text))
             self.name_inputs.append(inp)
 
-        # Start Button (Bottom Anchor)
-        start_w = int(sw * 0.30)
+        # Start & Network Multiplayer Buttons (Bottom Anchor)
+        start_w = int(sw * 0.22)
         start_h = int(sh * 0.07)
-        start_x = (sw - start_w) // 2
         start_y = int(sh * 0.90)
-        self.start_button = Button((start_x, start_y, start_w, start_h), "START POKER GAME", callback=self._launch_game, bg_color=(16, 185, 129), hover_color=(5, 150, 105), font_size=20, radius=10)
+        start_x = (sw - (start_w * 3 + 24)) // 2
+
+        self.start_button = Button((start_x, start_y, start_w, start_h), "START LOCAL GAME", callback=self._launch_game, bg_color=(16, 185, 129), hover_color=(5, 150, 105), font_size=16, radius=10)
+        self.host_room_btn = Button((start_x + start_w + 12, start_y, start_w, start_h), "HOST ROOM (CREATE)", callback=self._host_room_action, bg_color=(59, 130, 246), hover_color=(29, 78, 216), font_size=16, radius=10)
+        self.join_room_btn = Button((start_x + 2 * (start_w + 12), start_y, start_w, start_h), "JOIN ROOM (CODE)", callback=self._open_join_modal_action, bg_color=(168, 85, 247), hover_color=(126, 34, 206), font_size=16, radius=10)
+
+        # Join Room Modal Input
+        modal_w, modal_h = int(sw * 0.42), int(sh * 0.38)
+        mx, my = (sw - modal_w) // 2, (sh - modal_h) // 2
+        self.join_code_input = TextInput((mx + 140, my + 90, 200, 32), initial_text="PKR-")
+
+    def _host_room_action(self):
+        try:
+            self.server.start()
+            self.active_room_code = self.server.generate_room_code()
+            self.network_status_msg = f"HOSTING ROOM: {self.active_room_code} (Share Code With Friends)"
+        except Exception as e:
+            self.network_status_msg = f"Host error: {e}"
+
+    def _open_join_modal_action(self):
+        self.show_join_modal = True
+
+    def _submit_join_room_action(self):
+        code = self.join_code_input.text.strip().upper()
+        target_ip = self.server.room_code_to_ip(code)
+        if self.client.connect(target_ip, 9999):
+            self.client.send("JOIN_ROOM", {"room_code": code, "player_name": "FriendPlayer"})
+            self.active_room_code = code
+            self.show_join_modal = False
+            self.network_status_msg = f"CONNECTED TO ROOM {code}!"
+        else:
+            self.network_status_msg = f"Could not connect to Room {code}"
 
     def _set_seat_count(self, count):
         self.num_seats = count
@@ -157,11 +193,30 @@ class LobbyScreen:
         if event.type == pygame.VIDEORESIZE:
             self._rebuild_layout()
 
-        if self.help_modal.mode is not None:
-            if self.help_modal.handle_event(event):
+        if self.show_join_modal:
+            if self.join_code_input.handle_event(event) or self.join_ip_input.handle_event(event):
                 return True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                self._submit_join_room_action()
+                return True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.show_join_modal = False
+                return True
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                sw, sh = self.screen.get_size()
+                modal_w, modal_h = int(sw * 0.45), int(sh * 0.45)
+                mx, my = (sw - modal_w) // 2, (sh - modal_h) // 2
+                submit_rect = pygame.Rect(mx + modal_w // 2 - 60, my + modal_h - 50, 120, 36)
+                close_rect = pygame.Rect(mx + modal_w - 36, my + 10, 26, 26)
+                if submit_rect.collidepoint(event.pos):
+                    self._submit_join_room_action()
+                    return True
+                if close_rect.collidepoint(event.pos):
+                    self.show_join_modal = False
+                    return True
+            return True
 
-        if self.dict_btn.handle_event(event) or self.start_button.handle_event(event):
+        if self.dict_btn.handle_event(event) or self.start_button.handle_event(event) or self.host_room_btn.handle_event(event) or self.join_room_btn.handle_event(event):
             return True
 
         for btn in self.seat_count_buttons + self.preset_buttons:
@@ -313,10 +368,9 @@ class LobbyScreen:
             cfg = self.seats[i]
             is_human = cfg["type"] == "Human"
             card_bg = (30, 41, 59) if is_human else (15, 23, 42)
-            border_color = (59, 130, 246) if is_human else (168, 85, 247)
+            border_color = (56, 189, 248) if is_human else (168, 85, 247)
 
-            pygame.draw.rect(self.screen, card_bg, rect, border_radius=10)
-            pygame.draw.rect(self.screen, border_color, rect, 2, border_radius=10)
+            draw_glass_panel(self.screen, rect, bg_color=card_bg, alpha=230, border_color=border_color, radius=10, border_width=2)
 
             font_lbl = pygame.font.SysFont("arial", max(11, int(card_h * 0.13)), bold=True)
             seat_lbl = font_lbl.render(f"Seat {i+1}:", True, (148, 163, 184))
@@ -366,6 +420,52 @@ class LobbyScreen:
                 self.screen.blit(h_surf, (x + 12, y + 60))
 
         self.start_button.draw(self.screen)
+        self.host_room_btn.draw(self.screen)
+        self.join_room_btn.draw(self.screen)
+
+        # Network Status Banner
+        if self.network_status_msg:
+            font_stat = pygame.font.SysFont("arial", 13, bold=True)
+            stat_surf = font_stat.render(self.network_status_msg, True, (250, 204, 21))
+            self.screen.blit(stat_surf, (sw // 2 - stat_surf.get_width() // 2, int(sh * 0.865)))
+
+        # Draw Join Room Modal Overlay if active
+        if self.show_join_modal:
+            self._draw_join_modal()
 
         # Draw AI Dictionary Modal if open
         self.help_modal.draw()
+
+    def _draw_join_modal(self):
+        sw, sh = self.screen.get_size()
+        modal_w, modal_h = int(sw * 0.42), int(sh * 0.38)
+        mx, my = (sw - modal_w) // 2, (sh - modal_h) // 2
+
+        backdrop = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        backdrop.fill((0, 0, 0, 180))
+        self.screen.blit(backdrop, (0, 0))
+
+        modal_rect = pygame.Rect(mx, my, modal_w, modal_h)
+        pygame.draw.rect(self.screen, (15, 23, 42), modal_rect, border_radius=14)
+        pygame.draw.rect(self.screen, (168, 85, 247), modal_rect, 2, border_radius=14)
+
+        font_t = pygame.font.SysFont("arial", 16, bold=True)
+        font_b = pygame.font.SysFont("arial", 13)
+
+        t_surf = font_t.render("JOIN MULTIPLAYER ROOM", True, (168, 85, 247))
+        self.screen.blit(t_surf, (mx + 20, my + 20))
+
+        c_lbl = font_b.render("ENTER ROOM CODE:", True, (241, 245, 249))
+        self.screen.blit(c_lbl, (mx + 20, my + 95))
+
+        self.join_code_input.draw(self.screen)
+
+        submit_rect = pygame.Rect(mx + modal_w // 2 - 60, my + modal_h - 50, 120, 36)
+        pygame.draw.rect(self.screen, (168, 85, 247), submit_rect, border_radius=6)
+        sub_surf = font_t.render("JOIN ROOM", True, (255, 255, 255))
+        self.screen.blit(sub_surf, (submit_rect.x + (120 - sub_surf.get_width()) // 2, submit_rect.y + 7))
+
+        close_rect = pygame.Rect(mx + modal_w - 36, my + 10, 26, 26)
+        pygame.draw.rect(self.screen, (220, 38, 38), close_rect, border_radius=6)
+        x_surf = font_t.render("X", True, (255, 255, 255))
+        self.screen.blit(x_surf, (close_rect.x + 8, close_rect.y + 3))

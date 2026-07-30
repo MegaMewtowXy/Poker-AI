@@ -1,6 +1,5 @@
 from enum import Enum, auto
 
-
 class Action(Enum):
     """
     All legal player actions in Texas Hold'em.
@@ -27,7 +26,6 @@ class Action(Enum):
 
     POST_BLIND = auto()
 
-
     # ==================================================
     # Action Classification
     # ==================================================
@@ -47,7 +45,6 @@ class Action(Enum):
 
         ]
 
-
     # --------------------------------------------------
 
     def is_passive(self) -> bool:
@@ -63,7 +60,6 @@ class Action(Enum):
 
         ]
 
-
     # --------------------------------------------------
 
     def is_terminal(self) -> bool:
@@ -72,7 +68,6 @@ class Action(Enum):
         """
 
         return self == Action.FOLD
-
 
     # --------------------------------------------------
 
@@ -94,7 +89,6 @@ class Action(Enum):
             Action.POST_BLIND
 
         ]
-
 
     # ==================================================
     # AI Helpers
@@ -128,7 +122,6 @@ class Action(Enum):
 
         return scores[self]
 
-
     # ==================================================
     # Display
     # ==================================================
@@ -139,7 +132,6 @@ class Action(Enum):
             "_",
             " "
         ).title()
-
 
     # --------------------------------------------------
 

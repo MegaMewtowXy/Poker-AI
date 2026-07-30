@@ -6,7 +6,6 @@ from engine.dealer import Dealer
 from engine.pot_manager import PotManager
 from engine.showdown import Showdown
 
-
 def test_full_hand():
 
     print("\n========== START FULL HAND TEST ==========")
@@ -29,7 +28,6 @@ def test_full_hand():
 
     ]
 
-
     # ==================================================
     # Create Engine Components
     # ==================================================
@@ -46,19 +44,16 @@ def test_full_hand():
 
     showdown = Showdown()
 
-
     # ==================================================
     # Start Hand
     # ==================================================
 
     dealer.start_new_hand()
 
-
     print("\nDeck created:")
     print(
         f"Cards remaining: {deck.cards_remaining()}"
     )
-
 
     # ==================================================
     # Deal Hole Cards
@@ -68,7 +63,6 @@ def test_full_hand():
         players
     )
 
-
     print("\nHole Cards")
 
     for player in players:
@@ -76,7 +70,6 @@ def test_full_hand():
         print(
             f"{player.name}: {player.show_hand()}"
         )
-
 
     # ==================================================
     # Deal Community Cards
@@ -94,13 +87,11 @@ def test_full_hand():
         table
     )
 
-
     print("\nCommunity Cards")
 
     print(
         table.show_community_cards()
     )
-
 
     # ==================================================
     # Simulate Betting
@@ -109,7 +100,6 @@ def test_full_hand():
     print("\nBetting")
 
     bet_amount = 100
-
 
     for player in players:
 
@@ -129,18 +119,15 @@ def test_full_hand():
             f"{player.name} bet {placed}"
         )
 
-
     print(
         f"Pot size: {pot_manager.total_pot()}"
     )
-
 
     # ==================================================
     # Showdown
     # ==================================================
 
     print("\n========== SHOWDOWN ==========")
-
 
     results = showdown.resolve(
 
@@ -152,13 +139,11 @@ def test_full_hand():
 
     )
 
-
     for player_name, result in results["results"].items():
 
         print(
             f"{player_name}: {result}"
         )
-
 
     # ==================================================
     # Final Chips
@@ -172,9 +157,7 @@ def test_full_hand():
             f"{player.name}: {player.chips}"
         )
 
-
     print("\n========== TEST COMPLETE ==========")
-
 
 if __name__ == "__main__":
 

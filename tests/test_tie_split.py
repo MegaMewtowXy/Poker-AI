@@ -6,7 +6,6 @@ from models.table import Table
 from engine.pot_manager import PotManager
 from engine.showdown import Showdown
 
-
 def card(rank, suit):
 
     return Card(
@@ -14,11 +13,9 @@ def card(rank, suit):
         rank
     )
 
-
 def test_tie_split():
 
     print("\n========== TIE SPLIT TEST ==========")
-
 
     # ==========================================
     # Players
@@ -34,12 +31,10 @@ def test_tie_split():
         1000
     )
 
-
     players = [
         alice,
         bob
     ]
-
 
     # ==========================================
     # Same Straight for Both Players
@@ -66,7 +61,6 @@ def test_tie_split():
 
     ]
 
-
     bob.hand = [
 
         card(
@@ -81,9 +75,7 @@ def test_tie_split():
 
     ]
 
-
     table = Table()
-
 
     table.community_cards = [
 
@@ -114,13 +106,11 @@ def test_tie_split():
 
     ]
 
-
     # ==========================================
     # Create Pot
     # ==========================================
 
     pot_manager = PotManager()
-
 
     alice.place_bet(
         100
@@ -129,7 +119,6 @@ def test_tie_split():
     bob.place_bet(
         100
     )
-
 
     pot_manager.add_to_main_pot(
         alice,
@@ -141,19 +130,16 @@ def test_tie_split():
         100
     )
 
-
     print(
         "Pot:",
         pot_manager.total_pot()
     )
-
 
     # ==========================================
     # Showdown
     # ==========================================
 
     showdown = Showdown()
-
 
     results = showdown.resolve(
 
@@ -165,7 +151,6 @@ def test_tie_split():
 
     )
 
-
     print("\nResults")
 
     for player_name, result in results["results"].items():
@@ -174,7 +159,6 @@ def test_tie_split():
             player_name,
             result
         )
-
 
     # ==========================================
     # Verify Split
@@ -192,16 +176,13 @@ def test_tie_split():
         bob.chips
     )
 
-
     assert alice.chips == 1000
 
     assert bob.chips == 1000
 
-
     print(
         "\n========== TIE SPLIT TEST PASSED =========="
     )
-
 
 if __name__ == "__main__":
 

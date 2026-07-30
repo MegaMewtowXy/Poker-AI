@@ -20,27 +20,19 @@ from AI.risk_manager import RiskManager
 
 from AI.range_model import RangeModel
 
-
 from AI.difficulty import (
     Difficulty,
     DifficultyManager
 )
-
 
 from AI.strategy import (
     Strategy,
     StrategyManager
 )
 
-
 from AI.opponent_model import OpponentModel
 
-
 from models.action import Action
-
-
-
-
 
 class BotPlayer:
     """
@@ -63,9 +55,6 @@ class BotPlayer:
     • Control game loop
     """
 
-
-
-
     def __init__(
         self,
         name: str,
@@ -73,10 +62,7 @@ class BotPlayer:
         strategy: Strategy = Strategy.BALANCED
     ):
 
-
         self.name = name
-
-
 
         # ======================================
         # AI Personality
@@ -88,14 +74,11 @@ class BotPlayer:
 
         )
 
-
         self.strategy = StrategyManager(
 
             strategy
 
         )
-
-
 
         # ======================================
         # Poker Intelligence
@@ -103,26 +86,19 @@ class BotPlayer:
 
         self.hand_strength = HandStrength()
 
-
         self.equity = EquityCalculator()
-
 
         self.pot_odds = PotOddsCalculator()
 
-
         self.board_analyzer = BoardAnalyzer()
 
-
         self.position_analyzer = PositionAnalyzer()
-
 
         self.risk_manager = RiskManager(
 
             self.strategy
 
         )
-
-
 
         # ======================================
         # Decision Modules
@@ -136,7 +112,6 @@ class BotPlayer:
 
         )
 
-
         self.bet_sizer = BetSizer(
 
             self.strategy,
@@ -144,7 +119,6 @@ class BotPlayer:
             self.difficulty
 
         )
-
 
         self.decision_engine = DecisionEngine(
 
@@ -154,14 +128,11 @@ class BotPlayer:
 
         )
 
-
-
         # ======================================
         # Opponent Intelligence
         # ======================================
 
         self.opponents = {}
-
 
         self.opponent_ranges = {}
     
@@ -177,7 +148,6 @@ class BotPlayer:
         Add opponent tracking.
         """
 
-
         if opponent_name not in self.opponents:
 
             self.opponents[opponent_name] = OpponentModel(
@@ -186,8 +156,6 @@ class BotPlayer:
 
             )
 
-
-
         if opponent_name not in self.opponent_ranges:
 
             self.opponent_ranges[opponent_name] = RangeModel(
@@ -195,9 +163,6 @@ class BotPlayer:
                 opponent_name
 
             )
-
-
-
 
     def opponent_model(
         self,
@@ -213,9 +178,6 @@ class BotPlayer:
 
         )
 
-
-
-
     def opponent_range(
         self,
         opponent_name
@@ -229,10 +191,6 @@ class BotPlayer:
             opponent_name
 
         )
-
-
-
-
 
     # ==========================================
     # Hand Analysis
@@ -260,10 +218,6 @@ class BotPlayer:
 
         )
 
-
-
-
-
     # ==========================================
     # Complete Intelligence Builder
     # ==========================================
@@ -279,8 +233,6 @@ class BotPlayer:
         Sent to DecisionEngine.
         """
 
-
-
         # ======================================
         # Hand Strength
         # ======================================
@@ -291,7 +243,6 @@ class BotPlayer:
 
         )
 
-
         strength = hand.get(
 
             "final_strength",
@@ -299,10 +250,6 @@ class BotPlayer:
             0
 
         )
-
-
-
-
 
         # ======================================
         # Equity
@@ -343,10 +290,6 @@ class BotPlayer:
             equity_result = {"equity": strength, "estimated": True}
             equity = strength
 
-
-
-
-
         # ======================================
         # Pot Odds
         # ======================================
@@ -359,9 +302,6 @@ class BotPlayer:
 
         )
 
-
-
-
         
         # ======================================
         # Board Analysis
@@ -372,10 +312,6 @@ class BotPlayer:
             context.community_cards
 
         )
-
-
-
-
 
         # ======================================
         # Position
@@ -388,10 +324,6 @@ class BotPlayer:
 
         )
 
-
-
-
-
         # ======================================
         # Opponent Intelligence
         # ======================================
@@ -400,10 +332,7 @@ class BotPlayer:
 
         range_profile = None
 
-
-
         if opponent_name:
-
 
             self.add_opponent(
 
@@ -411,10 +340,7 @@ class BotPlayer:
 
             )
 
-
-
             if self.difficulty.can_use_opponent_model():
-
 
                 opponent = self.opponent_model(
 
@@ -422,24 +348,17 @@ class BotPlayer:
 
                 )
 
-
                 opponent_range = self.opponent_range(
 
                     opponent_name
 
                 )
 
-
-
                 opponent_profile = opponent.ai_profile()
-
-
 
                 if opponent_range:
 
                     range_profile = opponent_range.profile()
-
-
 
         # ======================================
         # Bluff Analysis
@@ -447,16 +366,13 @@ class BotPlayer:
 
         bluff = {
 
-
             "should_bluff":
 
                 False,
 
-
             "frequency":
 
                 0,
-
 
             "score":
 
@@ -464,10 +380,7 @@ class BotPlayer:
 
         }
 
-
-
         if self.difficulty.can_bluff():
-
 
             bluff = self.bluff_engine.evaluate(
 
@@ -485,10 +398,6 @@ class BotPlayer:
 
             )
 
-
-
-
-
         # ======================================
         # Risk Analysis
         # ======================================
@@ -504,62 +413,47 @@ class BotPlayer:
         )
         risk["apply_to_decision"] = True
 
-
-
-
-
         return {
-
 
             "strength":
 
                 strength,
 
-
             "hand":
 
                 hand,
-
 
             "equity":
 
                 equity,
 
-
             "equity_details":
 
                 equity_result,
-
 
             "pot_odds":
 
                 pot_odds,
 
-
             "board":
 
                 board,
-
 
             "position":
 
                 position,
 
-
             "bluff":
 
                 bluff,
-
 
             "risk":
 
                 risk,
 
-
             "opponent":
 
                 opponent_profile,
-
 
             "range":
 
@@ -610,8 +504,6 @@ class BotPlayer:
         }
         """
 
-
-
         # ======================================
         # Build Analysis
         # ======================================
@@ -624,10 +516,6 @@ class BotPlayer:
 
         )
 
-
-
-
-
         # ======================================
         # Decision Engine
         # ======================================
@@ -638,19 +526,11 @@ class BotPlayer:
 
         )
 
-
-
         action = decision["action"]
-
-
 
         amount = 0
 
         sizing = None
-
-
-
-
 
         # ======================================
         # Bet Sizing
@@ -665,7 +545,6 @@ class BotPlayer:
             Action.ALL_IN
 
         ]:
-
 
             sizing = self.bet_sizer.calculate_size(
 
@@ -684,8 +563,6 @@ class BotPlayer:
                 )
 
             )
-
-
 
             amount = sizing.get(
 
@@ -706,19 +583,15 @@ class BotPlayer:
 
        
 
-
         return {
-
 
             "action":
 
                 action,
 
-
             "amount":
 
                 amount,
-
 
             "confidence":
 
@@ -730,7 +603,6 @@ class BotPlayer:
 
                 ),
 
-
             "reason":
 
                 decision.get(
@@ -740,7 +612,6 @@ class BotPlayer:
                     ""
 
                 ),
-
 
             "score":
 
@@ -752,21 +623,15 @@ class BotPlayer:
 
                 ),
 
-
             "sizing":
 
                 sizing,
-
 
             "analysis":
 
                 analysis
 
         }
-
-
-
-
 
     # ==========================================
     # Opponent Learning
@@ -789,15 +654,11 @@ class BotPlayer:
         - Possible hand range
         """
 
-
-
         self.add_opponent(
 
             opponent_name
 
         )
-
-
 
         opponent = self.opponent_model(
 
@@ -805,14 +666,11 @@ class BotPlayer:
 
         )
 
-
         opponent_range = self.opponent_range(
 
             opponent_name
 
         )
-
-
 
         if hasattr(action, "value"):
             action_str = str(action.value).lower()
@@ -838,11 +696,6 @@ class BotPlayer:
                 position
             )
 
-
-
-
-
-
     # ==========================================
     # New Hand Reset
     # ==========================================
@@ -856,15 +709,9 @@ class BotPlayer:
         Keeps opponent memory.
         """
 
-
-
         for opponent in self.opponents.values():
 
             opponent.record_hand()
-
-
-
-
 
     # ==========================================
     # Opponent Profiles
@@ -878,15 +725,11 @@ class BotPlayer:
         Return opponent intelligence.
         """
 
-
-
         opponent = self.opponent_model(
 
             opponent_name
 
         )
-
-
 
         opponent_range = self.opponent_range(
 
@@ -894,24 +737,15 @@ class BotPlayer:
 
         )
 
-
-
         if opponent is None:
 
             return None
 
-
-
-
-
         return {
-
 
             "statistics":
 
                 opponent.ai_profile(),
-
-
 
             "range":
 
@@ -922,10 +756,6 @@ class BotPlayer:
                 else None
 
         }
-
-
-
-
 
     # ==========================================
     # Bot Profile
@@ -938,28 +768,19 @@ class BotPlayer:
         Return bot information.
         """
 
-
-
         return {
-
 
             "name":
 
                 self.name,
 
-
-
             "difficulty":
 
                 self.difficulty.difficulty.value,
 
-
-
             "strategy":
 
                 self.strategy.strategy.value,
-
-
 
             "opponents_tracked":
 
@@ -970,10 +791,6 @@ class BotPlayer:
                 )
 
         }
-
-
-
-
 
     # ==========================================
     # Debug
@@ -988,10 +805,6 @@ class BotPlayer:
             f"BotPlayer({self.name})"
 
         )
-
-
-
-
 
     def __str__(
         self

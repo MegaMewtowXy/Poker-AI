@@ -4,14 +4,9 @@ import json
 
 from simulation.hand_history import HandHistory
 
-
-
-
-
 class ReplaySystem:
     """
     Poker hand replay system.
-
 
     Responsibilities
     ----------------
@@ -19,7 +14,6 @@ class ReplaySystem:
     • Reconstruct hand timeline
     • Replay actions
     • Display hand information
-
 
     Does NOT
     --------
@@ -29,10 +23,6 @@ class ReplaySystem:
     • Modify game state
     """
 
-
-
-
-
     def __init__(
         self,
         history_directory="data/hand_history"
@@ -40,18 +30,11 @@ class ReplaySystem:
 
         self.history_directory = history_directory
 
-
         self.hands = []
-
 
         self.current_hand = None
 
-
         self.current_action = 0
-
-
-
-
 
     # ==========================================
     # Load Single Hand
@@ -65,8 +48,6 @@ class ReplaySystem:
         Load one hand history file.
         """
 
-
-
         if not os.path.exists(file_path):
 
             raise FileNotFoundError(
@@ -74,10 +55,6 @@ class ReplaySystem:
                 "Hand history file not found."
 
             )
-
-
-
-
 
         with open(
 
@@ -89,16 +66,9 @@ class ReplaySystem:
 
         ) as file:
 
-
             data = json.load(file)
 
-
-
-
-
         hand = HandHistory()
-
-
 
         hand.from_dict(
 
@@ -106,24 +76,11 @@ class ReplaySystem:
 
         )
 
-
-
-
-
         self.current_hand = hand
-
 
         self.current_action = 0
 
-
-
-
-
         return hand
-
-
-
-
 
     # ==========================================
     # Load All Hands
@@ -136,8 +93,6 @@ class ReplaySystem:
         Load all saved hands.
         """
 
-
-
         path = os.path.join(
 
             self.history_directory,
@@ -146,17 +101,9 @@ class ReplaySystem:
 
         )
 
-
-
-
-
         if not os.path.exists(path):
 
             return []
-
-
-
-
 
         with open(
 
@@ -168,25 +115,13 @@ class ReplaySystem:
 
         ) as file:
 
-
             data = json.load(file)
-
-
-
-
 
         self.hands.clear()
 
-
-
-
-
         for item in data:
 
-
             hand = HandHistory()
-
-
 
             hand.from_dict(
 
@@ -194,17 +129,11 @@ class ReplaySystem:
 
             )
 
-
-
             self.hands.append(
 
                 hand
 
             )
-
-
-
-
 
         return self.hands
     
@@ -220,22 +149,11 @@ class ReplaySystem:
         Start replaying selected hand.
         """
 
-
-
         self.current_hand = hand
-
 
         self.current_action = 0
 
-
-
-
-
         return self.get_summary()
-
-
-
-
 
     # ==========================================
     # Get Next Action
@@ -250,8 +168,6 @@ class ReplaySystem:
         Moves replay pointer forward.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -260,23 +176,11 @@ class ReplaySystem:
 
             )
 
-
-
-
-
         actions = self.current_hand.actions
-
-
-
-
 
         if self.current_action >= len(actions):
 
             return None
-
-
-
-
 
         action = actions[
 
@@ -284,21 +188,9 @@ class ReplaySystem:
 
         ]
 
-
-
-
-
         self.current_action += 1
 
-
-
-
-
         return action
-
-
-
-
 
     # ==========================================
     # Replay All Actions
@@ -311,8 +203,6 @@ class ReplaySystem:
         Return complete action timeline.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -321,15 +211,7 @@ class ReplaySystem:
 
             )
 
-
-
-
-
         return self.current_hand.actions.copy()
-
-
-
-
 
     # ==========================================
     # Current Progress
@@ -342,31 +224,21 @@ class ReplaySystem:
         Return replay progress.
         """
 
-
-
         if self.current_hand is None:
 
             return {
-
 
                 "loaded": False
 
             }
 
-
-
-
-
         return {
 
-
             "loaded": True,
-
 
             "current_action":
 
                 self.current_action,
-
 
             "total_actions":
 
@@ -375,7 +247,6 @@ class ReplaySystem:
                     self.current_hand.actions
 
                 ),
-
 
             "finished":
 
@@ -386,10 +257,6 @@ class ReplaySystem:
                 )
 
         }
-
-
-
-
 
     # ==========================================
     # Show Board
@@ -402,8 +269,6 @@ class ReplaySystem:
         Return recorded community cards.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -412,15 +277,7 @@ class ReplaySystem:
 
             )
 
-
-
-
-
         return self.current_hand.community_cards.copy()
-
-
-
-
 
     # ==========================================
     # Players
@@ -433,15 +290,9 @@ class ReplaySystem:
         Return players in replay.
         """
 
-
-
         if self.current_hand is None:
 
             return []
-
-
-
-
 
         return self.current_hand.players.copy()
     
@@ -456,35 +307,23 @@ class ReplaySystem:
         Return complete hand summary.
         """
 
-
-
         if self.current_hand is None:
 
             return {
-
 
                 "loaded": False
 
             }
 
-
-
-
-
         return {
-
 
             "hand_id":
 
                 self.current_hand.hand_id,
 
-
-
             "players":
 
                 self.current_hand.players,
-
-
 
             "actions":
 
@@ -494,35 +333,23 @@ class ReplaySystem:
 
                 ),
 
-
-
             "community_cards":
 
                 self.current_hand.community_cards,
-
-
 
             "winner":
 
                 self.current_hand.winner,
 
-
-
             "pot":
 
                 self.current_hand.pot,
-
-
 
             "completed":
 
                 self.current_hand.completed
 
         }
-
-
-
-
 
     # ==========================================
     # Winner Information
@@ -535,21 +362,11 @@ class ReplaySystem:
         Return winner information.
         """
 
-
-
         if self.current_hand is None:
 
             return None
 
-
-
-
-
         return self.current_hand.winner
-
-
-
-
 
     # ==========================================
     # Replay Multiple Hands
@@ -562,37 +379,23 @@ class ReplaySystem:
         Return summaries of all loaded hands.
         """
 
-
-
         results = []
-
-
-
-
 
         for hand in self.hands:
 
-
             results.append({
-
 
                 "hand_id":
 
                     hand.hand_id,
 
-
-
                 "players":
 
                     hand.players,
 
-
-
                 "winner":
 
                     hand.winner,
-
-
 
                 "actions":
 
@@ -602,19 +405,9 @@ class ReplaySystem:
 
                     )
 
-
-
             })
 
-
-
-
-
         return results
-
-
-
-
 
     # ==========================================
     # Select Hand By Index
@@ -628,8 +421,6 @@ class ReplaySystem:
         Select a loaded hand.
         """
 
-
-
         if index < 0 or index >= len(self.hands):
 
             raise IndexError(
@@ -638,24 +429,11 @@ class ReplaySystem:
 
             )
 
-
-
-
-
         self.current_hand = self.hands[index]
-
 
         self.current_action = 0
 
-
-
-
-
         return self.current_hand
-
-
-
-
 
     # ==========================================
     # Reset Replay
@@ -668,16 +446,9 @@ class ReplaySystem:
         Reset replay state.
         """
 
-
-
         self.current_hand = None
 
-
         self.current_action = 0
-
-
-
-
 
     # ==========================================
     # Profile
@@ -690,16 +461,11 @@ class ReplaySystem:
         Replay system information.
         """
 
-
-
         return {
-
 
             "history_directory":
 
                 self.history_directory,
-
-
 
             "loaded_hands":
 
@@ -708,8 +474,6 @@ class ReplaySystem:
                     self.hands
 
                 ),
-
-
 
             "current_hand":
 
@@ -720,10 +484,6 @@ class ReplaySystem:
                 else None
 
         }
-
-
-
-
 
     # ==========================================
     # Debug
@@ -738,10 +498,6 @@ class ReplaySystem:
             "Poker Replay System"
 
         )
-
-
-
-
 
     def __repr__(
         self

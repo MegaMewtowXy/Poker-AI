@@ -1,7 +1,5 @@
 from models.action import Action
 
-
-
 class DecisionEngine:
     """
     Final AI poker decision engine.
@@ -34,8 +32,6 @@ class DecisionEngine:
     • Execute actions
     """
 
-
-
     def __init__(
         self,
         difficulty=None,
@@ -45,8 +41,6 @@ class DecisionEngine:
         self.difficulty = difficulty
 
         self.strategy = strategy
-
-
 
         # ======================================
         # Action Thresholds
@@ -61,21 +55,15 @@ class DecisionEngine:
 
                 20,
 
-
             "bet":
 
                 45,
-
 
             "raise":
 
                 75
 
         }
-
-
-
-
 
     # ==========================================
     # Safe Parameter Access
@@ -94,8 +82,6 @@ class DecisionEngine:
 
             return default
 
-
-
         function = getattr(
 
             self.strategy,
@@ -106,18 +92,11 @@ class DecisionEngine:
 
         )
 
-
-
         if callable(function):
 
             return function()
 
-
-
         return default
-
-
-
 
     def get_difficulty_value(
         self,
@@ -132,8 +111,6 @@ class DecisionEngine:
 
             return default
 
-
-
         function = getattr(
 
             self.difficulty,
@@ -144,19 +121,11 @@ class DecisionEngine:
 
         )
 
-
-
         if callable(function):
 
             return function()
 
-
-
         return default
-
-
-
-
 
     # ==========================================
     # Score Calculation
@@ -174,14 +143,9 @@ class DecisionEngine:
         More aggressive action.
         """
 
-
-
         score = 0
 
         factors = {}
-
-
-
 
         # ======================================
         # Hand Strength
@@ -201,39 +165,25 @@ class DecisionEngine:
 
         )
 
-
-
         if strength >= 85:
 
             value = 40
-
-
 
         elif strength >= 65:
 
             value = 30
 
-
-
         elif strength >= 45:
 
             value = 15
-
-
 
         else:
 
             value = -15
 
-
-
-
         score += value
 
         factors["strength"] = value
-
-
-
 
         # ======================================
         # Equity
@@ -247,19 +197,13 @@ class DecisionEngine:
 
         )
 
-
-
         if equity >= 80:
 
             value = 40
 
-
-
         elif equity >= 65:
 
             value = 30
-
-
 
         elif equity >= 55:
 
@@ -267,13 +211,9 @@ class DecisionEngine:
         elif equity >= 45:
             value = 0
 
-
         else:
 
             value = -15
-
-
-
 
         score += value
 
@@ -290,27 +230,17 @@ class DecisionEngine:
 
         )
 
-
-
         if equity >= pot_odds:
 
             value = 5
-
-
 
         else:
 
             value = -15
 
-
-
-
         score += value
 
         factors["pot_odds"] = value
-
-
-
 
         # ======================================
         # Position
@@ -324,8 +254,6 @@ class DecisionEngine:
 
         )
 
-
-
         advantage = position.get(
 
             "advantage",
@@ -334,18 +262,11 @@ class DecisionEngine:
 
         )
 
-
-
         value = advantage * 3
-
-
 
         score += value
 
         factors["position"] = value
-
-
-
 
         # ======================================
         # Opponent Threat & Exploitative Counter-Play
@@ -387,10 +308,6 @@ class DecisionEngine:
 
         factors["opponent"] = round(value, 2)
 
-
-
-
-
         # ======================================
         # Range Strength
         # ======================================
@@ -398,8 +315,6 @@ class DecisionEngine:
         range_info = analysis.get("range") or {}
 
         
-
-
 
         range_strength = range_info.get(
 
@@ -409,33 +324,21 @@ class DecisionEngine:
 
         )
 
-
-
         if range_strength >= 70:
 
             value = -10
-
-
 
         elif range_strength >= 50:
 
             value = -5
 
-
-
         else:
 
             value = 0
 
-
-
-
         score += value
 
         factors["range"] = value
-
-
-
 
         # ======================================
         # Board Analysis
@@ -445,8 +348,6 @@ class DecisionEngine:
 
            
 
-
-
         danger = board.get(
 
             "danger_level",
@@ -455,26 +356,17 @@ class DecisionEngine:
 
         )
 
-
-
         if danger >= 6:
 
             value = -10
-
-
 
         elif danger >= 4:
 
             value = -5
 
-
-
         else:
 
             value = 0
-
-
-
 
         score += value
 
@@ -490,14 +382,7 @@ class DecisionEngine:
         score += value
         factors["risk"] = round(value, 2)
 
-
-
-
         return score, factors
-
-
-
-
 
     # ==========================================
     # Strategy Adjustment
@@ -512,8 +397,6 @@ class DecisionEngine:
         Apply playing style influence.
         """
 
-
-
         aggression = self.get_strategy_value(
 
             "aggression",
@@ -521,8 +404,6 @@ class DecisionEngine:
             0.5
 
         )
-
-
 
         risk = self.get_strategy_value(
 
@@ -532,8 +413,6 @@ class DecisionEngine:
 
         )
 
-
-
         pressure = self.get_strategy_value(
 
             "pressure_factor",
@@ -541,8 +420,6 @@ class DecisionEngine:
             0.5
 
         )
-
-
 
         strategy_bonus = (
 
@@ -557,9 +434,6 @@ class DecisionEngine:
             pressure
 
         ) / 3
-
-
-
 
         strategy_weight = self.get_difficulty_value(
             "strategy_weight",
@@ -580,11 +454,7 @@ class DecisionEngine:
 
         )
 
-
-
         score += value
-
-
 
         factors["strategy"] = round(
 
@@ -594,13 +464,7 @@ class DecisionEngine:
 
         )
 
-
-
         return score
-
-
-
-
 
     # ==========================================
     # Difficulty Adjustment
@@ -615,8 +479,6 @@ class DecisionEngine:
         Apply AI difficulty modifiers.
         """
 
-
-
         aggression = self.get_difficulty_value(
 
             "aggression_modifier",
@@ -625,19 +487,13 @@ class DecisionEngine:
 
         )
 
-
-
         value = (
 
             aggression - 1
 
         ) * 20
 
-
-
         score += value
-
-
 
         factors["difficulty"] = round(
 
@@ -647,13 +503,7 @@ class DecisionEngine:
 
         )
 
-
-
         return score
-
-
-
-
 
     # ==========================================
     # Bluff Adjustment
@@ -669,13 +519,9 @@ class DecisionEngine:
         Modify score using bluff engine.
         """
 
-
-
         bluff = analysis.get("bluff") or {}
 
            
-
-
 
         should_bluff = bluff.get(
 
@@ -685,13 +531,9 @@ class DecisionEngine:
 
         )
 
-
-
         if not should_bluff:
 
             return score
-
-
 
         frequency = self.get_strategy_value(
 
@@ -701,8 +543,6 @@ class DecisionEngine:
 
         )
 
-
-
         multiplier = self.get_difficulty_value(
 
             "bluff_multiplier",
@@ -710,8 +550,6 @@ class DecisionEngine:
             1.0
 
         )
-
-
 
         value = (
 
@@ -727,11 +565,7 @@ class DecisionEngine:
 
         )
 
-
-
         score += value
-
-
 
         factors["bluff"] = round(
 
@@ -740,8 +574,6 @@ class DecisionEngine:
             2
 
         )
-
-
 
         return score
         # ==========================================
@@ -759,8 +591,6 @@ class DecisionEngine:
         fewer mistakes.
         """
 
-
-
         mistake_rate = self.get_difficulty_value(
 
             "mistake_rate",
@@ -768,8 +598,6 @@ class DecisionEngine:
             0.1
 
         )
-
-
 
         # Higher mistake rate reduces score.
         # Hard AI should have close to zero penalty.
@@ -784,13 +612,7 @@ class DecisionEngine:
 
         )
 
-
-
         return score - penalty
-
-
-
-
 
     # ==========================================
     # Score To Action
@@ -836,8 +658,6 @@ class DecisionEngine:
 
             return Action.ALL_IN
 
-
-
     # ==========================================
     # Action Safety
     # ==========================================
@@ -851,8 +671,6 @@ class DecisionEngine:
         Prevent impossible decisions.
         """
 
-
-
         all_in_available = analysis.get(
 
             "all_in_available",
@@ -861,19 +679,11 @@ class DecisionEngine:
 
         )
 
-
-
         if action == Action.ALL_IN and not all_in_available:
 
             return Action.RAISE
 
-
-
         return action
-
-
-
-
 
     # ==========================================
     # Confidence
@@ -890,11 +700,7 @@ class DecisionEngine:
         0 - 1
         """
 
-
-
         confidence = abs(score) / 100
-
-
 
         return round(
 
@@ -910,10 +716,6 @@ class DecisionEngine:
 
         )
 
-
-
-
-
     # ==========================================
     # Reason Generator
     # ==========================================
@@ -927,39 +729,25 @@ class DecisionEngine:
         Explain AI decision.
         """
 
-
-
         positive = []
 
         negative = []
 
-
-
         for key, value in factors.items():
-
 
             if value > 0:
 
                 positive.append(key)
 
-
-
             elif value < 0:
 
                 negative.append(key)
-
-
-
 
         if action == Action.ALL_IN:
 
             return "maximum_strength_decision"
 
-
-
-
         if action == Action.RAISE:
-
 
             if positive:
 
@@ -977,21 +765,13 @@ class DecisionEngine:
 
                 )
 
-
             return "pressure_raise"
-
-
-
 
         if action == Action.BET:
 
             return "value_or_bluff_bet"
 
-
-
-
         if action == Action.CALL:
-
 
             if negative:
 
@@ -1009,23 +789,13 @@ class DecisionEngine:
 
                 )
 
-
             return "pot_odds_call"
-
-
-
 
         if action == Action.FOLD:
 
             return "weak_hand_or_bad_conditions"
 
-
-
         return "standard_decision"
-
-
-
-
 
     # ==========================================
     # Final Decision
@@ -1049,15 +819,11 @@ class DecisionEngine:
         }
         """
 
-
-
         score, factors = self.calculate_score(
 
             analysis
 
         )
-
-
 
         score = self.apply_strategy(
 
@@ -1067,8 +833,6 @@ class DecisionEngine:
 
         )
 
-
-
         score = self.apply_difficulty(
 
             score,
@@ -1076,8 +840,6 @@ class DecisionEngine:
             factors
 
         )
-
-
 
         score = self.apply_bluff(
 
@@ -1088,8 +850,6 @@ class DecisionEngine:
             factors
 
         )
-
-
 
         score = self.apply_error(
 
@@ -1104,8 +864,6 @@ class DecisionEngine:
 
         )
 
-
-
         action = self.validate_action(
 
             action,
@@ -1114,16 +872,11 @@ class DecisionEngine:
 
         )
 
-
-
-
         return {
-
 
             "action":
 
                 action,
-
 
             "score":
 
@@ -1135,7 +888,6 @@ class DecisionEngine:
 
                 ),
 
-
             "confidence":
 
                 self.confidence(
@@ -1143,7 +895,6 @@ class DecisionEngine:
                     score
 
                 ),
-
 
             "reason":
 
@@ -1155,16 +906,11 @@ class DecisionEngine:
 
                 ),
 
-
             "factors":
 
                 factors
 
         }
-
-
-
-
 
     # ==========================================
     # Explanation
@@ -1178,48 +924,35 @@ class DecisionEngine:
         Human readable decision debug.
         """
 
-
-
         decision = self.decide(
 
             analysis
 
         )
 
-
-
         return {
-
 
             "action":
 
                 decision["action"].value,
 
-
             "score":
 
                 decision["score"],
-
 
             "confidence":
 
                 decision["confidence"],
 
-
             "reason":
 
                 decision["reason"],
-
 
             "factors":
 
                 decision["factors"]
 
         }
-
-
-
-
 
     # ==========================================
     # Debug
@@ -1228,8 +961,6 @@ class DecisionEngine:
     def __repr__(self):
 
         return "DecisionEngine()"
-
-
 
     def __str__(self):
 

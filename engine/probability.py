@@ -3,8 +3,6 @@ from models.player import Player
 
 from engine.evaluator import HandEvaluator
 
-
-
 class Probability:
     """
     Poker probability and mathematical analysis.
@@ -28,13 +26,9 @@ class Probability:
     - Table state
     """
 
-
-
     def __init__(self):
 
         self.evaluator = HandEvaluator()
-
-
 
     # ==================================================
     # Pot Odds
@@ -46,11 +40,9 @@ class Probability:
         pot_size: int
     ) -> float:
 
-
         if call_amount <= 0:
 
             return 0.0
-
 
         if pot_size < 0:
 
@@ -58,14 +50,11 @@ class Probability:
                 "Pot size cannot be negative."
             )
 
-
         return call_amount / (
 
             pot_size + call_amount
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -75,7 +64,6 @@ class Probability:
         pot_size: int
     ) -> float:
 
-
         return Probability.pot_odds(
 
             call_amount,
@@ -83,8 +71,6 @@ class Probability:
             pot_size
 
         ) * 100
-
-
 
     # ==================================================
     # Implied Odds
@@ -97,11 +83,9 @@ class Probability:
         expected_future_chips: int
     ) -> float:
 
-
         if call_amount <= 0:
 
             return 0.0
-
 
         return (
 
@@ -113,8 +97,6 @@ class Probability:
 
         ) / call_amount
 
-
-
     # ==================================================
     # Hand Evaluation
     # ==================================================
@@ -125,7 +107,6 @@ class Probability:
         community_cards: list[Card]
     ):
 
-
         return self.evaluator.evaluate(
 
             hole_cards,
@@ -133,8 +114,6 @@ class Probability:
             community_cards
 
         )
-
-
 
     # ==================================================
     # Outs
@@ -146,11 +125,9 @@ class Probability:
         unseen_cards: int = 47
     ) -> int:
 
-
         if winning_cards < 0:
 
             return 0
-
 
         return min(
 
@@ -160,8 +137,6 @@ class Probability:
 
         )
 
-
-
     # --------------------------------------------------
 
     @staticmethod
@@ -170,11 +145,9 @@ class Probability:
         unseen_cards: int
     ) -> float:
 
-
         if unseen_cards <= 0:
 
             return 0.0
-
 
         outs = Probability.calculate_outs(
 
@@ -184,10 +157,7 @@ class Probability:
 
         )
 
-
         return outs / unseen_cards
-
-
 
     # --------------------------------------------------
 
@@ -197,11 +167,9 @@ class Probability:
         unseen_cards: int
     ) -> float:
 
-
         if unseen_cards <= 1:
 
             return 0.0
-
 
         outs = Probability.calculate_outs(
 
@@ -211,14 +179,11 @@ class Probability:
 
         )
 
-
         miss_one = (
 
             unseen_cards - outs
 
         ) / unseen_cards
-
-
 
         miss_two = (
 
@@ -230,14 +195,11 @@ class Probability:
 
         )
 
-
         return 1 - (
 
             miss_one * miss_two
 
         )
-
-
 
     # ==================================================
     # Draw Helpers
@@ -248,7 +210,6 @@ class Probability:
         suit_cards: int
     ) -> int:
 
-
         return max(
 
             0,
@@ -257,15 +218,12 @@ class Probability:
 
         )
 
-
-
     # --------------------------------------------------
 
     @staticmethod
     def straight_draw_outs(
         possible_cards: int
     ) -> int:
-
 
         return max(
 
@@ -275,8 +233,6 @@ class Probability:
 
         )
 
-
-
     # ==================================================
     # Probability Helpers
     # ==================================================
@@ -285,7 +241,6 @@ class Probability:
     def normalize_probability(
         value: float
     ) -> float:
-
 
         return max(
 
@@ -301,15 +256,12 @@ class Probability:
 
         )
 
-
-
     # --------------------------------------------------
 
     @staticmethod
     def percentage(
         probability: float
     ) -> float:
-
 
         return Probability.normalize_probability(
 
@@ -352,13 +304,11 @@ class Probability:
                 "Simulations must be positive."
             )
 
-
         if not opponents:
 
             raise ValueError(
                 "At least one opponent is required."
             )
-
 
         wins = 0
 
@@ -366,10 +316,7 @@ class Probability:
 
         losses = 0
 
-
-
         for _ in range(simulations):
-
 
             result = self._simulate_once(
 
@@ -383,26 +330,19 @@ class Probability:
 
             )
 
-
             if result == "win":
 
                 wins += 1
-
 
             elif result == "tie":
 
                 ties += 1
 
-
             else:
 
                 losses += 1
 
-
-
         total = simulations
-
-
 
         return {
 
@@ -428,8 +368,6 @@ class Probability:
 
         }
 
-
-
     # ==================================================
     # Single Simulation
     # ==================================================
@@ -449,14 +387,11 @@ class Probability:
 
         simulation_deck = deck.clone()
 
-
-
         # ----------------------------------------------
         # Remove known cards
         # ----------------------------------------------
 
         known_cards = []
-
 
         known_cards.extend(
 
@@ -464,13 +399,11 @@ class Probability:
 
         )
 
-
         known_cards.extend(
 
             community_cards
 
         )
-
 
         for opponent in opponents:
 
@@ -480,14 +413,11 @@ class Probability:
 
             )
 
-
         simulation_deck.remove_cards(
 
             known_cards
 
         )
-
-
 
         # ----------------------------------------------
         # Create simulated opponents
@@ -495,9 +425,7 @@ class Probability:
 
         simulated_opponents = []
 
-
         for _ in opponents:
-
 
             simulated_opponents.append(
 
@@ -509,14 +437,11 @@ class Probability:
 
             )
 
-
-
         # ----------------------------------------------
         # Complete board
         # ----------------------------------------------
 
         simulated_board = community_cards.copy()
-
 
         missing_cards = (
 
@@ -528,9 +453,7 @@ class Probability:
 
         )
 
-
         if missing_cards > 0:
-
 
             simulated_board.extend(
 
@@ -541,8 +464,6 @@ class Probability:
                 )
 
             )
-
-
 
         # ----------------------------------------------
         # Evaluate hero
@@ -556,10 +477,7 @@ class Probability:
 
         )
 
-
         hero_score = hero_result.score
-
-
 
         # ----------------------------------------------
         # Compare opponents
@@ -569,10 +487,7 @@ class Probability:
 
         hero_ties = 0
 
-
-
         for opponent_hand in simulated_opponents:
-
 
             opponent_result = self.evaluator.evaluate(
 
@@ -582,25 +497,17 @@ class Probability:
 
             )
 
-
             opponent_score = opponent_result.score
-
-
 
             if hero_score > opponent_score:
 
                 hero_wins = False
 
-
                 return "lose"
-
-
 
             elif hero_score == opponent_score:
 
                 hero_ties += 1
-
-
 
         # Beat everyone
 
@@ -608,13 +515,9 @@ class Probability:
 
             return "win"
 
-
-
         # Tie with all remaining players
 
         return "tie"
-
-
 
     # ==================================================
     # Expected Value
@@ -627,7 +530,6 @@ class Probability:
         pot_reward: int,
         investment: int
     ) -> float:
-
 
         return (
 
@@ -647,8 +549,6 @@ class Probability:
 
         )
 
-
-
     # --------------------------------------------------
 
     @staticmethod
@@ -657,7 +557,6 @@ class Probability:
         pot_size: int,
         call_amount: int
     ) -> float:
-
 
         return (
 
@@ -677,8 +576,6 @@ class Probability:
 
         ) - call_amount
 
-
-
     # ==================================================
     # AI Decision Helpers
     # ==================================================
@@ -689,10 +586,7 @@ class Probability:
         pot_odds: float
     ) -> bool:
 
-
         return equity >= pot_odds
-
-
 
     # --------------------------------------------------
 
@@ -701,16 +595,11 @@ class Probability:
         hand_result
     ) -> float:
 
-
         if hand_result is None:
 
             return 0.0
 
-
-
         rank = hand_result.rank
-
-
 
         score = (
 
@@ -718,15 +607,11 @@ class Probability:
 
         ) / 10
 
-
-
         return Probability.normalize_probability(
 
             score
 
         )
-
-
 
     # ==================================================
     # Debug
@@ -735,8 +620,6 @@ class Probability:
     def __repr__(self):
 
         return "Probability()"
-
-
 
     # --------------------------------------------------
 

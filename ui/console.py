@@ -1,6 +1,5 @@
 from models.action import Action
 
-
 class ConsoleUI:
     """
     Console interface for human players.

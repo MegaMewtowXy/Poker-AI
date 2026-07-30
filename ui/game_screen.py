@@ -1,3 +1,4 @@
+import concurrent.futures
 import math
 import pygame
 from engine.evaluator import HandEvaluator
@@ -6,7 +7,8 @@ from models.action import Action
 from models.player_role import PlayerRole
 from ui.card_renderer import card_renderer
 from ui.help_modal import HelpModal
-from ui.widgets import Button, Slider
+from ui.audio_manager import audio_manager
+from ui.widgets import Button, Slider, draw_glass_panel, draw_progress_bar, draw_chip_stack
 
 class GameScreen:
     """
@@ -19,13 +21,14 @@ class GameScreen:
     - AI vs AI Spectator Mode with Pacing Delay (450ms per turn), Pause/Resume, and Terminate Battle buttons.
     """
 
-    def __init__(self, screen, players, on_exit_to_lobby, starting_chips=1000, small_blind=10, big_blind=20, auto_rebuy=True):
+    def __init__(self, screen, players, on_exit_to_lobby, starting_chips=1000, small_blind=10, big_blind=20, auto_rebuy=True, room_code=None):
         self.screen = screen
         self.players = players
         self.on_exit_to_lobby = on_exit_to_lobby
         self.starting_chips = starting_chips
         self.small_blind = small_blind
         self.big_blind = big_blind
+        self.room_code = room_code
         self.auto_rebuy = auto_rebuy
 
         # Engine & Evaluator
@@ -39,12 +42,21 @@ class GameScreen:
         self.is_showdown = False
         self.show_ai_hud = True
         self.show_hole_cards = True
+        self.show_stats_overlay = False
         self.is_all_ai = all(getattr(p, "is_ai", False) for p in self.players)
         self.ai_paused = False
         self.ai_delay_ms = 450      # 450ms pacing delay for visible AI moves
         self.street_delay_ms = 750  # 750ms pacing delay between Flop, Turn, River dealing
+        self.card_deal_delay_ms = 250 # 250ms card-by-card dealing delay
+        self.visible_comm_count = 0
+        self.last_card_deal_time = 0
         self.last_ai_move_time = 0
         self.display_pot = 0
+
+        # Asynchronous Multi-Threaded AI Worker Executor
+        self._ai_executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+        self._ai_future = None
+        self._ai_pending_player = None
 
         # Show / Muck Cards State
         self.winner_player = None
@@ -92,6 +104,8 @@ class GameScreen:
 
         self.is_showdown = False
         self.display_pot = 0
+        self.visible_comm_count = 0
+        self.last_card_deal_time = 0
         self.winner_player = None
         self.show_winner_cards = False
         self.user_showed_players = set()
@@ -200,18 +214,20 @@ class GameScreen:
         p_bet = getattr(curr_p, "current_bet", 0)
         call_amt = tbl_bet - p_bet
 
+        self.fold_btn.text = "[F] FOLD"
+
         if call_amt <= 0:
-            self.call_btn.text = "CHECK"
+            self.call_btn.text = "[C] CHECK"
         else:
-            self.call_btn.text = f"CALL ${call_amt}"
+            self.call_btn.text = f"[C] CALL ${call_amt}"
 
         val = self.bet_slider.val if self.bet_slider else 0
         if val >= curr_p.chips:
-            self.bet_btn.text = f"ALL-IN (${curr_p.chips})"
+            self.bet_btn.text = f"[R] ALL-IN (${curr_p.chips})"
         elif tbl_bet > 0:
-            self.bet_btn.text = f"RAISE TO ${val}"
+            self.bet_btn.text = f"[R] RAISE TO ${val}"
         else:
-            self.bet_btn.text = f"BET ${val}"
+            self.bet_btn.text = f"[R] BET ${val}"
 
     def _player_leave_table(self, player):
         if player.name in self.left_players:
@@ -241,6 +257,24 @@ class GameScreen:
     def _toggle_privacy(self):
         self.show_hole_cards = not self.show_hole_cards
 
+    def _export_hand_history(self):
+        try:
+            import os
+            os.makedirs("data/hand_history", exist_ok=True)
+            filename = f"data/hand_history/export_hand_{self.game.hand_number}.txt"
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(f"Texas Hold'em Hand History - Hand #{self.game.hand_number}\n")
+                f.write(f"Blinds: ${self.small_blind}/${self.big_blind}\n")
+                f.write("Players:\n")
+                for p in self.players:
+                    f.write(f" - {p.name}: ${p.chips} stack\n")
+                f.write(f"Community Cards: {self.game.table.show_community_cards()}\n")
+                f.write(f"Total Pot: ${self.display_pot}\n")
+                f.write(f"Status: {self.status_message}\n")
+            self.status_message = f"EXPORTED Hand #{self.game.hand_number} to {filename}"
+        except Exception as e:
+            self.status_message = f"Export failed: {e}"
+
     def _check_next_turn(self):
         """
         Manages turn progression & automatic board runouts when All-In occurs.
@@ -259,7 +293,24 @@ class GameScreen:
             self.game.pot_manager.reset()
             self.hand_in_progress = False
             self.is_showdown = False
-            self.status_message = f"{self.winner_player.name} WON ${self.display_pot}! [SHOW CARDS] or [MUCK CARDS] • Press SPACE for Next Hand"
+            self.last_action_texts[self.winner_player.name] = f"WINNER +${self.display_pot}"
+            self.status_message = f"WINNER: {self.winner_player.name} won ${self.display_pot} (Everyone Folded)! Press SPACE for Next Hand"
+            audio_manager.play_win()
+            return
+
+        # Progressive Card-by-Card Dealing Animation Check
+        comm = self.game.table.community_cards
+        if self.visible_comm_count < len(comm):
+            if now - self.last_card_deal_time >= self.card_deal_delay_ms:
+                self.visible_comm_count += 1
+                self.last_card_deal_time = now
+                audio_manager.play_card_deal()
+                if len(comm) == 3:
+                    self.status_message = f"Flop Dealt ({self.visible_comm_count}/3)"
+                elif len(comm) == 4:
+                    self.status_message = "Turn Dealt"
+                elif len(comm) == 5:
+                    self.status_message = "River Dealt"
             return
 
         if self.game.betting_round.betting_complete():
@@ -269,95 +320,129 @@ class GameScreen:
             if now - self.last_ai_move_time < self.street_delay_ms:
                 return
 
-            comm = self.game.table.community_cards
             if len(comm) < 3:
                 self.game.deal_flop()
                 self.game.betting_round.reset()
                 self.game.betting_round.start()
-                self.status_message = "Flop Dealt"
+                self.last_card_deal_time = now
                 self.last_ai_move_time = now
                 return
             elif len(comm) < 4:
                 self.game.deal_turn()
                 self.game.betting_round.reset()
                 self.game.betting_round.start()
-                self.status_message = "Turn Dealt"
+                self.last_card_deal_time = now
                 self.last_ai_move_time = now
                 return
             elif len(comm) < 5:
                 self.game.deal_river()
                 self.game.betting_round.reset()
                 self.game.betting_round.start()
-                self.status_message = "River Dealt"
+                self.last_card_deal_time = now
                 self.last_ai_move_time = now
                 return
             else:
                 self.is_showdown = True
-                self.game.showdown.resolve(self.players, self.game.table.community_cards, self.game.pot_manager)
+                res = self.game.showdown.resolve(self.players, self.game.table.community_cards, self.game.pot_manager)
                 self.hand_in_progress = False
-                self.status_message = "Showdown Complete! Press SPACE for Next Hand"
-                return
+                winners = res.get("winners", []) if isinstance(res, dict) else []
+                if winners:
+                    w_names = [w.name if hasattr(w, "name") else str(w) for w in winners]
+                    w_str = ", ".join(w_names)
+                    self.winner_player = winners[0]
+                    for w in winners:
+                        w_name = w.name if hasattr(w, "name") else str(w)
+                        self.last_action_texts[w_name] = f"WINNER +${self.display_pot}"
 
+                    hand_desc = ""
+                    results_dict = res.get("results", {}) if isinstance(res, dict) else {}
+                    w_res = results_dict.get(w_names[0])
+                    if w_res and hasattr(w_res, "hand_name"):
+                        hand_desc = f" ({w_res.hand_name})"
+                    elif isinstance(w_res, str):
+                        hand_desc = f" ({w_res})"
+
+                    self.status_message = f"WINNER: {w_str} won ${self.display_pot}{hand_desc}! Press SPACE for Next Hand"
+                else:
+                    self.status_message = "Showdown Complete! Press SPACE for Next Hand"
+                audio_manager.play_win()
+                return
 
         curr_p = self.game.betting_round.current_player()
         if curr_p and getattr(curr_p, "is_ai", False):
-            if not self.ai_paused and (now - self.last_ai_move_time >= self.ai_delay_ms):
-                self.last_ai_move_time = now
-                self._execute_ai_turn(curr_p)
+            if self._ai_future is not None:
+                if self._ai_future.done():
+                    decision = self._ai_future.result()
+                    pending_p = self._ai_pending_player
+                    self._ai_future = None
+                    self._ai_pending_player = None
+                    self.last_ai_move_time = now
+                    if pending_p:
+                        self._apply_ai_decision(pending_p, decision)
+                return
 
-    def _execute_ai_turn(self, player):
-        if player.name in self.left_players:
+            if not self.ai_paused and (now - self.last_ai_move_time >= self.ai_delay_ms):
+                if hasattr(curr_p, "decide"):
+                    context = self.game.create_context(curr_p)
+                    opponents = [p.name for p in self.players if p != curr_p and not getattr(p, "folded", False)]
+                    opp_name = opponents[0] if opponents else None
+                    self._ai_pending_player = curr_p
+                    self._ai_future = self._ai_executor.submit(curr_p.decide, context, opp_name)
+
+    def _apply_ai_decision(self, player, decision):
+        if not player or player.name in self.left_players:
             self.game.betting_round.next_player()
             return
 
-        if hasattr(player, "decide"):
-            context = self.game.create_context(player)
-            opponents = [p.name for p in self.players if p != player and not getattr(p, "folded", False)]
-            opp_name = opponents[0] if opponents else None
+        if not isinstance(decision, dict):
+            self.game.betting_round.next_player()
+            return
 
-            decision = player.decide(context, opponent_name=opp_name)
-            self.current_ai_analysis = decision.get("analysis")
+        self.current_ai_analysis = decision.get("analysis")
 
-            action = decision.get("action")
-            amount = decision.get("amount", 0)
+        action = decision.get("action")
+        amount = decision.get("amount", 0)
 
-            if action == Action.FOLD:
-                self.game.betting_engine.fold(player)
-                self.last_action_texts[player.name] = "FOLDED"
-            elif action == Action.CHECK:
-                self.game.betting_engine.check(player)
-                self.last_action_texts[player.name] = "CHECK"
-            elif action == Action.CALL:
-                self.game.betting_engine.call(player)
-                self.last_action_texts[player.name] = "CALL"
-            elif action in (Action.BET, Action.RAISE, Action.ALL_IN):
-                current_tb_bet = getattr(self.game.table, "current_bet", 0)
-                if action == Action.ALL_IN or (amount and amount >= player.chips):
+        if action == Action.FOLD:
+            self.game.betting_engine.fold(player)
+            self.last_action_texts[player.name] = "FOLDED"
+            audio_manager.play_fold()
+        elif action == Action.CHECK:
+            self.game.betting_engine.check(player)
+            self.last_action_texts[player.name] = "CHECK"
+        elif action == Action.CALL:
+            self.game.betting_engine.call(player)
+            self.last_action_texts[player.name] = "CALL"
+            audio_manager.play_chip_clink()
+        elif action in (Action.BET, Action.RAISE, Action.ALL_IN):
+            audio_manager.play_chip_clink()
+            current_tb_bet = getattr(self.game.table, "current_bet", 0)
+            if action == Action.ALL_IN or (amount and amount >= player.chips):
+                self.game.betting_engine.all_in(player)
+                self.last_action_texts[player.name] = "ALL-IN!"
+            elif current_tb_bet > 0 or action == Action.RAISE:
+                raise_to = max(current_tb_bet + getattr(self.game.table, "big_blind", 20), amount or self.big_blind * 2)
+                try:
+                    self.game.betting_engine.raise_bet(player, raise_to)
+                    self.last_action_texts[player.name] = f"RAISE ${raise_to}"
+                except Exception:
                     self.game.betting_engine.all_in(player)
                     self.last_action_texts[player.name] = "ALL-IN!"
-                elif current_tb_bet > 0 or action == Action.RAISE:
-                    raise_to = max(current_tb_bet + getattr(self.game.table, "big_blind", 20), amount or self.big_blind * 2)
-                    try:
-                        self.game.betting_engine.raise_bet(player, raise_to)
-                        self.last_action_texts[player.name] = f"RAISE ${raise_to}"
-                    except Exception:
-                        self.game.betting_engine.all_in(player)
-                        self.last_action_texts[player.name] = "ALL-IN!"
-                else:
-                    try:
-                        self.game.betting_engine.bet(player, amount or self.big_blind * 2)
-                        self.last_action_texts[player.name] = f"BET ${amount or self.big_blind * 2}"
-                    except Exception:
-                        self.game.betting_engine.all_in(player)
-                        self.last_action_texts[player.name] = "ALL-IN!"
+            else:
+                try:
+                    self.game.betting_engine.bet(player, amount or self.big_blind * 2)
+                    self.last_action_texts[player.name] = f"BET ${amount or self.big_blind * 2}"
+                except Exception:
+                    self.game.betting_engine.all_in(player)
+                    self.last_action_texts[player.name] = "ALL-IN!"
 
-            for other in self.players:
-                if other != player and hasattr(other, "record_opponent_action"):
-                    other.record_opponent_action(player.name, action, getattr(player, "position", None), self.game.betting_round.street)
+        for other in self.players:
+            if other != player and hasattr(other, "record_opponent_action"):
+                other.record_opponent_action(player.name, action, getattr(player, "position", None), self.game.betting_round.street)
 
-            act_name = action.name if hasattr(action, "name") else str(action)
-            self.status_message = f"{player.name} chose {act_name.upper()}"
-            self.game.betting_round.next_player()
+        act_name = action.name if hasattr(action, "name") else str(action)
+        self.status_message = f"{player.name} chose {act_name.upper()}"
+        self.game.betting_round.next_player()
 
     def _handle_human_action(self, action_type, amount=0):
         curr_p = self.game.betting_round.current_player()
@@ -367,6 +452,7 @@ class GameScreen:
         if action_type == Action.FOLD:
             self.game.betting_engine.fold(curr_p)
             self.last_action_texts[curr_p.name] = "FOLDED"
+            audio_manager.play_fold()
         elif action_type == Action.CHECK:
             self.game.betting_engine.check(curr_p)
             self.last_action_texts[curr_p.name] = "CHECK"
@@ -380,7 +466,9 @@ class GameScreen:
             else:
                 self.game.betting_engine.call(curr_p)
                 self.last_action_texts[curr_p.name] = f"CALL ${call_amt}"
+                audio_manager.play_chip_clink()
         elif action_type == Action.BET:
+            audio_manager.play_chip_clink()
             current_tb_bet = getattr(self.game.table, "current_bet", 0)
             if amount >= curr_p.chips:
                 self.game.betting_engine.all_in(curr_p)
@@ -414,7 +502,7 @@ class GameScreen:
         if not hasattr(player, "hand") or len(player.hand) < 2:
             return ""
 
-        comm_cards = self.game.table.community_cards
+        comm_cards = self.game.table.community_cards[:self.visible_comm_count]
         if len(comm_cards) < 3:
             c1, c2 = player.hand[0], player.hand[1]
             r1 = c1.rank.symbol if hasattr(c1.rank, "symbol") else str(c1.rank)
@@ -496,12 +584,48 @@ class GameScreen:
             elif event.key == pygame.K_h:
                 self._toggle_privacy()
                 return True
+            elif event.key == pygame.K_s:
+                self.show_stats_overlay = not self.show_stats_overlay
+                return True
+            elif event.key == pygame.K_e:
+                self._export_hand_history()
+                return True
             elif event.key == pygame.K_F1:
                 self.help_modal.open_rankings()
                 return True
             elif event.key == pygame.K_SPACE:
                 if not self.hand_in_progress:
                     self._start_new_hand()
+                    return True
+            
+            # Action & Bet Hotkeys (when human turn)
+            if curr_acting and not getattr(curr_acting, "is_ai", False) and self.hand_in_progress:
+                if event.key == pygame.K_f:
+                    self._handle_human_action(Action.FOLD)
+                    return True
+                elif event.key == pygame.K_c:
+                    self._handle_human_action(Action.CALL)
+                    return True
+                elif event.key == pygame.K_r:
+                    self._handle_human_action(Action.BET, self.bet_slider.val if self.bet_slider else 0)
+                    return True
+                elif event.key == pygame.K_a:
+                    self._handle_human_action(Action.ALL_IN)
+                    return True
+                elif event.key == pygame.K_1:
+                    self._set_slider_ratio(0.0)
+                    return True
+                elif event.key == pygame.K_2:
+                    self._set_slider_ratio(0.2)
+                    return True
+                elif event.key == pygame.K_3:
+                    self._set_slider_ratio(0.5)
+                    return True
+                elif event.key == pygame.K_4:
+                    self._set_slider_ratio(0.8)
+                    return True
+                elif event.key == pygame.K_5:
+                    self._set_slider_ratio(1.0)
                     return True
 
         if curr_acting and not getattr(curr_acting, "is_ai", False) and self.hand_in_progress:
@@ -522,6 +646,11 @@ class GameScreen:
         self.screen.fill((11, 15, 25))
         sw, sh = self.screen.get_size()
 
+        if self.room_code:
+            font_rc = pygame.font.SysFont("arial", max(12, int(sh * 0.024)), bold=True)
+            rc_surf = font_rc.render(f"MULTIPLAYER ROOM: {self.room_code}", True, (168, 85, 247))
+            self.screen.blit(rc_surf, (sw // 2 - rc_surf.get_width() // 2, int(sh * 0.17)))
+
         # Render Oval Felt Table (Positioned cleanly with 23% top padding)
         table_w = int(sw * 0.66)
         table_h = int(sh * 0.44)
@@ -529,10 +658,12 @@ class GameScreen:
         table_y = int(sh * 0.23)
         table_rect = pygame.Rect(table_x, table_y, table_w, table_h)
 
-        pygame.draw.ellipse(self.screen, (67, 40, 24), table_rect.inflate(28, 28))
-        pygame.draw.ellipse(self.screen, (217, 119, 6), table_rect.inflate(6, 6))
-        pygame.draw.ellipse(self.screen, (6, 95, 70), table_rect)
-        pygame.draw.ellipse(self.screen, (16, 185, 129), table_rect, 2)
+        # Multi-Layered Leather & Gold Table Rim
+        pygame.draw.ellipse(self.screen, (15, 23, 42), table_rect.inflate(36, 36))
+        pygame.draw.ellipse(self.screen, (30, 41, 59), table_rect.inflate(28, 28))
+        pygame.draw.ellipse(self.screen, (245, 158, 11), table_rect.inflate(10, 10))
+        pygame.draw.ellipse(self.screen, (11, 79, 55), table_rect)
+        pygame.draw.ellipse(self.screen, (16, 185, 129), table_rect, 3)
 
         # Total Pot Badge (Remembers final winning pot during Showdown)
         font_pot = pygame.font.SysFont("arial", max(13, int(sh * 0.026)), bold=True)
@@ -542,9 +673,9 @@ class GameScreen:
 
         pot_surf = font_pot.render(f"TOTAL POT: ${self.display_pot}", True, (254, 240, 138))
         pot_rect = pot_surf.get_rect(center=(sw // 2, table_y + int(table_h * 0.35)))
-        pygame.draw.rect(self.screen, (15, 23, 42), pot_rect.inflate(20, 10), border_radius=10)
-        pygame.draw.rect(self.screen, (234, 179, 8), pot_rect.inflate(20, 10), 2, border_radius=10)
+        draw_glass_panel(self.screen, pot_rect.inflate(24, 12), bg_color=(15, 23, 42), alpha=230, border_color=(245, 158, 11), radius=10, border_width=2)
         self.screen.blit(pot_surf, pot_rect)
+        draw_chip_stack(self.screen, pot_rect.left - 18, pot_rect.centery + 4, self.display_pot, radius=10)
 
         # Community Cards (FACE-UP for ALL)
         comm_cards = self.game.table.community_cards
@@ -554,7 +685,7 @@ class GameScreen:
 
         for i in range(5):
             cx = start_cx + i * (card_w + 8)
-            if i < len(comm_cards):
+            if i < self.visible_comm_count and i < len(comm_cards):
                 card = comm_cards[i]
                 c_surf = card_renderer.get_card_surface(card.rank, card.suit, card_w, card_h, face_down=False)
             else:
@@ -590,7 +721,6 @@ class GameScreen:
         stat_surf = font_status.render(self.status_message, True, (241, 245, 249))
         self.screen.blit(stat_surf, (sw // 2 - stat_surf.get_width() // 2, int(sh * 0.06)))
 
-
         # Draw Action Bar when Human turn
         if curr_acting and not getattr(curr_acting, "is_ai", False) and self.hand_in_progress:
             self._update_action_button_labels()
@@ -609,13 +739,51 @@ class GameScreen:
             hint_surf = hint_font.render("Click any seat to SHOW / MUCK cards", True, (148, 163, 184))
             self.screen.blit(hint_surf, (sw // 2 - hint_surf.get_width() // 2, int(sh * 0.82)))
 
-
         # Draw AI Brain HUD Panel
         if self.show_ai_hud:
             self._draw_ai_hud()
 
+        # Draw Table Statistics Overlay
+        if self.show_stats_overlay:
+            self._draw_stats_overlay()
+
         # Draw Help / Tutorial Overlay Modal if active
         self.help_modal.draw()
+
+    def _draw_stats_overlay(self):
+        sw, sh = self.screen.get_size()
+        panel_w, panel_h = 320, 240
+        px, py = sw - panel_w - 20, 70
+
+        panel_rect = pygame.Rect(px, py, panel_w, panel_h)
+        draw_glass_panel(self.screen, panel_rect, bg_color=(15, 23, 42), alpha=235, border_color=(56, 189, 248), radius=12, border_width=2)
+
+        font_t = pygame.font.SysFont("arial", 14, bold=True)
+        font_b = pygame.font.SysFont("arial", 12)
+
+        t_surf = font_t.render("LIVE TABLE TELEMETRY", True, (56, 189, 248))
+        self.screen.blit(t_surf, (px + 16, py + 12))
+
+        leader = max(self.players, key=lambda p: p.chips) if self.players else None
+        leader_str = f"{leader.name} (${leader.chips})" if leader else "None"
+        tot_chips = sum(p.chips for p in self.players)
+
+        lines = [
+            f"Hand Number       : #{self.game.hand_number}",
+            f"Active Players    : {len([p for p in self.players if p.name not in self.left_players])}/{len(self.players)}",
+            f"Table Blinds      : ${self.small_blind} / ${self.big_blind}",
+            f"Total Table Chips : ${tot_chips}",
+            f"Chip Leader       : {leader_str}",
+            f"Current Street    : {self.game.table.show_community_cards() or 'Pre-Flop'}",
+            "Press [S] to Close Telemetry"
+        ]
+
+        y_off = py + 42
+        for line in lines:
+            col = (250, 204, 21) if "Press [S]" in line else (241, 245, 249)
+            l_surf = font_b.render(line, True, col)
+            self.screen.blit(l_surf, (px + 16, y_off))
+            y_off += 24
 
     def _draw_player_seat(self, player, x, y, is_acting, curr_acting, card_w, card_h, cx_tab, cy_tab, table_w):
         sw, sh = self.screen.get_size()
@@ -624,14 +792,21 @@ class GameScreen:
 
         is_human = not getattr(player, "is_ai", False)
         has_left = player.name in self.left_players
+        is_folded = hasattr(player, "is_folded") and player.is_folded()
+
+        is_winner = (not self.hand_in_progress and self.winner_player == player)
         bg_color = (15, 23, 42) if has_left else ((30, 41, 59) if is_human else (15, 23, 42))
-        border_color = (250, 204, 21) if is_acting else ((59, 130, 246) if is_human else (168, 85, 247))
+        border_color = (245, 158, 11) if is_winner else ((250, 204, 21) if is_acting else ((56, 189, 248) if is_human else (168, 85, 247)))
+        alpha_val = 240 if is_winner else (110 if (has_left or is_folded) else 230)
 
-        if is_acting:
-            pygame.draw.rect(self.screen, (250, 204, 21, 100), rect.inflate(10, 10), border_radius=12)
+        # Glowing Active Turn or Winner Outline
+        if is_acting or is_winner:
+            glow_color = (245, 158, 11, 120) if is_winner else (250, 204, 21, 90)
+            glow_surf = pygame.Surface((rect.width + 16, rect.height + 16), pygame.SRCALPHA)
+            pygame.draw.rect(glow_surf, glow_color, (0, 0, rect.width + 16, rect.height + 16), border_radius=14)
+            self.screen.blit(glow_surf, (rect.x - 8, rect.y - 8))
 
-        pygame.draw.rect(self.screen, bg_color, rect, border_radius=10)
-        pygame.draw.rect(self.screen, border_color, rect, 2, border_radius=10)
+        draw_glass_panel(self.screen, rect, bg_color=bg_color, alpha=alpha_val, border_color=border_color, radius=10, border_width=2)
 
         font = pygame.font.SysFont("arial", max(10, int(seat_h * 0.28)), bold=True)
         name_surf = font.render(player.name, True, (241, 245, 249) if not has_left else (148, 163, 184))
@@ -639,6 +814,11 @@ class GameScreen:
 
         self.screen.blit(name_surf, (rect.x + 10, rect.y + 4))
         self.screen.blit(chips_surf, (rect.x + 10, rect.y + rect.height // 2))
+
+        if not has_left:
+            p_bet = getattr(player, "current_bet", 0)
+            chip_amt = p_bet if p_bet > 0 else player.chips
+            draw_chip_stack(self.screen, rect.left - 12, rect.centery + 4, chip_amt, radius=8)
 
         if not has_left and player == curr_acting and self.hand_in_progress:
             leave_btn_rect = pygame.Rect(rect.right - 22, rect.y + 2, 20, 20)
@@ -651,23 +831,26 @@ class GameScreen:
         if player.name in self.last_action_texts:
             act_txt = self.last_action_texts[player.name]
             font_act = pygame.font.SysFont("arial", max(9, int(seat_h * 0.24)), bold=True)
-            act_surf = font_act.render(act_txt, True, (254, 240, 138) if "BET" in act_txt else (226, 232, 240))
+            act_surf = font_act.render(act_txt, True, (254, 240, 138) if "BET" in act_txt or "RAISE" in act_txt else (226, 232, 240))
             self.screen.blit(act_surf, (rect.x + 10, rect.bottom - 16))
 
-        # Role Badges (Dealer D, Small Blind SB, Big Blind BB)
+        # Role Badges (3D Metallic Circles for Dealer D, Small Blind SB, Big Blind BB)
         if not has_left:
             d_font = pygame.font.SysFont("arial", max(9, int(seat_h * 0.26)), bold=True)
             if player.has_role(PlayerRole.DEALER):
+                pygame.draw.circle(self.screen, (239, 68, 68), (rect.right - 14, rect.bottom - 14), 11)
+                pygame.draw.circle(self.screen, (255, 255, 255), (rect.right - 14, rect.bottom - 14), 11, 1)
                 d_surf = d_font.render("D", True, (255, 255, 255))
-                pygame.draw.circle(self.screen, (220, 38, 38), (rect.right - 14, rect.bottom - 14), 11)
                 self.screen.blit(d_surf, (rect.right - 18, rect.bottom - 21))
             elif player.has_role(PlayerRole.SMALL_BLIND):
-                sb_surf = d_font.render("SB", True, (255, 255, 255))
                 pygame.draw.circle(self.screen, (37, 99, 235), (rect.right - 14, rect.bottom - 14), 11)
+                pygame.draw.circle(self.screen, (255, 255, 255), (rect.right - 14, rect.bottom - 14), 11, 1)
+                sb_surf = d_font.render("SB", True, (255, 255, 255))
                 self.screen.blit(sb_surf, (rect.right - 21, rect.bottom - 21))
             elif player.has_role(PlayerRole.BIG_BLIND):
-                bb_surf = d_font.render("BB", True, (255, 255, 255))
                 pygame.draw.circle(self.screen, (147, 51, 234), (rect.right - 14, rect.bottom - 14), 11)
+                pygame.draw.circle(self.screen, (255, 255, 255), (rect.right - 14, rect.bottom - 14), 11, 1)
+                bb_surf = d_font.render("BB", True, (255, 255, 255))
                 self.screen.blit(bb_surf, (rect.right - 21, rect.bottom - 21))
 
         # Smart 4-Quadrant Hole Cards Radial Placement
@@ -683,7 +866,6 @@ class GameScreen:
 
             show_face_up = self.is_showdown or self.is_all_ai or is_active_human_turn or is_winner_show or is_user_show or is_ai_round_end_reveal
 
-
             cw, ch = card_w * 0.72, card_h * 0.72
 
             dx = x - cx_tab
@@ -695,7 +877,6 @@ class GameScreen:
                 card_x2 = card_x1 + int(cw * 0.6)
                 card_y = rect.bottom + 4
                 banner_y = rect.top - 14
-
 
             # 2. BOTTOM CENTER SEATS: Render cards BELOW seat box
             elif abs(dx) < int(table_w * 0.28) and dy >= 0:
@@ -739,8 +920,7 @@ class GameScreen:
                     b_surf = font_banner.render(banner_label, True, (254, 240, 138))
 
                     b_rect = b_surf.get_rect(center=(card_x1 + int(cw * 0.8), banner_y))
-                    pygame.draw.rect(self.screen, (15, 23, 42, 220), b_rect.inflate(12, 6), border_radius=6)
-                    pygame.draw.rect(self.screen, (234, 179, 8), b_rect.inflate(12, 6), 1, border_radius=6)
+                    draw_glass_panel(self.screen, b_rect.inflate(12, 6), bg_color=(15, 23, 42), alpha=230, border_color=(245, 158, 11), radius=6)
                     self.screen.blit(b_surf, b_rect)
 
     def _draw_ai_hud(self):
@@ -751,29 +931,44 @@ class GameScreen:
         panel_y = int(sh * 0.02)
 
         rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
-        pygame.draw.rect(self.screen, (15, 23, 42), rect, border_radius=10)
-        pygame.draw.rect(self.screen, (59, 130, 246), rect, 2, border_radius=10)
+        draw_glass_panel(self.screen, rect, bg_color=(15, 23, 42), alpha=225, border_color=(56, 189, 248), radius=10, border_width=2)
 
         font_h = pygame.font.SysFont("arial", max(12, int(panel_h * 0.06)), bold=True)
-        title_surf = font_h.render("LIVE AI BRAIN HUD", True, (96, 165, 250))
+        title_surf = font_h.render("LIVE AI BRAIN HUD", True, (56, 189, 248))
         self.screen.blit(title_surf, (panel_x + 12, panel_y + 10))
 
         font_body = pygame.font.SysFont("arial", max(10, int(panel_h * 0.045)))
         y_off = panel_y + 40
 
         if self.current_ai_analysis:
-            eq = self.current_ai_analysis.get("equity", 0)
-            st = self.current_ai_analysis.get("strength", 0)
-            reason = self.current_ai_analysis.get("reason", "standard_decision")
+            eq = float(self.current_ai_analysis.get("equity", 0) or 0)
+            st = float(self.current_ai_analysis.get("strength", 0) or 0)
+            reason = str(self.current_ai_analysis.get("reason", "standard_decision"))
             opp = self.current_ai_analysis.get("opponent") or {}
 
+            # Win Equity Metric & Gauge
+            surf_eq = font_body.render(f"Win Equity: {eq:.1f}%", True, (96, 165, 250))
+            self.screen.blit(surf_eq, (panel_x + 12, y_off))
+            y_off += int(panel_h * 0.05)
+            draw_progress_bar(self.screen, (panel_x + 12, y_off, panel_w - 24, 8), eq, 0, 100, fill_color=(56, 189, 248))
+            y_off += int(panel_h * 0.06)
+
+            # Hand Strength Metric & Gauge
+            surf_st = font_body.render(f"Hand Strength: {int(st)}/100", True, (52, 211, 153))
+            self.screen.blit(surf_st, (panel_x + 12, y_off))
+            y_off += int(panel_h * 0.05)
+            draw_progress_bar(self.screen, (panel_x + 12, y_off, panel_w - 24, 8), st, 0, 100, fill_color=(16, 185, 129))
+            y_off += int(panel_h * 0.06)
+
             lines = [
-                f"Win Equity: {eq}%",
-                f"Hand Strength: {st}/100",
                 f"Opponent Type: {opp.get('type', 'unknown')}",
                 f"Threat Level: {opp.get('threat_level', 5)}/10",
-                f"Reasoning: {reason}",
+                f"Reasoning: {reason[:26]}",
             ]
+            for line in lines:
+                surf = font_body.render(line, True, (226, 232, 240))
+                self.screen.blit(surf, (panel_x + 12, y_off))
+                y_off += int(panel_h * 0.07)
         else:
             lines = [
                 "Waiting for AI Decision...",
@@ -781,8 +976,8 @@ class GameScreen:
                 "Press [H] for Hole Privacy",
                 "Press [F1] for Hand Rankings"
             ]
+            for line in lines:
+                surf = font_body.render(line, True, (226, 232, 240))
+                self.screen.blit(surf, (panel_x + 12, y_off))
+                y_off += int(panel_h * 0.07)
 
-        for line in lines:
-            surf = font_body.render(line, True, (226, 232, 240))
-            self.screen.blit(surf, (panel_x + 12, y_off))
-            y_off += int(panel_h * 0.07)

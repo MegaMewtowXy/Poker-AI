@@ -8,8 +8,6 @@ from AI.strategy import Strategy
 
 from models.card import Card, Suit, Rank
 
-
-
 def card(rank, suit):
 
     return Card(
@@ -20,15 +18,9 @@ def card(rank, suit):
 
     )
 
-
-
-
 def test_bot_player():
 
-
     print("\n========== BOT PLAYER TEST ==========")
-
-
 
     # ==========================================
     # Create Bot
@@ -44,8 +36,6 @@ def test_bot_player():
 
     )
 
-
-
     print("\nBot Profile")
 
     print(
@@ -54,11 +44,7 @@ def test_bot_player():
 
     )
 
-
-
     profile = bot.profile()
-
-
 
     assert profile["name"] == "DeepBot"
 
@@ -66,18 +52,13 @@ def test_bot_player():
 
     assert profile["strategy"] == "tight_aggressive"
 
-
-
-
     # ==========================================
     # Create Game Context
     # ==========================================
 
     context = GameContext(
 
-
         hole_cards=[
-
 
             card(
 
@@ -86,7 +67,6 @@ def test_bot_player():
                 Suit.SPADES
 
             ),
-
 
             card(
 
@@ -98,10 +78,7 @@ def test_bot_player():
 
         ],
 
-
-
         community_cards=[
-
 
             card(
 
@@ -111,7 +88,6 @@ def test_bot_player():
 
             ),
 
-
             card(
 
                 Rank.SEVEN,
@@ -119,7 +95,6 @@ def test_bot_player():
                 Suit.DIAMONDS
 
             ),
-
 
             card(
 
@@ -131,35 +106,23 @@ def test_bot_player():
 
         ],
 
-
-
         position="BUTTON",
-
 
         street="flop",
 
-
         pot_size=200,
-
 
         current_bet=50,
 
-
         min_raise=100,
-
 
         big_blind=50,
 
-
         player_stack=1000,
-
 
         players_remaining=3
 
     )
-
-
-
 
     # ==========================================
     # Decision Test
@@ -171,8 +134,6 @@ def test_bot_player():
 
     )
 
-
-
     print("\nDecision")
 
     print(
@@ -180,8 +141,6 @@ def test_bot_player():
         decision
 
     )
-
-
 
     assert "action" in decision
 
@@ -191,15 +150,9 @@ def test_bot_player():
 
     assert "analysis" in decision
 
-
-
     assert decision["action"] is not None
 
-
-
     analysis = decision["analysis"]
-
-
 
     assert "strength" in analysis
 
@@ -208,9 +161,6 @@ def test_bot_player():
     assert "bluff" in analysis
 
     assert "risk" in analysis
-
-
-
 
     # ==========================================
     # Opponent Model Test
@@ -222,15 +172,11 @@ def test_bot_player():
 
     )
 
-
-
     opponent = bot.opponent_model(
 
         "Alice"
 
     )
-
-
 
     print("\nOpponent Profile")
 
@@ -240,12 +186,7 @@ def test_bot_player():
 
     )
 
-
-
     assert opponent is not None
-
-
-
 
     # ==========================================
     # Range Model Test
@@ -257,8 +198,6 @@ def test_bot_player():
 
     )
 
-
-
     print("\nOpponent Range")
 
     print(
@@ -267,14 +206,9 @@ def test_bot_player():
 
     )
 
-
-
     assert opponent_range is not None
 
     assert "range" in opponent_range.profile()
-
-
-
 
     # ==========================================
     # Learning Test
@@ -290,15 +224,11 @@ def test_bot_player():
 
     )
 
-
-
     updated_range = bot.opponent_range(
 
         "Alice"
 
     )
-
-
 
     assert len(
 
@@ -306,16 +236,11 @@ def test_bot_player():
 
     ) > 0
 
-
-
-
     # ==========================================
     # New Hand Reset
     # ==========================================
 
     bot.new_hand()
-
-
 
     print(
 
@@ -323,10 +248,6 @@ def test_bot_player():
 
     )
 
-
-
-
 if __name__ == "__main__":
-
 
     test_bot_player()

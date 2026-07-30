@@ -2,10 +2,6 @@ from models.player import Player
 
 from AI.bot_player import BotPlayer
 
-
-
-
-
 class AIPlayer(Player):
     """
     Engine-compatible AI player.
@@ -19,17 +15,12 @@ class AIPlayer(Player):
     • Forward decisions to BotPlayer
     • Expose AI profile information
 
-
     Does NOT:
         • Calculate hand strength
         • Decide actions itself
         • Manage betting rules
         • Control game flow
     """
-
-
-
-
 
     def __init__(
         self,
@@ -48,12 +39,7 @@ class AIPlayer(Player):
 
         )
 
-
         self.bot = bot
-
-
-
-
 
     # ==========================================
     # AI Decision
@@ -80,7 +66,6 @@ class AIPlayer(Player):
             opponent_name
 
         )
-
 
     # ==========================================
     # Opponent Learning & Hand Forwarding
@@ -113,7 +98,6 @@ class AIPlayer(Player):
                     position
                 )
 
-
     def new_hand(
         self
     ):
@@ -122,11 +106,6 @@ class AIPlayer(Player):
         """
         if hasattr(self.bot, "new_hand"):
             self.bot.new_hand()
-
-
-
-
-
 
     # ==========================================
     # AI Properties
@@ -142,10 +121,6 @@ class AIPlayer(Player):
 
         return self.bot.difficulty.difficulty
 
-
-
-
-
     @property
     def strategy(
         self
@@ -155,10 +130,6 @@ class AIPlayer(Player):
         """
 
         return self.bot.strategy.strategy
-
-
-
-
 
     # ==========================================
     # Profile
@@ -173,16 +144,13 @@ class AIPlayer(Player):
 
         return {
 
-
             "name":
 
                 self.name,
 
-
             "chips":
 
                 self.chips,
-
 
             "difficulty":
 
@@ -193,8 +161,6 @@ class AIPlayer(Player):
                 )
                 else self.difficulty,
 
-
-
             "strategy":
 
                 self.strategy.value
@@ -204,17 +170,11 @@ class AIPlayer(Player):
                 )
                 else self.strategy,
 
-
-
             "bot":
 
                 self.bot.profile()
 
         }
-
-
-
-
 
     # ==========================================
     # Reset
@@ -231,10 +191,6 @@ class AIPlayer(Player):
 
         super().reset_for_round()
 
-
-
-
-
     # ==========================================
     # Display
     # ==========================================
@@ -250,10 +206,6 @@ class AIPlayer(Player):
             f"Chips: ${self.chips}"
 
         )
-
-
-
-
 
     # ==========================================
     # Debug

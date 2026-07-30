@@ -2,8 +2,6 @@ from copy import deepcopy
 
 from models.player_position import PlayerPosition
 
-
-
 class RangeModel:
     """
     Estimates possible opponent hands.
@@ -22,8 +20,6 @@ class RangeModel:
         • Control gameplay
     """
 
-
-
     def __init__(
         self,
         opponent_name: str,
@@ -34,14 +30,11 @@ class RangeModel:
 
         self.opponent_type = opponent_type
 
-
-
         # ======================================
         # Default Starting Range
         # ======================================
 
         self.starting_range = {
-
 
             # Premium pairs
 
@@ -55,8 +48,6 @@ class RangeModel:
 
             "TT": 1.0,
 
-
-
             # Medium pairs
 
             "99": 0.8,
@@ -65,8 +56,6 @@ class RangeModel:
 
             "77": 0.6,
 
-
-
             # Big Ax hands
 
             "AK": 1.0,
@@ -74,8 +63,6 @@ class RangeModel:
             "AQ": 1.0,
 
             "AJ": 0.8,
-
-
 
             # Broadways
 
@@ -87,15 +74,11 @@ class RangeModel:
 
             "JT": 0.4,
 
-
-
             # Drawing categories
 
             "suited_connectors": 0.5,
 
             "small_pairs": 0.5,
-
-
 
             # Bluff category
 
@@ -103,15 +86,11 @@ class RangeModel:
 
         }
 
-
-
         self.range = deepcopy(
 
             self.starting_range
 
         )
-
-
 
         # ======================================
         # History Tracking
@@ -120,8 +99,6 @@ class RangeModel:
         self.history = []
 
         self.observations = 0
-
-
 
         # Apply initial player style
 
@@ -134,8 +111,6 @@ class RangeModel:
             )
 
             self.normalize_range()
-
-
 
     # ==========================================
     # Reset
@@ -156,8 +131,6 @@ class RangeModel:
 
         self.observations = 0
 
-
-
         if self.opponent_type != "unknown":
 
             self.adjust_player_type(
@@ -167,8 +140,6 @@ class RangeModel:
             )
 
             self.normalize_range()
-
-
 
     # ==========================================
     # Observe Action
@@ -198,14 +169,9 @@ class RangeModel:
 
         )
 
-
         self.observations += 1
 
-
-
         action = action.lower()
-
-
 
         if action == "raise":
 
@@ -215,24 +181,17 @@ class RangeModel:
 
             )
 
-
         elif action == "call":
 
             self.narrow_after_call()
-
-
 
         elif action == "3bet":
 
             self.adjust_after_3bet()
 
-
-
         elif action == "fold":
 
             self.adjust_after_fold()
-
-
 
         if opponent_type:
 
@@ -242,10 +201,7 @@ class RangeModel:
 
             )
 
-
         self.normalize_range()
-
-
 
     # ==========================================
     # Position Helper
@@ -270,8 +226,6 @@ class RangeModel:
 
             return position.name
 
-
-
         if isinstance(
 
             position,
@@ -282,11 +236,7 @@ class RangeModel:
 
             return position.upper()
 
-
-
         return None
-
-
 
     # ==========================================
     # Raise Adjustment
@@ -312,8 +262,6 @@ class RangeModel:
 
         )
 
-
-
         early_positions = {
 
             "UNDER_THE_GUN",
@@ -323,8 +271,6 @@ class RangeModel:
             "MIDDLE_POSITION"
 
         }
-
-
 
         late_positions = {
 
@@ -336,10 +282,7 @@ class RangeModel:
 
         }
 
-
-
         if position in early_positions:
-
 
             self.range["KQ"] *= 0.5
 
@@ -349,10 +292,7 @@ class RangeModel:
 
             self.range["bluffs"] *= 0.5
 
-
-
         elif position in late_positions:
-
 
             self.range["AJ"] *= 1.1
 
@@ -379,8 +319,6 @@ class RangeModel:
 
         self.range["KK"] *= 0.9
 
-
-
     # ==========================================
     # 3-Bet Adjustment
     # ==========================================
@@ -402,8 +340,6 @@ class RangeModel:
 
         self.range["bluffs"] *= 0.3
 
-
-
     # ==========================================
     # Fold Adjustment
     # ==========================================
@@ -418,8 +354,6 @@ class RangeModel:
         """
 
         self.range["bluffs"] *= 0.5
-
-
 
     # ==========================================
     # Player Type Adjustment
@@ -436,14 +370,11 @@ class RangeModel:
 
         opponent_type = opponent_type.lower()
 
-
-
         # --------------------------------------
         # Loose Aggressive
         # --------------------------------------
 
         if opponent_type == "loose_aggressive":
-
 
             self.range["bluffs"] *= 1.5
 
@@ -451,14 +382,11 @@ class RangeModel:
 
             self.range["AJ"] *= 1.1
 
-
-
         # --------------------------------------
         # Tight Aggressive
         # --------------------------------------
 
         elif opponent_type == "tight_aggressive":
-
 
             self.range["bluffs"] *= 0.6
 
@@ -468,14 +396,11 @@ class RangeModel:
 
             self.range["AK"] *= 1.1
 
-
-
         # --------------------------------------
         # Calling Station
         # --------------------------------------
 
         elif opponent_type == "calling_station":
-
 
             self.range["AQ"] *= 1.2
 
@@ -483,20 +408,15 @@ class RangeModel:
 
             self.range["bluffs"] *= 0.5
 
-
-
         # --------------------------------------
         # Loose Passive
         # --------------------------------------
 
         elif opponent_type == "loose_passive":
 
-
             self.range["suited_connectors"] *= 1.2
 
             self.range["small_pairs"] *= 1.2
-
-
 
     # ==========================================
     # Remove Weak Hands
@@ -517,8 +437,6 @@ class RangeModel:
 
         self.range["bluffs"] *= 0.5
 
-
-
     # ==========================================
     # Add Bluff Possibility
     # ==========================================
@@ -531,8 +449,6 @@ class RangeModel:
         """
 
         self.range["bluffs"] *= 1.3
-
-
 
     # ==========================================
     # Normalize Range
@@ -548,22 +464,15 @@ class RangeModel:
 
         for hand in self.range:
 
-
             if self.range[hand] < 0:
 
                 self.range[hand] = 0
-
-
 
             elif self.range[hand] > 1:
 
                 self.range[hand] = 1
 
-
-
         return self.range
-
-
 
     # ==========================================
     # Range Strength
@@ -581,7 +490,6 @@ class RangeModel:
 
         weights = {
 
-
             "AA": 10,
 
             "KK": 9,
@@ -592,20 +500,17 @@ class RangeModel:
 
             "TT": 6,
 
-
             "99": 5,
 
             "88": 4,
 
             "77": 3,
 
-
             "AK": 8,
 
             "AQ": 6,
 
             "AJ": 5,
-
 
             "KQ": 4,
 
@@ -615,7 +520,6 @@ class RangeModel:
 
             "JT": 2,
 
-
             "suited_connectors": 2,
 
             "small_pairs": 3,
@@ -624,16 +528,11 @@ class RangeModel:
 
         }
 
-
-
         total = 0
 
         probability_total = 0
 
-
-
         for hand, probability in self.range.items():
-
 
             weight = weights.get(
 
@@ -643,18 +542,13 @@ class RangeModel:
 
             )
 
-
             total += probability * weight
 
             probability_total += probability
 
-
-
         if probability_total == 0:
 
             return 0
-
-
 
         return round(
 
@@ -663,8 +557,6 @@ class RangeModel:
             2
 
         )
-
-
 
     # ==========================================
     # Confidence
@@ -691,8 +583,6 @@ class RangeModel:
 
         )
 
-
-
     # ==========================================
     # Accessors
     # ==========================================
@@ -703,15 +593,11 @@ class RangeModel:
 
         return self.history.copy()
 
-
-
     def get_range(
         self
     ):
 
         return self.range.copy()
-
-
 
     # ==========================================
     # Profile
@@ -726,43 +612,33 @@ class RangeModel:
 
         self.normalize_range()
 
-
-
         return {
-
 
             "name":
 
                 self.name,
 
-
             "opponent_type":
 
                 self.opponent_type,
-
 
             "range":
 
                 self.range.copy(),
 
-
             "range_strength":
 
                 self.range_strength(),
 
-
             "confidence":
 
                 self.confidence(),
-
 
             "observations":
 
                 self.observations
 
         }
-
-
 
     # ==========================================
     # Debug
@@ -777,8 +653,6 @@ class RangeModel:
             f"{self.name})"
 
         )
-
-
 
     def __str__(self):
 

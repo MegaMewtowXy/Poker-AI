@@ -5,7 +5,6 @@ from models.player_position import PlayerPosition
 from models.player_role import PlayerRole
 from models.street import Street
 
-
 @dataclass
 class GameContext:
     """
@@ -229,9 +228,7 @@ class GameContext:
 
             "street": str(self.street),
 
-
             "position": str(self.position),
-
 
             "roles": [
 
@@ -241,21 +238,15 @@ class GameContext:
 
             ],
 
-
             "pot": self.pot_size,
-
 
             "call_amount": self.call_amount,
 
-
             "pot_odds": self.pot_odds(),
-
 
             "stack": self.player_stack,
 
-
             "stack_bb": self.stack_in_bb(),
-
 
             "players_remaining":
 

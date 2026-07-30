@@ -3,14 +3,9 @@ from AI.difficulty import (
     DifficultyManager
 )
 
-
-
 def test_difficulty():
 
-
     print("\n========== DIFFICULTY TEST ==========")
-
-
 
     # ==========================================
     # EASY
@@ -22,7 +17,6 @@ def test_difficulty():
 
     )
 
-
     print("\nEasy Config")
 
     print(
@@ -30,7 +24,6 @@ def test_difficulty():
         easy.config()
 
     )
-
 
     assert not easy.can_use_probability()
 
@@ -44,9 +37,6 @@ def test_difficulty():
 
     assert easy.strategy_weight() == 0.5
 
-
-
-
     # ==========================================
     # MEDIUM
     # ==========================================
@@ -57,7 +47,6 @@ def test_difficulty():
 
     )
 
-
     print("\nMedium Config")
 
     print(
@@ -65,7 +54,6 @@ def test_difficulty():
         medium.config()
 
     )
-
 
     assert medium.can_use_probability()
 
@@ -77,9 +65,6 @@ def test_difficulty():
 
     assert medium.strategy_weight() == 0.75
 
-
-
-
     # ==========================================
     # HARD
     # ==========================================
@@ -90,7 +75,6 @@ def test_difficulty():
 
     )
 
-
     print("\nHard Config")
 
     print(
@@ -98,7 +82,6 @@ def test_difficulty():
         hard.config()
 
     )
-
 
     assert hard.can_use_probability()
 
@@ -112,9 +95,6 @@ def test_difficulty():
 
     assert hard.strategy_weight() == 1.0
 
-
-
-
     # ==========================================
     # EXPERT
     # ==========================================
@@ -125,7 +105,6 @@ def test_difficulty():
 
     )
 
-
     print("\nExpert Config")
 
     print(
@@ -133,7 +112,6 @@ def test_difficulty():
         expert.config()
 
     )
-
 
     assert expert.can_use_probability()
 
@@ -147,20 +125,15 @@ def test_difficulty():
 
     assert expert.strategy_weight() == 1.0
 
-
-
-
     # ==========================================
     # Profile
     # ==========================================
 
     profile = expert.profile()
 
-
     print("\nExpert Profile")
 
     print(profile)
-
 
     assert profile["difficulty"] == "expert"
 
@@ -168,17 +141,11 @@ def test_difficulty():
 
     assert profile["strategy_weight"] == 1.0
 
-
-
-
     print(
 
         "\n========== DIFFICULTY TEST PASSED =========="
 
     )
-
-
-
 
 if __name__ == "__main__":
 

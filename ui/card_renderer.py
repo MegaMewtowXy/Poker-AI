@@ -3,14 +3,14 @@ import pygame
 class CardRenderer:
     """
     Ultra-Modern Procedural Playing Card Renderer for Pygame.
-    Generates crisp, high-contrast playing cards with elegant typography and centered suit graphics.
+    Generates crisp, high-contrast playing cards with elegant typography, HD suit graphics, and drop-shadows.
     """
 
     SUIT_COLORS = {
-        "H": (220, 38, 38),     # Hearts Red
-        "D": (220, 38, 38),     # Diamonds Red
-        "C": (30, 41, 59),      # Clubs Slate
-        "S": (30, 41, 59),      # Spades Slate
+        "H": (239, 68, 68),     # Crimson Red
+        "D": (239, 68, 68),     # Crimson Red
+        "C": (15, 23, 42),      # Midnight Black
+        "S": (15, 23, 42),      # Midnight Black
     }
 
     SUIT_SYMBOLS = {
@@ -67,26 +67,33 @@ class CardRenderer:
 
         surface = pygame.Surface((width, height), pygame.SRCALPHA)
         rect = pygame.Rect(0, 0, width, height)
-        radius = max(4, int(width * 0.10))
+        radius = max(5, int(width * 0.11))
 
         if face_down:
-            # Card Back
-            pygame.draw.rect(surface, (248, 250, 252), rect, border_radius=radius)
+            # High-Definition Card Back
+            pygame.draw.rect(surface, (241, 245, 249), rect, border_radius=radius)
             inner_rect = rect.inflate(-int(width * 0.12), -int(height * 0.12))
-            pygame.draw.rect(surface, (30, 58, 138), inner_rect, border_radius=max(2, radius - 2))
+            
+            # Deep Navy Fill
+            pygame.draw.rect(surface, (15, 23, 42), inner_rect, border_radius=max(2, radius - 2))
 
-            pattern_color = (29, 78, 216)
+            # Gold Accent Border
+            pygame.draw.rect(surface, (245, 158, 11), inner_rect, 1, border_radius=max(2, radius - 2))
+
+            # Pattern Lines
+            pattern_color = (30, 41, 59)
             step = max(5, int(width * 0.18))
             for x in range(inner_rect.left - height, inner_rect.right + height, step):
                 pygame.draw.line(surface, pattern_color, (x, inner_rect.top), (x + height, inner_rect.bottom), 1)
 
+            # Outer Border
             pygame.draw.rect(surface, (148, 163, 184), rect, 2, border_radius=radius)
         else:
             # Face Up Card
             pygame.draw.rect(surface, (255, 255, 255), rect, border_radius=radius)
-            pygame.draw.rect(surface, (203, 213, 225), rect, 2, border_radius=radius)
+            pygame.draw.rect(surface, (203, 213, 225), rect, 1, border_radius=radius)
 
-            color = self.SUIT_COLORS.get(suit_code, (30, 41, 59))
+            color = self.SUIT_COLORS.get(suit_code, (15, 23, 42))
 
             font_size = max(11, int(height * 0.25))
             font = pygame.font.SysFont("arial", font_size, bold=True)

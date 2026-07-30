@@ -23,16 +23,12 @@ class RiskManager:
     • Evaluate hands
     """
 
-
-
     def __init__(
         self,
         strategy=None
     ):
 
         self.strategy = strategy
-
-
 
     # ==========================================
     # Strategy Access
@@ -54,8 +50,6 @@ class RiskManager:
 
             ).lower()
 
-
-
         if self.strategy:
 
             return str(
@@ -64,12 +58,7 @@ class RiskManager:
 
             ).lower()
 
-
-
         return "balanced"
-
-
-
 
     # ==========================================
     # Stack Conversion
@@ -88,12 +77,7 @@ class RiskManager:
 
             return 0
 
-
-
         return player_stack / big_blind
-
-
-
 
     # ==========================================
     # Main Analysis
@@ -109,8 +93,6 @@ class RiskManager:
         Returns risk profile.
         """
 
-
-
         stack_bb = self.stack_in_bb(
 
             player_stack,
@@ -119,67 +101,41 @@ class RiskManager:
 
         )
 
-
-
         # ======================================
         # Stack Pressure
         # ======================================
 
         if stack_bb <= 10:
 
-
             risk_level = 0.9
-
 
             aggression = 1.3
 
-
             style = "desperate"
-
-
-
 
         elif stack_bb <= 30:
 
-
             risk_level = 0.7
-
 
             aggression = 1.15
 
-
             style = "semi_aggressive"
-
-
-
 
         elif stack_bb <= 100:
 
-
             risk_level = 0.5
-
 
             aggression = 1.0
 
-
             style = "balanced"
-
-
-
 
         else:
 
-
             risk_level = 0.3
-
 
             aggression = 0.85
 
-
             style = "patient"
-
-
-
 
         # ======================================
         # Strategy Adjustment
@@ -191,31 +147,17 @@ class RiskManager:
 
         )
 
-
-
         if "loose_aggressive" in strategy_name:
-
 
             aggression += 0.15
 
-
-
-
         elif "tight_passive" in strategy_name:
-
 
             aggression -= 0.15
 
-
-
-
         elif "tight_aggressive" in strategy_name:
 
-
             aggression += 0.05
-
-
-
 
         aggression = max(
 
@@ -232,7 +174,6 @@ class RiskManager:
         )
         return {
 
-
             "stack_bb":
 
                 round(
@@ -243,13 +184,9 @@ class RiskManager:
 
                 ),
 
-
-
             "risk_level":
 
                 risk_level,
-
-
 
             "aggression_modifier":
 
@@ -261,17 +198,11 @@ class RiskManager:
 
                 ),
 
-
-
             "recommended_style":
 
                 style
 
         }
-
-
-
-
 
     # ==========================================
     # Stack Pressure Analysis
@@ -294,33 +225,21 @@ class RiskManager:
 
         )
 
-
-
         if stack_bb <= 10:
 
             return "critical"
-
-
 
         elif stack_bb <= 30:
 
             return "short"
 
-
-
         elif stack_bb <= 100:
 
             return "normal"
 
-
-
         else:
 
             return "deep"
-
-
-
-
 
     # ==========================================
     # Survival Mode
@@ -344,13 +263,7 @@ class RiskManager:
 
         )
 
-
-
         return stack_bb <= 10
-
-
-
-
 
     # ==========================================
     # SPR Analysis
@@ -369,8 +282,6 @@ class RiskManager:
 
             return 0
 
-
-
         return round(
 
             player_stack
@@ -382,10 +293,6 @@ class RiskManager:
             2
 
         )
-
-
-
-
 
     # ==========================================
     # Pressure Adjustment
@@ -402,25 +309,17 @@ class RiskManager:
 
         factor = 1.0
 
-
-
         if stack_pressure == "critical":
 
             factor += 0.25
-
-
 
         elif stack_pressure == "short":
 
             factor += 0.10
 
-
-
         if opponents_remaining > 5:
 
             factor -= 0.10
-
-
 
         return round(
 
@@ -441,10 +340,6 @@ class RiskManager:
             2
 
         )
-
-
-
-
 
     # ==========================================
     # Full Profile
@@ -472,7 +367,6 @@ class RiskManager:
 
         )
 
-
         pressure = self.stack_pressure(
 
             player_stack,
@@ -481,20 +375,13 @@ class RiskManager:
 
         )
 
-
-
         return {
 
-
             **risk,
-
-
 
             "stack_pressure":
 
                 pressure,
-
-
 
             "survival_mode":
 
@@ -506,8 +393,6 @@ class RiskManager:
 
                 ),
 
-
-
             "spr":
 
                 self.stack_pot_ratio(
@@ -517,8 +402,6 @@ class RiskManager:
                     pot_size
 
                 ),
-
-
 
             "pressure_factor":
 
@@ -532,10 +415,6 @@ class RiskManager:
 
         }
 
-
-
-
-
     # ==========================================
     # Debug
     # ==========================================
@@ -547,8 +426,6 @@ class RiskManager:
             "RiskManager()"
 
         )
-
-
 
     def __str__(self):
 

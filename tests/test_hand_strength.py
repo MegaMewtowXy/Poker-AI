@@ -3,7 +3,6 @@ from models.player_position import PlayerPosition
 
 from AI.hand_strength import HandStrength
 
-
 def card(rank, suit):
 
     return Card(
@@ -11,14 +10,11 @@ def card(rank, suit):
         rank
     )
 
-
 def test_hand_strength():
 
     print("\n========== HAND STRENGTH TEST ==========")
 
-
     analyzer = HandStrength()
-
 
     # ==================================================
     # Strong Hand Test
@@ -39,7 +35,6 @@ def test_hand_strength():
 
     ]
 
-
     community_cards = [
 
         card(
@@ -59,7 +54,6 @@ def test_hand_strength():
 
     ]
 
-
     result = analyzer.analyze_hand(
 
         hole_cards,
@@ -72,19 +66,15 @@ def test_hand_strength():
 
     )
 
-
     print("\nPair Analysis")
 
     print(result)
-
 
     assert result["hand_name"] == "Pair"
 
     assert result["base_strength"] == 35
 
     assert result["final_strength"] > 35
-
-
 
     # ==================================================
     # Flush Draw Test
@@ -103,7 +93,6 @@ def test_hand_strength():
         )
 
     ]
-
 
     community_cards = [
 
@@ -124,7 +113,6 @@ def test_hand_strength():
 
     ]
 
-
     result = analyzer.analyze_hand(
 
         hole_cards,
@@ -137,17 +125,13 @@ def test_hand_strength():
 
     )
 
-
     print("\nFlush Draw Analysis")
 
     print(result)
 
-
     assert "Flush Draw" in result["draws"]
 
     assert result["draw_strength"] >= 10
-
-
 
     # ==================================================
     # Many Opponents Modifier
@@ -194,20 +178,15 @@ def test_hand_strength():
 
     )
 
-
     print("\nMulti Opponent Analysis")
 
     print(weak_result)
 
-
     assert weak_result["final_strength"] < 50
-
-
 
     print(
         "\n========== HAND STRENGTH TEST PASSED =========="
     )
-
 
 if __name__ == "__main__":
 

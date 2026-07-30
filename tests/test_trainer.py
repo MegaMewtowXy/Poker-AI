@@ -2,18 +2,11 @@ import os
 
 from AI.trainer import Trainer
 
-
-
-
 def test_trainer():
 
     print("\n========== TRAINER TEST ==========")
 
-
-
     trainer = Trainer()
-
-
 
     # ==========================================
     # Reward Calculation
@@ -25,16 +18,13 @@ def test_trainer():
 
     )
 
-
     negative = trainer.calculate_reward(
 
         -500
 
     )
 
-
     print("\nRewards")
-
 
     print(
 
@@ -44,7 +34,6 @@ def test_trainer():
 
     )
 
-
     print(
 
         "Negative:",
@@ -53,14 +42,9 @@ def test_trainer():
 
     )
 
-
-
     assert positive == 0.5
 
     assert negative == -0.5
-
-
-
 
     # ==========================================
     # Experience Recording
@@ -88,8 +72,6 @@ def test_trainer():
 
     )
 
-
-
     trainer.record_experience(
 
         {
@@ -110,23 +92,13 @@ def test_trainer():
 
     )
 
-
-
-
     stats = trainer.statistics()
-
-
 
     print("\nStatistics")
 
     print(stats)
 
-
-
     assert stats["experiences"] == 2
-
-
-
 
     # ==========================================
     # Learning
@@ -134,32 +106,19 @@ def test_trainer():
 
     before = trainer.get_weights()
 
-
-
     trainer.learn()
 
-
-
     after = trainer.get_weights()
-
-
 
     print("\nWeights Before")
 
     print(before)
 
-
-
     print("\nWeights After")
 
     print(after)
 
-
-
     assert before != after
-
-
-
 
     # ==========================================
     # Profile
@@ -167,13 +126,9 @@ def test_trainer():
 
     profile = trainer.profile()
 
-
-
     print("\nTrainer Profile")
 
     print(profile)
-
-
 
     assert "learning_rate" in profile
 
@@ -181,16 +136,11 @@ def test_trainer():
 
     assert "statistics" in profile
 
-
-
-
     # ==========================================
     # Save / Load
     # ==========================================
 
     path = "data/training_data/test_trainer.json"
-
-
 
     trainer.save(
 
@@ -198,19 +148,13 @@ def test_trainer():
 
     )
 
-
-
     assert os.path.exists(
 
         path
 
     )
 
-
-
     new_trainer = Trainer()
-
-
 
     loaded = new_trainer.load(
 
@@ -218,11 +162,7 @@ def test_trainer():
 
     )
 
-
-
     assert loaded == True
-
-
 
     assert len(
 
@@ -230,16 +170,11 @@ def test_trainer():
 
     ) == 2
 
-
-
-
     # ==========================================
     # Reset
     # ==========================================
 
     new_trainer.reset()
-
-
 
     assert len(
 
@@ -247,11 +182,7 @@ def test_trainer():
 
     ) == 0
 
-
-
     reset_weights = new_trainer.get_weights()
-
-
 
     assert reset_weights["aggression"] == 0.5
 
@@ -259,27 +190,17 @@ def test_trainer():
 
     assert reset_weights["risk_tolerance"] == 0.5
 
-
-
-
     # Cleanup
 
     if os.path.exists(path):
 
         os.remove(path)
 
-
-
-
     print(
 
         "\n========== TRAINER TEST PASSED =========="
 
     )
-
-
-
-
 
 if __name__ == "__main__":
 

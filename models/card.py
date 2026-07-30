@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-
 # =====================================================
 # Suit
 # =====================================================
@@ -18,7 +17,6 @@ class Suit(Enum):
     HEARTS = "h"
 
     SPADES = "s"
-
 
     # -------------------------------------------------
 
@@ -37,7 +35,6 @@ class Suit(Enum):
 
         }[self]
 
-
     # -------------------------------------------------
 
     @property
@@ -53,10 +50,7 @@ class Suit(Enum):
 
             return "red"
 
-
         return "black"
-
-
 
 # =====================================================
 # Rank
@@ -70,7 +64,6 @@ class Rank(Enum):
     - display symbol
     - numeric strength
     """
-
 
     TWO = ("2", 2)
 
@@ -98,8 +91,6 @@ class Rank(Enum):
 
     ACE = ("A", 14)
 
-
-
     def __init__(
         self,
         symbol: str,
@@ -110,15 +101,11 @@ class Rank(Enum):
 
         self.strength = strength
 
-
-
     # -------------------------------------------------
 
     def __str__(self):
 
         return self.symbol
-
-
 
     # -------------------------------------------------
 
@@ -135,17 +122,12 @@ class Rank(Enum):
 
         ]
 
-
-
     # -------------------------------------------------
 
     @property
     def is_high(self) -> bool:
 
         return self.strength >= 10
-
-
-
 
 # =====================================================
 # Card
@@ -163,17 +145,13 @@ class Card:
     change after creation.
     """
 
-
     suit: Suit
 
     rank: Rank
 
-
-
     # =====================================================
     # External Evaluator Formats
     # =====================================================
-
 
     @property
     def treys(self) -> str:
@@ -194,8 +172,6 @@ class Card:
 
         )
 
-
-
     # -------------------------------------------------
 
     @property
@@ -206,20 +182,14 @@ class Card:
 
         return self.treys
 
-
-
-
     # =====================================================
     # Card Information
     # =====================================================
-
 
     @property
     def numeric_rank(self) -> int:
 
         return self.rank.strength
-
-
 
     # -------------------------------------------------
 
@@ -228,16 +198,12 @@ class Card:
 
         return self.rank.is_face
 
-
-
     # -------------------------------------------------
 
     @property
     def is_ace(self) -> bool:
 
         return self.rank == Rank.ACE
-
-
 
     # -------------------------------------------------
 
@@ -246,16 +212,12 @@ class Card:
 
         return self.suit.color
 
-
-
     # -------------------------------------------------
 
     @property
     def is_red(self) -> bool:
 
         return self.color == "red"
-
-
 
     # -------------------------------------------------
 
@@ -264,12 +226,9 @@ class Card:
 
         return self.color == "black"
 
-
-
     # =====================================================
     # Comparison Helpers
     # =====================================================
-
 
     def beats(
         self,
@@ -289,12 +248,9 @@ class Card:
 
         )
 
-
-
     # =====================================================
     # Display
     # =====================================================
-
 
     def __str__(self):
 
@@ -305,8 +261,6 @@ class Card:
             f"{self.suit.symbol}"
 
         )
-
-
 
     # -------------------------------------------------
 

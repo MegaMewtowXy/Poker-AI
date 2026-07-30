@@ -4,10 +4,6 @@ from AI.game_context import GameContext
 
 from models.action import Action
 
-
-
-
-
 class BotController:
     """
     Final AI game controller.
@@ -20,7 +16,6 @@ class BotController:
     • Execute actions
     • Maintain decision history
 
-
     Does NOT
     --------
     • Decide strategy
@@ -29,8 +24,6 @@ class BotController:
     • Calculate bets
     """
 
-
-
     def __init__(
         self,
         bot: BotPlayer
@@ -38,15 +31,9 @@ class BotController:
 
         self.bot = bot
 
-
         self.last_decision = None
 
-
         self.history = []
-
-
-
-
 
     # ==========================================
     # Request AI Decision
@@ -61,7 +48,6 @@ class BotController:
         Ask BotPlayer for decision.
         """
 
-
         decision = self.bot.decide(
 
             context,
@@ -70,9 +56,7 @@ class BotController:
 
         )
 
-
         self.last_decision = decision
-
 
         self.history.append(
 
@@ -80,12 +64,7 @@ class BotController:
 
         )
 
-
         return decision
-
-
-
-
 
     # ==========================================
     # Validate Decision
@@ -99,7 +78,6 @@ class BotController:
         Ensure decision format is valid.
         """
 
-
         required = [
 
             "action",
@@ -108,10 +86,7 @@ class BotController:
 
         ]
 
-
-
         for field in required:
-
 
             if field not in decision:
 
@@ -120,8 +95,6 @@ class BotController:
                     f"Missing decision field: {field}"
 
                 )
-
-
 
         if not isinstance(
 
@@ -137,8 +110,6 @@ class BotController:
 
             )
 
-
-
         if decision["amount"] < 0:
 
             raise ValueError(
@@ -147,13 +118,7 @@ class BotController:
 
             )
 
-
-
         return True
-
-
-
-
 
     # ==========================================
     # Action Name
@@ -167,12 +132,7 @@ class BotController:
         Convert action enum to readable name.
         """
 
-
         return action.name.lower()
-
-
-
-
 
     # ==========================================
     # Execute Action
@@ -191,18 +151,13 @@ class BotController:
         It does NOT decide.
         """
 
-
-
         self.validate_decision(
 
             decision
 
         )
 
-
-
         action = decision["action"]
-
 
         amount = decision.get(
 
@@ -212,11 +167,7 @@ class BotController:
 
         )
 
-
-
-
         if action == Action.FOLD:
-
 
             betting_manager.fold(
 
@@ -224,10 +175,7 @@ class BotController:
 
             )
 
-
-
         elif action == Action.CHECK:
-
 
             betting_manager.check(
 
@@ -235,10 +183,7 @@ class BotController:
 
             )
 
-
-
         elif action == Action.CALL:
-
 
             betting_manager.call(
 
@@ -246,10 +191,7 @@ class BotController:
 
             )
 
-
-
         elif action == Action.BET:
-
 
             betting_manager.bet(
 
@@ -259,10 +201,7 @@ class BotController:
 
             )
 
-
-
         elif action == Action.RAISE:
-
 
             betting_manager.raise_bet(
 
@@ -272,10 +211,7 @@ class BotController:
 
             )
 
-
-
         elif action == Action.ALL_IN:
-
 
             betting_manager.all_in(
 
@@ -283,10 +219,7 @@ class BotController:
 
             )
 
-
-
         else:
-
 
             raise ValueError(
 
@@ -294,13 +227,7 @@ class BotController:
 
             )
 
-
-
         return True
-
-
-
-
 
     # ==========================================
     # History
@@ -313,12 +240,7 @@ class BotController:
         Return decision history.
         """
 
-
         return self.history.copy()
-
-
-
-
 
     def reset_history(
         self
@@ -327,15 +249,9 @@ class BotController:
         Reset history for simulations.
         """
 
-
         self.history.clear()
 
-
         self.last_decision = None
-
-
-
-
 
     # ==========================================
     # Last Decision
@@ -348,12 +264,7 @@ class BotController:
         Return latest AI decision.
         """
 
-
         return self.last_decision
-
-
-
-
 
     # ==========================================
     # Profile
@@ -366,14 +277,11 @@ class BotController:
         Controller information.
         """
 
-
         return {
-
 
             "bot":
 
                 self.bot.name,
-
 
             "decisions_made":
 
@@ -384,10 +292,6 @@ class BotController:
                 )
 
         }
-
-
-
-
 
     # ==========================================
     # Debug

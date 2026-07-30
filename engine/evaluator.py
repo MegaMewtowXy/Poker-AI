@@ -4,8 +4,6 @@ from treys import Evaluator as TreysEvaluator
 from models.card import Card
 from models.hand_result import HandResult
 
-
-
 # ==========================================================
 # Treys Rank Class → Hand Name
 # ==========================================================
@@ -34,10 +32,6 @@ RANK_CLASS_TO_NAME = {
 
 }
 
-
-
-
-
 class HandEvaluator:
     """
     Evaluates Texas Hold'em hands.
@@ -56,13 +50,9 @@ class HandEvaluator:
     - Decide winners
     """
 
-
-
     def __init__(self):
 
         self.evaluator = TreysEvaluator()
-
-
 
     # ==================================================
     # Card Conversion
@@ -77,8 +67,6 @@ class HandEvaluator:
         into Treys integers.
         """
 
-
-
         suit_map = {
 
             "HEARTS": "h",
@@ -91,14 +79,9 @@ class HandEvaluator:
 
         }
 
-
-
         converted = []
 
-
-
         for card in cards:
-
 
             if not hasattr(card.rank, "symbol"):
 
@@ -106,20 +89,15 @@ class HandEvaluator:
                     f"Invalid rank: {card.rank}"
                 )
 
-
-
             if card.suit.name not in suit_map:
 
                 raise ValueError(
                     f"Invalid suit: {card.suit}"
                 )
 
-
-
             converted.append(
 
                 TreysCard.new(
-
 
                     card.rank.symbol
                     +
@@ -129,8 +107,6 @@ class HandEvaluator:
                 )
 
             )
-
-
 
         return converted
         # ==================================================
@@ -146,22 +122,17 @@ class HandEvaluator:
         Validate Texas Hold'em cards.
         """
 
-
         if len(hole_cards) != 2:
 
             raise ValueError(
                 "Exactly two hole cards are required."
             )
 
-
-
         if len(community_cards) > 5:
 
             raise ValueError(
                 "Community cards cannot exceed five."
             )
-
-
 
         if (
 
@@ -177,8 +148,6 @@ class HandEvaluator:
                 "Texas Hold'em supports maximum seven cards."
             )
 
-
-
     # ==================================================
     # Evaluation
     # ==================================================
@@ -192,7 +161,6 @@ class HandEvaluator:
         Evaluate one player's hand.
         """
 
-
         self.validate(
 
             hole_cards,
@@ -201,23 +169,17 @@ class HandEvaluator:
 
         )
 
-
-
         treys_hole = self.to_treys(
 
             hole_cards
 
         )
 
-
-
         treys_board = self.to_treys(
 
             community_cards
 
         )
-
-
 
         score = self.evaluator.evaluate(
 
@@ -227,15 +189,11 @@ class HandEvaluator:
 
         )
 
-
-
         rank = self.evaluator.get_rank_class(
 
             score
 
         )
-
-
 
         return HandResult(
 
@@ -246,8 +204,6 @@ class HandEvaluator:
             hand_name=self.rank_name(rank)
 
         )
-
-
 
     # ==================================================
     # Hand Information
@@ -270,8 +226,6 @@ class HandEvaluator:
 
         )
 
-
-
     # --------------------------------------------------
 
     def hand_name(
@@ -289,14 +243,11 @@ class HandEvaluator:
 
         )
 
-
         return self.rank_name(
 
             rank
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -341,8 +292,6 @@ class HandEvaluator:
 
             return -1
 
-
-
         if self.is_better(
             second,
             first
@@ -350,11 +299,7 @@ class HandEvaluator:
 
             return 1
 
-
-
         return 0
-
-
 
     # --------------------------------------------------
 
@@ -377,8 +322,6 @@ class HandEvaluator:
 
         )
 
-
-
     # --------------------------------------------------
 
     def is_tie(
@@ -399,8 +342,6 @@ class HandEvaluator:
             second.score
 
         )
-
-
 
     # ==================================================
     # Player Evaluation
@@ -423,8 +364,6 @@ class HandEvaluator:
 
         )
 
-
-
     # --------------------------------------------------
 
     def evaluate_players(
@@ -444,16 +383,11 @@ class HandEvaluator:
 
         results = {}
 
-
-
         for player in players:
-
 
             if not player.is_active():
 
                 continue
-
-
 
             results[player] = self.evaluate(
 
@@ -463,11 +397,7 @@ class HandEvaluator:
 
             )
 
-
-
         return results
-
-
 
     # ==================================================
     # Winner Detection
@@ -486,8 +416,6 @@ class HandEvaluator:
 
             return []
 
-
-
         best_score = min(
 
             result.score
@@ -495,8 +423,6 @@ class HandEvaluator:
             for result in results.values()
 
         )
-
-
 
         return [
 
@@ -507,8 +433,6 @@ class HandEvaluator:
             if result.score == best_score
 
         ]
-
-
 
     # ==================================================
     # Best Five Cards
@@ -535,8 +459,6 @@ class HandEvaluator:
 
         return None
 
-
-
     # ==================================================
     # Debug
     # ==================================================
@@ -544,8 +466,6 @@ class HandEvaluator:
     def __repr__(self):
 
         return "HandEvaluator()"
-
-
 
     # --------------------------------------------------
 

@@ -12,9 +12,6 @@ from models.action import Action
 
 from models.card import Card, Suit, Rank
 
-
-
-
 def card(rank, suit):
 
     return Card(
@@ -25,9 +22,6 @@ def card(rank, suit):
 
     )
 
-
-
-
 class MockBettingManager:
 
     def __init__(self):
@@ -36,25 +30,17 @@ class MockBettingManager:
 
         self.amount = 0
 
-
-
     def fold(self, player):
 
         self.action = "fold"
-
-
 
     def check(self, player):
 
         self.action = "check"
 
-
-
     def call(self, player):
 
         self.action = "call"
-
-
 
     def bet(self, player, amount):
 
@@ -62,30 +48,19 @@ class MockBettingManager:
 
         self.amount = amount
 
-
-
     def raise_bet(self, player, amount):
 
         self.action = "raise"
 
         self.amount = amount
 
-
-
     def all_in(self, player):
 
         self.action = "all_in"
 
-
-
-
-
 def test_bot_controller():
 
-
     print("\n========== BOT CONTROLLER TEST ==========")
-
-
 
     # ==========================================
     # Create Bot
@@ -101,14 +76,11 @@ def test_bot_controller():
 
     )
 
-
     controller = BotController(
 
         bot
 
     )
-
-
 
     print("\nController Profile")
 
@@ -118,15 +90,11 @@ def test_bot_controller():
 
     )
 
-
-
-
     # ==========================================
     # Create Game Context
     # ==========================================
 
     context = GameContext(
-
 
         hole_cards=[
 
@@ -147,7 +115,6 @@ def test_bot_controller():
             )
 
         ],
-
 
         community_cards=[
 
@@ -177,7 +144,6 @@ def test_bot_controller():
 
         ],
 
-
         position="BUTTON",
 
         street="flop",
@@ -196,9 +162,6 @@ def test_bot_controller():
 
     )
 
-
-
-
     # ==========================================
     # Get Decision
     # ==========================================
@@ -209,13 +172,9 @@ def test_bot_controller():
 
     )
 
-
-
     print("\nAI Decision")
 
     print(decision)
-
-
 
     assert isinstance(
 
@@ -225,7 +184,6 @@ def test_bot_controller():
 
     )
 
-
     assert isinstance(
 
         decision["action"],
@@ -234,15 +192,11 @@ def test_bot_controller():
 
     )
 
-
     assert "amount" in decision
 
     assert "confidence" in decision
 
     assert "analysis" in decision
-
-
-
 
     # ==========================================
     # Action Conversion
@@ -254,26 +208,17 @@ def test_bot_controller():
 
     )
 
-
-
     print("\nAction Name")
 
     print(action_name)
 
-
-
     assert action_name == "raise"
-
-
-
 
     # ==========================================
     # Execute Action
     # ==========================================
 
     manager = MockBettingManager()
-
-
 
     controller.execute_action(
 
@@ -285,18 +230,11 @@ def test_bot_controller():
 
     )
 
-
-
     print("\nExecuted Action")
 
     print(manager.action)
 
-
-
     assert manager.action is not None
-
-
-
 
     # ==========================================
     # History
@@ -304,22 +242,13 @@ def test_bot_controller():
 
     history = controller.get_history()
 
-
-
     print("\nHistory")
 
     print(history)
 
-
-
     assert len(history) == 1
 
-
-
     assert controller.get_last_decision() == decision
-
-
-
 
     # ==========================================
     # Validation
@@ -331,18 +260,11 @@ def test_bot_controller():
 
     )
 
-
-
-
     print(
 
         "\n========== BOT CONTROLLER TEST PASSED =========="
 
     )
-
-
-
-
 
 if __name__ == "__main__":
 

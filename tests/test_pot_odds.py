@@ -1,14 +1,10 @@
 from AI.pot_odds import PotOddsCalculator
 
-
-
 def test_pot_odds():
 
     print("\n========== POT ODDS TEST ==========")
 
-
     calculator = PotOddsCalculator()
-
 
     odds = calculator.calculate(
 
@@ -18,12 +14,9 @@ def test_pot_odds():
 
     )
 
-
     print("Pot Odds:")
 
     print(odds)
-
-
 
     result = calculator.is_profitable_call(
 
@@ -33,24 +26,17 @@ def test_pot_odds():
 
     )
 
-
     print("Profitable Call:")
 
     print(result)
-
-
 
     assert odds == 16.67
 
     assert result == True
 
-
-
     print(
         "\n========== POT ODDS TEST PASSED =========="
     )
-
-
 
 if __name__ == "__main__":
 

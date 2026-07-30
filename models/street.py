@@ -1,6 +1,5 @@
 from enum import Enum, auto
 
-
 class Street(Enum):
     """
     Represents the current stage of a Texas Hold'em hand.

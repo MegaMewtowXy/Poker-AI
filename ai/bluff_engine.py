@@ -26,8 +26,6 @@ class BluffEngine:
     • Control game state
     """
 
-
-
     def __init__(
         self,
         strategy=None,
@@ -37,8 +35,6 @@ class BluffEngine:
         self.strategy = strategy
 
         self.difficulty = difficulty
-
-
 
     # ==========================================
     # Safe Access
@@ -57,8 +53,6 @@ class BluffEngine:
 
             return default
 
-
-
         function = getattr(
 
             self.strategy,
@@ -69,18 +63,11 @@ class BluffEngine:
 
         )
 
-
-
         if callable(function):
 
             return function()
 
-
-
         return default
-
-
-
 
     def get_difficulty_value(
         self,
@@ -95,8 +82,6 @@ class BluffEngine:
 
             return default
 
-
-
         function = getattr(
 
             self.difficulty,
@@ -107,18 +92,11 @@ class BluffEngine:
 
         )
 
-
-
         if callable(function):
 
             return function()
 
-
-
         return default
-
-
-
 
     # ==========================================
     # Position Factor
@@ -141,36 +119,23 @@ class BluffEngine:
 
         position = position.upper()
 
-
-
         if "BUTTON" in position:
 
             return 3
-
-
 
         if "CO" in position or "CUTOFF" in position:
 
             return 2
 
-
-
         if "HIJACK" in position:
 
             return 1
-
-
 
         if "UTG" in position or "UNDER_THE_GUN" in position:
 
             return -2
 
-
-
         return 0
-
-
-
 
     # ==========================================
     # Board Factor
@@ -189,11 +154,7 @@ class BluffEngine:
 
             return 0
 
-
-
         score = 0
-
-
 
         texture = board_analysis.get(
 
@@ -203,8 +164,6 @@ class BluffEngine:
 
         )
 
-
-
         danger = board_analysis.get(
 
             "danger_level",
@@ -213,38 +172,23 @@ class BluffEngine:
 
         )
 
-
-
-
         if texture == "dry":
 
             score += 3
-
-
 
         elif texture == "wet":
 
             score -= 2
 
-
-
         elif texture == "semi_wet":
 
             score += 1
-
-
-
 
         if danger >= 5:
 
             score -= 2
 
-
-
         return score
-
-
-
 
     # ==========================================
     # Opponent Factor
@@ -262,8 +206,6 @@ class BluffEngine:
 
             return 0
 
-
-
         opponent_type = opponent_profile.get(
 
             "type",
@@ -272,36 +214,23 @@ class BluffEngine:
 
         )
 
-
-
         if opponent_type == "tight_passive":
 
             return 3
-
-
 
         if opponent_type == "calling_station":
 
             return -3
 
-
-
         if opponent_type == "loose_aggressive":
 
             return -1
-
-
 
         if opponent_type == "tight_aggressive":
 
             return 1
 
-
-
         return 0
-
-
-
 
     # ==========================================
     # Range Factor
@@ -320,8 +249,6 @@ class BluffEngine:
 
             return 0
 
-
-
         strength = range_profile.get(
 
             "range_strength",
@@ -330,30 +257,19 @@ class BluffEngine:
 
         )
 
-
-
         if strength >= 75:
 
             return -3
-
-
 
         if strength >= 55:
 
             return -1
 
-
-
         if strength <= 35:
 
             return 3
 
-
-
         return 0
-
-
-
 
     # ==========================================
     # Equity Factor
@@ -372,13 +288,9 @@ class BluffEngine:
 
             return 2
 
-
-
         if equity > 60:
 
             return -3
-
-
 
         return 0
         # ==========================================
@@ -399,8 +311,6 @@ class BluffEngine:
 
             return 0
 
-
-
         stack = getattr(
 
             context,
@@ -410,8 +320,6 @@ class BluffEngine:
             0
 
         )
-
-
 
         pot = getattr(
 
@@ -423,35 +331,21 @@ class BluffEngine:
 
         )
 
-
-
         if pot <= 0:
 
             return 0
 
-
-
         spr = stack / pot
-
-
 
         if spr >= 8:
 
             return 2
 
-
-
         if spr <= 2:
 
             return -2
 
-
-
         return 0
-
-
-
-
 
     # ==========================================
     # Opponent Confidence Factor
@@ -470,8 +364,6 @@ class BluffEngine:
 
             return 0
 
-
-
         confidence = opponent_profile.get(
 
             "confidence",
@@ -480,25 +372,15 @@ class BluffEngine:
 
         )
 
-
-
         if confidence >= 0.7:
 
             return 1
-
-
 
         if confidence <= 0.2:
 
             return -1
 
-
-
         return 0
-
-
-
-
 
     # ==========================================
     # Bluff Type
@@ -513,13 +395,9 @@ class BluffEngine:
         Classify bluff opportunity.
         """
 
-
-
         if equity >= 35:
 
             return "semi_bluff"
-
-
 
         if board_analysis:
 
@@ -533,13 +411,7 @@ class BluffEngine:
 
                 return "pure_bluff"
 
-
-
         return "pressure_bluff"
-
-
-
-
 
     # ==========================================
     # Final Evaluation
@@ -569,15 +441,9 @@ class BluffEngine:
         }
         """
 
-
-
         score = 0
 
-
         reasons = []
-
-
-
 
         # Position
 
@@ -587,10 +453,7 @@ class BluffEngine:
 
         )
 
-
         score += value
-
-
 
         if value > 0:
 
@@ -600,9 +463,6 @@ class BluffEngine:
 
             )
 
-
-
-
         # Board
 
         value = self.board_factor(
@@ -611,10 +471,7 @@ class BluffEngine:
 
         )
 
-
         score += value
-
-
 
         if value > 0:
 
@@ -624,9 +481,6 @@ class BluffEngine:
 
             )
 
-
-
-
         # Opponent
 
         value = self.opponent_factor(
@@ -635,10 +489,7 @@ class BluffEngine:
 
         )
 
-
         score += value
-
-
 
         if value > 0:
 
@@ -648,9 +499,6 @@ class BluffEngine:
 
             )
 
-
-
-
         # Range
 
         value = self.range_factor(
@@ -659,10 +507,7 @@ class BluffEngine:
 
         )
 
-
         score += value
-
-
 
         if value > 0:
 
@@ -672,9 +517,6 @@ class BluffEngine:
 
             )
 
-
-
-
         # Equity
 
         value = self.equity_factor(
@@ -683,11 +525,7 @@ class BluffEngine:
 
         )
 
-
         score += value
-
-
-
 
         # Stack
 
@@ -697,11 +535,7 @@ class BluffEngine:
 
         )
 
-
         score += value
-
-
-
 
         # Confidence
 
@@ -711,12 +545,7 @@ class BluffEngine:
 
         )
 
-
         score += value
-
-
-
-
 
         # ======================================
         # Strategy Adjustment
@@ -730,9 +559,6 @@ class BluffEngine:
 
         )
 
-
-
-
         # ======================================
         # Difficulty Adjustment
         # ======================================
@@ -745,8 +571,6 @@ class BluffEngine:
 
         )
 
-
-
         frequency = (
 
             bluff_frequency
@@ -757,12 +581,7 @@ class BluffEngine:
 
         )
 
-
-
         frequency += score * 0.05
-
-
-
 
         frequency = max(
 
@@ -778,10 +597,6 @@ class BluffEngine:
 
         )
 
-
-
-
-
         should_bluff = (
 
             frequency >= 0.25
@@ -795,18 +610,11 @@ class BluffEngine:
                 should_bluff = False
                 frequency = 0.0
 
-
-
-
-
-
         confidence = abs(
 
             score
 
         ) / 12
-
-
 
         confidence = min(
 
@@ -816,17 +624,11 @@ class BluffEngine:
 
         )
 
-
-
-
-
         return {
-
 
             "should_bluff":
 
                 should_bluff,
-
 
             "frequency":
 
@@ -838,11 +640,9 @@ class BluffEngine:
 
                 ),
 
-
             "score":
 
                 score,
-
 
             "confidence":
 
@@ -854,7 +654,6 @@ class BluffEngine:
 
                 ),
 
-
             "bluff_type":
 
                 self.bluff_type(
@@ -865,16 +664,11 @@ class BluffEngine:
 
                 ),
 
-
             "reasons":
 
                 reasons
 
         }
-
-
-
-
 
     # ==========================================
     # Explain
@@ -890,7 +684,6 @@ class BluffEngine:
 
         return {
 
-
             "bluff":
 
                 result.get(
@@ -900,8 +693,6 @@ class BluffEngine:
                     False
 
                 ),
-
-
 
             "type":
 
@@ -913,8 +704,6 @@ class BluffEngine:
 
                 ),
 
-
-
             "frequency":
 
                 result.get(
@@ -925,8 +714,6 @@ class BluffEngine:
 
                 ),
 
-
-
             "confidence":
 
                 result.get(
@@ -936,8 +723,6 @@ class BluffEngine:
                     0
 
                 ),
-
-
 
             "reasons":
 
@@ -951,10 +736,6 @@ class BluffEngine:
 
         }
 
-
-
-
-
     # ==========================================
     # Debug
     # ==========================================
@@ -966,8 +747,6 @@ class BluffEngine:
             "BluffEngine()"
 
         )
-
-
 
     def __str__(self):
 

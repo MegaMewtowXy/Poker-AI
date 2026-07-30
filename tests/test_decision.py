@@ -13,13 +13,9 @@ from AI.strategy import (
     StrategyManager
 )
 
-
-
 def test_decision():
 
     print("\n========== DECISION TEST ==========")
-
-
 
     # ==========================================
     # Hard Aggressive AI
@@ -37,14 +33,11 @@ def test_decision():
 
     )
 
-
-
     # ==========================================
     # Strong Hand
     # ==========================================
 
     strong_analysis = {
-
 
         "strength": 85,
 
@@ -52,13 +45,11 @@ def test_decision():
 
         "pot_odds": 20,
 
-
         "position": {
 
             "advantage": 5
 
         },
-
 
         "opponent": {
 
@@ -66,20 +57,17 @@ def test_decision():
 
         },
 
-
         "range": {
 
             "range_strength": 40
 
         },
 
-
         "bluff": {
 
             "should_bluff": False
 
         },
-
 
         "risk": {
 
@@ -89,14 +77,11 @@ def test_decision():
 
     }
 
-
-
     decision = engine.decide(
 
         strong_analysis
 
     )
-
 
     print(
 
@@ -105,8 +90,6 @@ def test_decision():
     )
 
     print(decision)
-
-
 
     assert decision["action"] in [
 
@@ -118,15 +101,11 @@ def test_decision():
 
     ]
 
-
-
-
     # ==========================================
     # Weak Hand
     # ==========================================
 
     weak_analysis = {
-
 
         "strength": 10,
 
@@ -134,13 +113,11 @@ def test_decision():
 
         "pot_odds": 40,
 
-
         "position": {
 
             "advantage": 0
 
         },
-
 
         "opponent": {
 
@@ -148,20 +125,17 @@ def test_decision():
 
         },
 
-
         "range": {
 
             "range_strength": 80
 
         },
 
-
         "bluff": {
 
             "should_bluff": False
 
         },
-
 
         "risk": {
 
@@ -171,14 +145,11 @@ def test_decision():
 
     }
 
-
-
     decision = engine.decide(
 
         weak_analysis
 
     )
-
 
     print(
 
@@ -188,8 +159,6 @@ def test_decision():
 
     print(decision)
 
-
-
     assert decision["action"] in [
 
         Action.FOLD,
@@ -198,15 +167,11 @@ def test_decision():
 
     ]
 
-
-
-
     # ==========================================
     # Bluff Situation
     # ==========================================
 
     bluff_analysis = {
-
 
         "strength": 25,
 
@@ -214,13 +179,11 @@ def test_decision():
 
         "pot_odds": 50,
 
-
         "position": {
 
             "advantage": 10
 
         },
-
 
         "opponent": {
 
@@ -228,20 +191,17 @@ def test_decision():
 
         },
 
-
         "range": {
 
             "range_strength": 30
 
         },
 
-
         "bluff": {
 
             "should_bluff": True
 
         },
-
 
         "risk": {
 
@@ -251,14 +211,11 @@ def test_decision():
 
     }
 
-
-
     decision = engine.decide(
 
         bluff_analysis
 
     )
-
 
     print(
 
@@ -267,8 +224,6 @@ def test_decision():
     )
 
     print(decision)
-
-
 
     assert decision["action"] in [
 
@@ -284,16 +239,11 @@ def test_decision():
 
     ]
 
-
-
     print(
 
         "\n========== DECISION TEST PASSED =========="
 
     )
-
-
-
 
 if __name__ == "__main__":
 

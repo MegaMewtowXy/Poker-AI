@@ -6,14 +6,11 @@ from models.player_role import PlayerRole
 from models.table import Table
 from models.street import Street
 
-
-
 # ==========================================================
 # Position Layouts
 # ==========================================================
 
 POSITION_LAYOUTS = {
-
 
     # ==========================================
     # Heads Up
@@ -35,8 +32,6 @@ POSITION_LAYOUTS = {
 
     ],
 
-
-
     3: [
 
         PlayerPosition.BUTTON,
@@ -46,8 +41,6 @@ POSITION_LAYOUTS = {
         PlayerPosition.CUTOFF
 
     ],
-
-
 
     4: [
 
@@ -60,8 +53,6 @@ POSITION_LAYOUTS = {
         PlayerPosition.UNDER_THE_GUN
 
     ],
-
-
 
     5: [
 
@@ -76,8 +67,6 @@ POSITION_LAYOUTS = {
         PlayerPosition.UNDER_THE_GUN
 
     ],
-
-
 
     6: [
 
@@ -94,8 +83,6 @@ POSITION_LAYOUTS = {
         PlayerPosition.UNDER_THE_GUN
 
     ],
-
-
 
     7: [
 
@@ -114,8 +101,6 @@ POSITION_LAYOUTS = {
         PlayerPosition.UNDER_THE_GUN
 
     ],
-
-
 
     8: [
 
@@ -136,8 +121,6 @@ POSITION_LAYOUTS = {
         PlayerPosition.UNDER_THE_GUN
 
     ],
-
-
 
     9: [
 
@@ -163,10 +146,6 @@ POSITION_LAYOUTS = {
 
 }
 
-
-
-
-
 class Dealer:
     """
     Represents poker dealer.
@@ -189,8 +168,6 @@ class Dealer:
     - Winners
     """
 
-
-
     def __init__(
         self,
         deck: Deck
@@ -202,10 +179,7 @@ class Dealer:
                 "Dealer requires a deck."
             )
 
-
         self.deck = deck
-
-
 
     # ==================================================
     # Deck Management
@@ -220,15 +194,11 @@ class Dealer:
 
         self.deck.shuffle()
 
-
-
     # --------------------------------------------------
 
     def reset_deck(self):
 
         self.start_new_hand()
-
-
 
     # --------------------------------------------------
 
@@ -236,15 +206,11 @@ class Dealer:
 
         self.deck.shuffle()
 
-
-
     # --------------------------------------------------
 
     def cards_remaining(self) -> int:
 
         return self.deck.cards_remaining()
-
-
 
     # --------------------------------------------------
 
@@ -255,8 +221,6 @@ class Dealer:
             self.cards_remaining() == 0
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -300,15 +264,11 @@ class Dealer:
 
         ]
 
-
-
         if not active_players:
 
             raise ValueError(
                 "No active players."
             )
-
-
 
         required_cards = (
 
@@ -318,8 +278,6 @@ class Dealer:
 
         )
 
-
-
         if not self.can_deal(
             required_cards
         ):
@@ -328,15 +286,11 @@ class Dealer:
                 "Not enough cards for hole cards."
             )
 
-
-
         # Clear previous hand
 
         for player in active_players:
 
             player.clear_hand()
-
-
 
         # Deal clockwise
 
@@ -349,8 +303,6 @@ class Dealer:
                     self.deck.deal()
 
                 )
-
-
 
     # ==================================================
     # Burn Card
@@ -367,10 +319,7 @@ class Dealer:
                 "Cannot burn card. Deck empty."
             )
 
-
         return self.deck.deal()
-
-
 
     # ==================================================
     # Community Cards
@@ -392,10 +341,7 @@ class Dealer:
                 "Not enough cards for flop."
             )
 
-
         self.burn_card()
-
-
 
         for _ in range(3):
 
@@ -405,15 +351,11 @@ class Dealer:
 
             )
 
-
-
         table.set_street(
 
             Street.FLOP
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -433,10 +375,7 @@ class Dealer:
                 "Not enough cards for turn."
             )
 
-
         self.burn_card()
-
-
 
         table.add_community_card(
 
@@ -444,15 +383,11 @@ class Dealer:
 
         )
 
-
-
         table.set_street(
 
             Street.TURN
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -472,18 +407,13 @@ class Dealer:
                 "Not enough cards for river."
             )
 
-
         self.burn_card()
-
-
 
         table.add_community_card(
 
             self.deck.deal()
 
         )
-
-
 
         table.set_street(
 
@@ -512,12 +442,9 @@ class Dealer:
                 "Need at least two players."
             )
 
-
         table.rotate_dealer(
             total_players
         )
-
-
 
     # ==================================================
     # Player Positions + Roles
@@ -543,7 +470,6 @@ class Dealer:
                 DEALER
                 SMALL_BLIND
 
-
         Player B:
             Position:
                 BIG_BLIND
@@ -551,7 +477,6 @@ class Dealer:
             Roles:
                 BIG_BLIND
         """
-
 
         active_players = [
 
@@ -563,11 +488,7 @@ class Dealer:
 
         ]
 
-
-
         total = len(active_players)
-
-
 
         if total < 2:
 
@@ -575,15 +496,11 @@ class Dealer:
                 "At least two active players are required."
             )
 
-
-
         if total not in POSITION_LAYOUTS:
 
             raise ValueError(
                 f"Unsupported player count: {total}"
             )
-
-
 
         # ------------------------------------------
         # Clear old state
@@ -599,8 +516,6 @@ class Dealer:
 
             player.clear_roles()
 
-
-
         # ------------------------------------------
         # Dealer button order
         # ------------------------------------------
@@ -610,7 +525,6 @@ class Dealer:
             table.dealer_position % total
 
         )
-
 
         ordered_players = [
 
@@ -624,15 +538,11 @@ class Dealer:
 
         ]
 
-
-
         # ------------------------------------------
         # Assign positions
         # ------------------------------------------
 
         positions = POSITION_LAYOUTS[total]
-
-
 
         for player, position in zip(
 
@@ -648,22 +558,17 @@ class Dealer:
 
             )
 
-
-
         # ------------------------------------------
         # Assign Dealer Role
         # ------------------------------------------
 
         button_player = ordered_players[0]
 
-
         button_player.add_role(
 
             PlayerRole.DEALER
 
         )
-
-
 
         # ------------------------------------------
         # Assign Blind Roles
@@ -680,7 +585,6 @@ class Dealer:
 
             )
 
-
         else:
 
             ordered_players[1].add_role(
@@ -688,8 +592,6 @@ class Dealer:
                 PlayerRole.SMALL_BLIND
 
             )
-
-
 
         # Big Blind always second player
 
@@ -709,8 +611,6 @@ class Dealer:
 
         return self.cards_remaining()
 
-
-
     # --------------------------------------------------
 
     def cards_remaining(self) -> int:
@@ -720,15 +620,11 @@ class Dealer:
 
         return len(self.deck)
 
-
-
     # --------------------------------------------------
 
     def __len__(self):
 
         return self.cards_remaining()
-
-
 
     # --------------------------------------------------
 
@@ -745,8 +641,6 @@ class Dealer:
         """
 
         self.reset_deck()
-
-
 
     # --------------------------------------------------
 
@@ -768,8 +662,6 @@ class Dealer:
 
         )
 
-
-
     # ==================================================
     # Debug
     # ==================================================
@@ -785,8 +677,6 @@ class Dealer:
             ")"
 
         )
-
-
 
     # --------------------------------------------------
 

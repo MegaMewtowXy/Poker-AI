@@ -1,7 +1,5 @@
 from models.card import Suit, Rank
 
-
-
 class BoardAnalyzer:
     """
     Analyzes poker board texture.
@@ -20,8 +18,6 @@ class BoardAnalyzer:
     • Decide bluffs
     • Control strategy
     """
-
-
 
     def analyze(
         self,
@@ -45,8 +41,6 @@ class BoardAnalyzer:
         }
         """
 
-
-
         if community_cards is None:
             community_cards = []
 
@@ -58,55 +52,43 @@ class BoardAnalyzer:
 
         result = {
 
-
             "texture":
 
                 "dry",
-
 
             "flush_possible":
 
                 False,
 
-
             "straight_possible":
 
                 False,
-
 
             "paired_board":
 
                 False,
 
-
             "danger_level":
 
                 0,
-
 
             "high_card":
 
                 None,
 
-
             "connectedness":
 
                 0,
-
 
             "monotone":
 
                 False,
 
-
             "rainbow":
 
                 False
 
-
         }
-
-
 
         # ==================================
         # Not enough cards
@@ -116,19 +98,13 @@ class BoardAnalyzer:
 
             return result
 
-
-
-
         # ==================================
         # Flush Detection
         # ==================================
 
         suit_counts = {}
 
-
-
         for card in community_cards:
-
 
             suit_counts[card.suit] = (
 
@@ -146,34 +122,23 @@ class BoardAnalyzer:
 
             )
 
-
-
         max_suit_count = max(
 
             suit_counts.values()
 
         )
 
-
-
         if max_suit_count >= 3:
 
             result["flush_possible"] = True
-
-
 
         if max_suit_count == len(community_cards):
 
             result["monotone"] = True
 
-
-
         elif len(suit_counts) == len(community_cards):
 
             result["rainbow"] = True
-
-
-
 
         # ==================================
         # Pair Detection
@@ -181,10 +146,7 @@ class BoardAnalyzer:
 
         rank_counts = {}
 
-
-
         for card in community_cards:
-
 
             rank_counts[card.rank] = (
 
@@ -202,19 +164,13 @@ class BoardAnalyzer:
 
             )
 
-
-
         for count in rank_counts.values():
-
 
             if count >= 2:
 
                 result["paired_board"] = True
 
                 break
-
-
-
 
         # ==================================
         # High Card
@@ -231,9 +187,6 @@ class BoardAnalyzer:
             ]
 
         )
-
-
-
 
         # ==================================
         # Straight Detection
@@ -255,8 +208,6 @@ class BoardAnalyzer:
 
         )
 
-
-
         # An ace may also be used as the low end of A-2-3-4-5.
         straight_values = values.copy()
         if 14 in straight_values:
@@ -264,14 +215,11 @@ class BoardAnalyzer:
 
         connected = 0
 
-
-
         for i in range(
 
             len(values) - 1
 
         ):
-
 
             difference = (
 
@@ -283,25 +231,17 @@ class BoardAnalyzer:
 
             )
 
-
-
             if difference <= 2:
 
                 connected += 1
 
-
-
-
         result["connectedness"] = connected
-
-
 
         for i in range(
 
             len(straight_values) - 2
 
         ):
-
 
             if (
 
@@ -324,38 +264,25 @@ class BoardAnalyzer:
 
         danger = 0
 
-
-
         if result["flush_possible"]:
 
             danger += 2
-
-
 
         if result["straight_possible"]:
 
             danger += 2
 
-
-
         if result["paired_board"]:
 
             danger += 1
-
-
 
         if result["monotone"]:
 
             danger += 2
 
-
-
         if result["connectedness"] >= 2:
 
             danger += 1
-
-
-
 
         result["danger_level"] = min(
 
@@ -365,40 +292,23 @@ class BoardAnalyzer:
 
         )
 
-
-
-
         # ==================================
         # Texture Classification
         # ==================================
 
         if result["danger_level"] >= 4:
 
-
             result["texture"] = "wet"
-
-
 
         elif result["danger_level"] >= 2:
 
-
             result["texture"] = "semi_wet"
-
-
 
         else:
 
-
             result["texture"] = "dry"
 
-
-
-
         return result
-
-
-
-
 
     # ==================================
     # Flush Analysis
@@ -414,10 +324,7 @@ class BoardAnalyzer:
 
         suits = {}
 
-
-
         for card in community_cards:
-
 
             suits[card.suit] = (
 
@@ -435,8 +342,6 @@ class BoardAnalyzer:
 
             )
 
-
-
         highest = max(
 
             suits.values(),
@@ -445,35 +350,25 @@ class BoardAnalyzer:
 
         )
 
-
-
         return {
-
 
             "flush_possible":
 
                 highest >= 3,
 
-
             "cards_same_suit":
 
                 highest,
 
-
             "flush_draw":
 
                 highest == 4,
-
 
             "monotone":
 
                 highest == len(community_cards)
 
         }
-
-
-
-
 
     # ==================================
     # Straight Analysis
@@ -503,18 +398,13 @@ class BoardAnalyzer:
 
         )
 
-
-
         connected = 0
-
-
 
         for i in range(
 
             len(values)-1
 
         ):
-
 
             if (
 
@@ -530,31 +420,21 @@ class BoardAnalyzer:
 
                 connected += 1
 
-
-
-
         return {
-
 
             "straight_possible":
 
                 connected >= 2,
 
-
             "connectedness":
 
                 connected,
-
 
             "straight_draw":
 
                 connected >= 3
 
         }
-
-
-
-
 
     # ==================================
     # Board Strength
@@ -577,15 +457,11 @@ class BoardAnalyzer:
 
         )
 
-
-
         strength = (
 
             analysis["danger_level"]
 
         )
-
-
 
         return min(
 
@@ -594,10 +470,6 @@ class BoardAnalyzer:
             10
 
         )
-
-
-
-
 
     # ==================================
     # Dangerous Board Check
@@ -625,10 +497,6 @@ class BoardAnalyzer:
 
         )
 
-
-
-
-
     # ==================================
     # Profile
     # ==================================
@@ -647,10 +515,6 @@ class BoardAnalyzer:
 
         )
 
-
-
-
-
     # ==================================
     # Debug
     # ==================================
@@ -662,8 +526,6 @@ class BoardAnalyzer:
             "BoardAnalyzer()"
 
         )
-
-
 
     def __str__(self):
 

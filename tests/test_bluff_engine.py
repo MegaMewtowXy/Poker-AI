@@ -10,14 +10,9 @@ from AI.difficulty import (
     DifficultyManager
 )
 
-
-
 def test_bluff_engine():
 
-
     print("\n========== BLUFF ENGINE TEST ==========")
-
-
 
     engine = BluffEngine(
 
@@ -34,8 +29,6 @@ def test_bluff_engine():
         )
 
     )
-
-
 
     # ======================================
     # Good Bluff Situation
@@ -73,8 +66,6 @@ def test_bluff_engine():
 
     )
 
-
-
     print(
 
         "\nGood Bluff Situation"
@@ -83,14 +74,9 @@ def test_bluff_engine():
 
     print(result)
 
-
-
     assert result["should_bluff"] == True
 
     assert result["frequency"] > 0
-
-
-
 
     # ======================================
     # Bad Bluff Situation
@@ -128,8 +114,6 @@ def test_bluff_engine():
 
     )
 
-
-
     print(
 
         "\nBad Bluff Situation"
@@ -138,12 +122,7 @@ def test_bluff_engine():
 
     print(result2)
 
-
-
     assert result2["frequency"] < result["frequency"]
-
-
-
 
     # ======================================
     # Expert AI Check
@@ -164,7 +143,6 @@ def test_bluff_engine():
         )
 
     )
-
 
     expert_result = expert_engine.evaluate(
 
@@ -198,8 +176,6 @@ def test_bluff_engine():
 
     )
 
-
-
     print(
 
         "\nExpert Bluff Situation"
@@ -208,22 +184,13 @@ def test_bluff_engine():
 
     print(expert_result)
 
-
-
     assert expert_result["frequency"] >= result["frequency"]
-
-
-
 
     print(
 
         "\n========== BLUFF ENGINE TEST PASSED =========="
 
     )
-
-
-
-
 
 if __name__ == "__main__":
 

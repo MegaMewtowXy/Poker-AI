@@ -2,8 +2,6 @@ from dataclasses import dataclass
 
 from models.betting_structure import BettingStructure
 
-
-
 @dataclass(slots=True)
 class GameConfig:
     """
@@ -21,8 +19,6 @@ class GameConfig:
     - Debug options
     """
 
-
-
     # ==================================================
     # Players
     # ==================================================
@@ -33,8 +29,6 @@ class GameConfig:
 
     maximum_players: int = 9
 
-
-
     # ==================================================
     # Betting Structure
     # ==================================================
@@ -43,14 +37,11 @@ class GameConfig:
         BettingStructure.NO_LIMIT
     )
 
-
     # Fixed Limit support
 
     small_bet: int = 20
 
     big_bet: int = 40
-
-
 
     # ==================================================
     # Blinds
@@ -60,12 +51,9 @@ class GameConfig:
 
     big_blind: int = 20
 
-
     blind_increase_interval: int = 10
 
     blind_multiplier: float = 2.0
-
-
 
     # ==================================================
     # Tournament
@@ -77,8 +65,6 @@ class GameConfig:
 
     rotate_dealer: bool = True
 
-
-
     # ==================================================
     # AI
     # ==================================================
@@ -86,8 +72,6 @@ class GameConfig:
     monte_carlo_simulations: int = 10000
 
     thinking_delay: float = 0.5
-
-
 
     # ==================================================
     # UI
@@ -99,15 +83,11 @@ class GameConfig:
 
     show_hand_strength: bool = True
 
-
-
     # ==================================================
     # Debug
     # ==================================================
 
     debug_mode: bool = False
-
-
 
     # ==================================================
     # Validation
@@ -115,14 +95,11 @@ class GameConfig:
 
     def __post_init__(self):
 
-
         if self.starting_chips <= 0:
 
             raise ValueError(
                 "Starting chips must be positive."
             )
-
-
 
         if self.minimum_players < 2:
 
@@ -130,15 +107,11 @@ class GameConfig:
                 "Minimum players must be at least 2."
             )
 
-
-
         if self.maximum_players > 9:
 
             raise ValueError(
                 "Texas Hold'em supports maximum 9 players."
             )
-
-
 
         if self.minimum_players > self.maximum_players:
 
@@ -146,15 +119,11 @@ class GameConfig:
                 "Minimum players cannot exceed maximum players."
             )
 
-
-
         if self.small_blind <= 0:
 
             raise ValueError(
                 "Small blind must be positive."
             )
-
-
 
         if self.big_blind <= self.small_blind:
 
@@ -162,15 +131,11 @@ class GameConfig:
                 "Big blind must be greater than small blind."
             )
 
-
-
         if self.blind_increase_interval <= 0:
 
             raise ValueError(
                 "Blind increase interval must be positive."
             )
-
-
 
         if self.blind_multiplier <= 1:
 
@@ -178,15 +143,11 @@ class GameConfig:
                 "Blind multiplier must be greater than 1."
             )
 
-
-
         if self.small_bet <= 0:
 
             raise ValueError(
                 "Small bet must be positive."
             )
-
-
 
         if self.big_bet <= self.small_bet:
 
@@ -194,15 +155,11 @@ class GameConfig:
                 "Big bet must be greater than small bet."
             )
 
-
-
         if self.monte_carlo_simulations <= 0:
 
             raise ValueError(
                 "Monte Carlo simulations must be positive."
             )
-
-
 
         if not isinstance(
             self.betting_structure,
@@ -213,12 +170,9 @@ class GameConfig:
                 "Invalid betting structure."
             )
 
-
-
     # ==================================================
     # Betting Helpers
     # ==================================================
-
 
     @property
     def is_no_limit(self) -> bool:
@@ -229,10 +183,7 @@ class GameConfig:
             BettingStructure.NO_LIMIT
         )
 
-
-
     # --------------------------------------------------
-
 
     @property
     def is_pot_limit(self) -> bool:
@@ -243,10 +194,7 @@ class GameConfig:
             BettingStructure.POT_LIMIT
         )
 
-
-
     # --------------------------------------------------
-
 
     @property
     def is_fixed_limit(self) -> bool:
@@ -257,24 +205,18 @@ class GameConfig:
             BettingStructure.FIXED_LIMIT
         )
 
-
-
     # ==================================================
     # Game Modes
     # ==================================================
-
 
     @property
     def is_heads_up(self) -> bool:
 
         return self.maximum_players == 2
 
-
-
     # ==================================================
     # Betting Calculation
     # ==================================================
-
 
     def calculate_max_raise(
         self,
@@ -296,12 +238,9 @@ class GameConfig:
             Fixed bet size
         """
 
-
         if self.is_no_limit:
 
             return None
-
-
 
         if self.is_pot_limit:
 
@@ -315,24 +254,18 @@ class GameConfig:
 
             )
 
-
-
         if self.is_fixed_limit:
 
             return self.big_bet
-
-
 
     # ==================================================
     # Tournament
     # ==================================================
 
-
     def next_blind_level(self):
         """
         Increase tournament blinds.
         """
-
 
         self.small_blind = int(
 
@@ -344,7 +277,6 @@ class GameConfig:
 
         )
 
-
         self.big_blind = int(
 
             self.big_blind
@@ -355,12 +287,9 @@ class GameConfig:
 
         )
 
-
-
     # ==================================================
     # Debug
     # ==================================================
-
 
     def __str__(self):
 

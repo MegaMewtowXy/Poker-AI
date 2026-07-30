@@ -2,11 +2,9 @@ from models.player import Player
 
 from engine.game import Game
 
-
 def test_game_flow():
 
     print("\n========== GAME FLOW TEST ==========")
-
 
     # ==========================================
     # Create Players
@@ -31,7 +29,6 @@ def test_game_flow():
 
     ]
 
-
     # ==========================================
     # Create Game
     # ==========================================
@@ -40,20 +37,16 @@ def test_game_flow():
         players
     )
 
-
     print(
         "\nStarting Game"
     )
 
-
     game.start_game()
-
 
     print(
         "Game Running:",
         game.is_running()
     )
-
 
     # ==========================================
     # Start Hand
@@ -61,12 +54,10 @@ def test_game_flow():
 
     game.start_hand()
 
-
     print(
         "\nHand Number:",
         game.current_hand()
     )
-
 
     # ==========================================
     # Verify Hole Cards
@@ -83,9 +74,7 @@ def test_game_flow():
             player.show_hand()
         )
 
-
         assert len(player.hand) == 2
-
 
     # ==========================================
     # Verify Positions
@@ -102,7 +91,6 @@ def test_game_flow():
             player.position
         )
 
-
     # ==========================================
     # Verify Table
     # ==========================================
@@ -117,11 +105,9 @@ def test_game_flow():
         )
     )
 
-
     assert len(
         game.table.community_cards
     ) == 0
-
 
     # ==========================================
     # Stop Game
@@ -129,14 +115,11 @@ def test_game_flow():
 
     game.stop_game()
 
-
     assert not game.is_running()
-
 
     print(
         "\n========== GAME FLOW TEST PASSED =========="
     )
-
 
 if __name__ == "__main__":
 

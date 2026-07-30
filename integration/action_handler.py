@@ -6,10 +6,6 @@ from AI.game_context import GameContext
 
 from models.action import Action
 
-
-
-
-
 class ActionHandler:
     """
     Final AI action bridge.
@@ -27,7 +23,6 @@ class ActionHandler:
           ↓
     BotPlayer
 
-
     Responsibilities
     ----------------
     • Register AI players
@@ -35,16 +30,11 @@ class ActionHandler:
     • Request decisions
     • Forward actions
 
-
     Does NOT:
         • Decide strategy
         • Calculate poker logic
         • Manage rules
     """
-
-
-
-
 
     def __init__(
         self,
@@ -53,15 +43,9 @@ class ActionHandler:
 
         self.betting_engine = betting_engine
 
-
         self.controllers = {}
 
-
         self.history = []
-
-
-
-
 
     # ==========================================
     # Register Bot
@@ -76,16 +60,11 @@ class ActionHandler:
         Attach AI to engine player.
         """
 
-
         self.controllers[player] = BotController(
 
             bot
 
         )
-
-
-
-
 
     # ==========================================
     # Remove Bot
@@ -99,14 +78,9 @@ class ActionHandler:
         Remove AI controller.
         """
 
-
         if player in self.controllers:
 
             del self.controllers[player]
-
-
-
-
 
     # ==========================================
     # Get Controller
@@ -120,16 +94,11 @@ class ActionHandler:
         Return bot controller.
         """
 
-
         return self.controllers.get(
 
             player
 
         )
-
-
-
-
 
     # ==========================================
     # Create Context
@@ -153,24 +122,17 @@ class ActionHandler:
         • Strategy
         """
 
-
         return GameContext(
-
 
             hole_cards=player.hand,
 
-
             community_cards=table.community_cards,
-
 
             position=position,
 
-
             street=street,
 
-
             pot_size=table.pot,
-
 
             current_bet=table.current_bet,
             player_current_bet=player.current_bet,
@@ -180,8 +142,6 @@ class ActionHandler:
         table.current_bet - player.current_bet
     ),
             min_raise=table.minimum_raise,
-
-
 
             big_blind=getattr(
 
@@ -193,10 +153,7 @@ class ActionHandler:
 
             ),
 
-
-
             player_stack=player.chips,
-
 
             players_remaining=len(
 
@@ -238,15 +195,11 @@ class ActionHandler:
         DecisionEngine
         """
 
-
-
         controller = self.controllers.get(
 
             player
 
         )
-
-
 
         if controller is None:
 
@@ -255,10 +208,6 @@ class ActionHandler:
                 "No AI controller registered."
 
             )
-
-
-
-
 
         # ======================================
         # Create AI Context
@@ -276,10 +225,6 @@ class ActionHandler:
 
         )
 
-
-
-
-
         # ======================================
         # Request Decision
         # ======================================
@@ -292,10 +237,6 @@ class ActionHandler:
 
         )
 
-
-
-
-
         # ======================================
         # Validate Decision
         # ======================================
@@ -306,10 +247,6 @@ class ActionHandler:
 
         )
 
-
-
-
-
         # ======================================
         # Store History
         # ======================================
@@ -319,10 +256,6 @@ class ActionHandler:
             decision
 
         )
-
-
-
-
 
         # ======================================
         # Execute Through Controller
@@ -338,15 +271,7 @@ class ActionHandler:
 
         )
 
-
-
-
-
         return decision
-
-
-
-
 
     # ==========================================
     # Validate Decision
@@ -367,8 +292,6 @@ class ActionHandler:
         • Bet amount is valid
         """
 
-
-
         if not decision:
 
             raise ValueError(
@@ -376,10 +299,6 @@ class ActionHandler:
                 "Empty decision received."
 
             )
-
-
-
-
 
         required_fields = [
 
@@ -389,25 +308,15 @@ class ActionHandler:
 
         ]
 
-
-
-
-
         for field in required_fields:
 
-
             if field not in decision:
-
 
                 raise ValueError(
 
                     f"Missing decision field: {field}"
 
                 )
-
-
-
-
 
         if not isinstance(
 
@@ -417,16 +326,11 @@ class ActionHandler:
 
         ):
 
-
             raise ValueError(
 
                 "Invalid action type."
 
             )
-
-
-
-
 
         amount = decision.get(
 
@@ -436,22 +340,13 @@ class ActionHandler:
 
         )
 
-
-
-
-
         if amount < 0:
-
 
             raise ValueError(
 
                 "Invalid bet amount."
 
             )
-
-
-
-
 
         return True
     
@@ -475,21 +370,13 @@ class ActionHandler:
         • Modify AI logic
         """
 
-
-
         self.validate_decision(
 
             decision
 
         )
 
-
-
-
-
         action = decision["action"]
-
-
 
         amount = decision.get(
 
@@ -499,16 +386,11 @@ class ActionHandler:
 
         )
 
-
-
-
-
         # ======================================
         # Fold
         # ======================================
 
         if action == Action.FOLD:
-
 
             self.betting_engine.fold(
 
@@ -516,16 +398,11 @@ class ActionHandler:
 
             )
 
-
-
-
-
         # ======================================
         # Check
         # ======================================
 
         elif action == Action.CHECK:
-
 
             self.betting_engine.check(
 
@@ -533,16 +410,11 @@ class ActionHandler:
 
             )
 
-
-
-
-
         # ======================================
         # Call
         # ======================================
 
         elif action == Action.CALL:
-
 
             self.betting_engine.call(
 
@@ -550,16 +422,11 @@ class ActionHandler:
 
             )
 
-
-
-
-
         # ======================================
         # Bet
         # ======================================
 
         elif action == Action.BET:
-
 
             self.betting_engine.bet(
 
@@ -569,16 +436,11 @@ class ActionHandler:
 
             )
 
-
-
-
-
         # ======================================
         # Raise
         # ======================================
 
         elif action == Action.RAISE:
-
 
             self.betting_engine.raise_bet(
 
@@ -588,16 +450,11 @@ class ActionHandler:
 
             )
 
-
-
-
-
         # ======================================
         # All In
         # ======================================
 
         elif action == Action.ALL_IN:
-
 
             self.betting_engine.all_in(
 
@@ -605,12 +462,7 @@ class ActionHandler:
 
             )
 
-
-
-
-
         else:
-
 
             raise ValueError(
 
@@ -618,15 +470,7 @@ class ActionHandler:
 
             )
 
-
-
-
-
         return True
-
-
-
-
 
     # ==========================================
     # History
@@ -639,12 +483,7 @@ class ActionHandler:
         Return AI action history.
         """
 
-
         return self.history.copy()
-
-
-
-
 
     # ==========================================
     # Clear History
@@ -657,12 +496,7 @@ class ActionHandler:
         Clear stored actions.
         """
 
-
         self.history.clear()
-
-
-
-
 
     # ==========================================
     # Simulation Reset
@@ -681,12 +515,7 @@ class ActionHandler:
         • Testing
         """
 
-
         self.history.clear()
-
-
-
-
 
     # ==========================================
     # Profile
@@ -699,10 +528,7 @@ class ActionHandler:
         Handler information.
         """
 
-
-
         return {
-
 
             "registered_bots":
 
@@ -711,8 +537,6 @@ class ActionHandler:
                     self.controllers
 
                 ),
-
-
 
             "actions_processed":
 
@@ -723,10 +547,6 @@ class ActionHandler:
                 )
 
         }
-
-
-
-
 
     # ==========================================
     # Debug

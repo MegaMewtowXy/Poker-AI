@@ -14,13 +14,9 @@ import random
 import uuid
 import traceback
 
-
-
-
 class BotVsBotSimulation:
     """
     AI vs AI poker simulation runner.
-
 
     Responsibilities
     ----------------
@@ -32,7 +28,6 @@ class BotVsBotSimulation:
     - Tracking results
     - Generating statistics
 
-
     Engine owns:
 
     - Cards
@@ -42,17 +37,12 @@ class BotVsBotSimulation:
     - Showdown
     - Poker rules
 
-
     AI owns:
 
     - Decision making
     - Strategy
     - Analysis
     """
-
-
-
-
 
     def __init__(
         self,
@@ -64,51 +54,31 @@ class BotVsBotSimulation:
         auto_rebuy=True
     ):
 
-
         self.simulation_id = str(
 
             uuid.uuid4()
 
         )
 
-
-
         self.hands = hands
 
-
-
         self.starting_chips = starting_chips
-
-
 
         self.enable_logging = enable_logging
 
         self.auto_rebuy = auto_rebuy
 
-
-
         self.completed_hands = 0
-
 
         self.failed_hands = 0
 
-
         self.current_hand = 0
 
-
         self.errors = []
-
-
-
-
 
         if seed is not None:
 
             random.seed(seed)
-
-
-
-
 
         # ======================================
         # Create Players
@@ -116,17 +86,11 @@ class BotVsBotSimulation:
 
         if players is not None:
 
-
             self.players = players
-
-
 
         else:
 
-
             self.players = [
-
-
 
                 AIPlayer(
 
@@ -145,10 +109,6 @@ class BotVsBotSimulation:
                     starting_chips
 
                 ),
-
-
-
-
 
                 AIPlayer(
 
@@ -170,15 +130,7 @@ class BotVsBotSimulation:
 
             ]
 
-
-
-
-
         self.validate_players()
-
-
-
-
 
         # ======================================
         # Logger
@@ -186,20 +138,13 @@ class BotVsBotSimulation:
 
         self.logger = None
 
-
-
         if self.enable_logging:
-
 
             self.logger = GameLogger(
 
                 "data/hand_history"
 
             )
-
-
-
-
 
         self.initialize_statistics()
         # ==========================================
@@ -213,8 +158,6 @@ class BotVsBotSimulation:
         Validate simulation players.
         """
 
-
-
         if len(self.players) < 2:
 
             raise ValueError(
@@ -223,12 +166,7 @@ class BotVsBotSimulation:
 
             )
 
-
-
-
-
         for player in self.players:
-
 
             if not isinstance(
 
@@ -244,12 +182,6 @@ class BotVsBotSimulation:
 
                 )
 
-
-
-
-
-
-
     # ==========================================
     # Initialize Statistics
     # ==========================================
@@ -261,52 +193,29 @@ class BotVsBotSimulation:
         Create statistics containers.
         """
 
-
-
         self.results = {}
-
-
-
-
 
         for player in self.players:
 
-
             self.results[player.name] = {
-
-
 
                 "hands": 0,
 
-
                 "wins": 0,
-
 
                 "losses": 0,
 
-
                 "ties": 0,
-
 
                 "chips": self.starting_chips,
 
-
                 "win_rate": 0.0,
-
 
                 "busts": 0,
 
-
                 "busted": False
 
-
             }
-
-
-
-
-
-
 
     # ==========================================
     # Run Single Hand
@@ -319,17 +228,9 @@ class BotVsBotSimulation:
         Execute one complete AI hand.
         """
 
-
-
         winner = None
 
-
-
-
-
         try:
-
-
 
             game = Game(
 
@@ -339,14 +240,9 @@ class BotVsBotSimulation:
 
             )
 
-
-
-
-
             result = game.play_hand()
 
             
-
 
             if isinstance(
 
@@ -356,163 +252,79 @@ class BotVsBotSimulation:
 
             ):
 
-
                 winner = result.get(
 
                     "winner"
 
                 )
 
-
-
             else:
-
 
                 winner = result
             
 
-
-
-
-
         except Exception as error:
-
-
 
             self.failed_hands += 1
 
-
-
-
-
             self.errors.append(
 
-
-
                 {
-
 
                     "hand":
 
                         self.current_hand + 1,
 
-
-
                     "error":
 
                         str(error)
 
-
-
                 }
 
-
-
             )
-
-
-
-
 
             print(f"\nSimulation error on hand {self.current_hand + 1}")
             traceback.print_exc()
 
             raise
 
-
-
-
-
-
-
         finally:
-
 
             self.current_hand += 1
 
-
-
-
-
-
-
         if winner is None:
-
 
             return None
 
-
-
-
-
-
-
         self.completed_hands += 1
-
-
-
-
-
-
 
         # ======================================
         # Update Results
         # ======================================
 
-
         for player in self.players:
-
-
 
             self.results[player.name]["hands"] += 1
 
-
-
-
-
-
-
         self.results[winner.name]["wins"] += 1
-
-
-
-
-
-
 
         for player in self.players:
 
-
-
             if player != winner:
 
-
                 self.results[player.name]["losses"] += 1
-
-
-
-
-
-
 
         # ======================================
         # Chip Tracking
         # ======================================
 
-
         for player in self.players:
-
-
 
             self.results[player.name]["chips"] = (
 
                 player.chips
 
             )
-
-
-
-
 
             if player.chips <= 0:
                 if not self.results[player.name]["busted"]:
@@ -553,16 +365,7 @@ class BotVsBotSimulation:
                 if len(active_players) < 2:
                     break
 
-
-
-
-
-
             self.run_hand()
-
-
-
-
 
             if (
 
@@ -584,41 +387,19 @@ class BotVsBotSimulation:
 
             ):
 
-
                 print(
 
                     f"Progress: {hand + 1}/{self.hands}"
 
                 )
 
-
-
-
-
-
-
         self.calculate_statistics()
-
-
-
-
 
         if self.logger:
 
-
             self.logger.save_all_history()
 
-
-
-
-
         return self.summary()
-
-
-
-
-
-
 
     def run_parallel(
         self,
@@ -640,7 +421,6 @@ class BotVsBotSimulation:
     # Calculate Statistics
     # ==========================================
 
-
     def calculate_statistics(
         self
     ):
@@ -648,19 +428,11 @@ class BotVsBotSimulation:
         Calculate simulation statistics.
         """
 
-
-
         for player in self.players:
-
 
             data = self.results[player.name]
 
-
-
-
-
             if data["hands"] > 0:
-
 
                 data["win_rate"] = round(
 
@@ -674,18 +446,9 @@ class BotVsBotSimulation:
 
                 )
 
-
-
             else:
 
-
                 data["win_rate"] = 0.0
-
-
-
-
-
-
 
     # ==========================================
     # Summary
@@ -698,35 +461,23 @@ class BotVsBotSimulation:
         Return simulation result.
         """
 
-
-
         return {
-
-
 
             "simulation_id":
 
                 self.simulation_id,
 
-
-
             "hands_requested":
 
                 self.hands,
-
-
 
             "hands_completed":
 
                 self.completed_hands,
 
-
-
             "hands_failed":
 
                 self.failed_hands,
-
-
 
             "players":
 
@@ -738,13 +489,9 @@ class BotVsBotSimulation:
 
                 ],
 
-
-
             "results":
 
                 self.results,
-
-
 
             "errors":
 
@@ -763,8 +510,6 @@ class BotVsBotSimulation:
         Return AI bot information.
         """
 
-
-
         return [
 
             player.profile()
@@ -772,12 +517,6 @@ class BotVsBotSimulation:
             for player in self.players
 
         ]
-
-
-
-
-
-
 
     # ==========================================
     # Simulation Profile
@@ -790,29 +529,19 @@ class BotVsBotSimulation:
         Return simulation configuration.
         """
 
-
-
         return {
-
-
 
             "simulation_id":
 
                 self.simulation_id,
 
-
-
             "hands":
 
                 self.hands,
 
-
-
             "starting_chips":
 
                 self.starting_chips,
-
-
 
             "players":
 
@@ -824,13 +553,9 @@ class BotVsBotSimulation:
 
                 ],
 
-
-
             "logging_enabled":
 
                 self.enable_logging,
-
-
 
             "bots":
 
@@ -838,11 +563,39 @@ class BotVsBotSimulation:
 
         }
 
+    def export_winrate_chart(self, filepath="data/simulation_winrate.png"):
+        """
+        Generate and save bot chip stack performance chart using matplotlib.
+        """
+        try:
+            import os
+            import matplotlib
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
 
+            os.makedirs(os.path.dirname(filepath) or ".", exist_ok=True)
+            plt.figure(figsize=(9, 5))
 
+            names = [p.name for p in self.players]
+            chips = [self.results[name]["chips"] for name in names]
+            wins = [self.results[name]["wins"] for name in names]
 
+            bars = plt.bar(names, chips, color=['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][:len(names)])
+            plt.title(f"Bot Chip Stack Performance ({self.completed_hands} Hands Played)")
+            plt.ylabel("Final Chip Stack ($)")
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
 
+            for bar, win_count in zip(bars, wins):
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width()/2.0, yval + 10, f"{win_count} Wins", ha='center', va='bottom', fontweight='bold')
 
+            plt.tight_layout()
+            plt.savefig(filepath, dpi=200)
+            plt.close()
+            return filepath
+        except Exception as e:
+            print(f"Chart export notice: {e}")
+            return None
 
     # ==========================================
     # Reset Simulation
@@ -855,46 +608,23 @@ class BotVsBotSimulation:
         Reset simulation state.
         """
 
-
-
         self.current_hand = 0
-
 
         self.completed_hands = 0
 
-
         self.failed_hands = 0
-
-
 
         self.errors.clear()
 
-
-
-
-
         for player in self.players:
-
-
 
             player.chips = self.starting_chips
 
-
-
             player.reset_for_round()
-
-
-
-
 
         self.initialize_statistics()
 
-
-
-
-
         if self.logger:
-
 
             self.logger.clear()
     
@@ -908,8 +638,6 @@ class BotVsBotSimulation:
         """
         Human readable simulation status.
         """
-
-
 
         return (
 
@@ -940,12 +668,6 @@ class BotVsBotSimulation:
             )
 
         )
-
-
-
-
-
-
 
     # ==========================================
     # Debug Representation

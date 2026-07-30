@@ -1,7 +1,5 @@
 from enum import Enum, auto
 
-
-
 class GameState(Enum):
     """
     Represents the current state of a
@@ -17,39 +15,27 @@ class GameState(Enum):
     - Winners
     """
 
-
-
     # ==================================================
     # States
     # ==================================================
 
     WAITING = auto()
 
-
     STARTING_HAND = auto()
-
 
     PRE_FLOP = auto()
 
-
     FLOP = auto()
-
 
     TURN = auto()
 
-
     RIVER = auto()
-
 
     SHOWDOWN = auto()
 
-
     HAND_COMPLETE = auto()
 
-
     GAME_OVER = auto()
-
-
 
     # ==================================================
     # State Helpers
@@ -74,8 +60,6 @@ class GameState(Enum):
 
         }
 
-
-
     # --------------------------------------------------
 
     def is_showdown(
@@ -91,8 +75,6 @@ class GameState(Enum):
 
         )
 
-
-
     # --------------------------------------------------
 
     def is_finished(
@@ -107,8 +89,6 @@ class GameState(Enum):
             self == GameState.GAME_OVER
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -135,8 +115,6 @@ class GameState(Enum):
 
         }
 
-
-
     # ==================================================
     # State Transitions
     # ==================================================
@@ -151,41 +129,33 @@ class GameState(Enum):
 
         transitions = {
 
-
             GameState.WAITING:
 
                 GameState.STARTING_HAND,
-
 
             GameState.STARTING_HAND:
 
                 GameState.PRE_FLOP,
 
-
             GameState.PRE_FLOP:
 
                 GameState.FLOP,
-
 
             GameState.FLOP:
 
                 GameState.TURN,
 
-
             GameState.TURN:
 
                 GameState.RIVER,
-
 
             GameState.RIVER:
 
                 GameState.SHOWDOWN,
 
-
             GameState.SHOWDOWN:
 
                 GameState.HAND_COMPLETE,
-
 
             GameState.HAND_COMPLETE:
 
@@ -193,13 +163,10 @@ class GameState(Enum):
 
         }
 
-
         return transitions.get(
             self,
             None
         )
-
-
 
     # --------------------------------------------------
 
@@ -221,8 +188,6 @@ class GameState(Enum):
 
         )
 
-
-
     # ==================================================
     # Debug
     # ==================================================
@@ -233,8 +198,6 @@ class GameState(Enum):
             "_",
             " "
         ).title()
-
-
 
     def __repr__(self):
 

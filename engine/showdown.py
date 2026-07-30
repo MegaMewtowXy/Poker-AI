@@ -4,12 +4,9 @@ from models.player import Player
 from engine.evaluator import HandEvaluator
 from engine.pot_manager import PotManager
 
-
-
 class Showdown:
     """
     Resolves Texas Hold'em showdown.
-
 
     Responsibilities
     ----------------
@@ -21,7 +18,6 @@ class Showdown:
     • Handle ties
     • Return final results
 
-
     Does NOT:
 
     • Deal cards
@@ -29,13 +25,9 @@ class Showdown:
     • Manage game flow
     """
 
-
-
     def __init__(self):
 
         self.evaluator = HandEvaluator()
-
-
 
     # ==================================================
     # Validation
@@ -53,14 +45,11 @@ class Showdown:
                 "At least two players are required."
             )
 
-
         if len(community_cards) != 5:
 
             raise ValueError(
                 "Showdown requires exactly five community cards."
             )
-
-
 
     # ==================================================
     # Resolve Showdown
@@ -81,7 +70,6 @@ class Showdown:
 
         )
 
-
         # ------------------------------------------
         # Active players
         # ------------------------------------------
@@ -96,8 +84,6 @@ class Showdown:
 
         ]
 
-
-
         if not active_players:
 
             return {
@@ -110,8 +96,6 @@ class Showdown:
 
             }
 
-
-
         # ------------------------------------------
         # Everyone folded except one
         # ------------------------------------------
@@ -120,12 +104,9 @@ class Showdown:
 
             winner = active_players[0]
 
-
             pot_results = []
 
-
             for pot in pot_manager.get_all_pots():
-
 
                 if pot.amount > 0:
 
@@ -136,7 +117,6 @@ class Showdown:
                         pot
 
                     )
-
 
                     pot_results.append(
 
@@ -152,8 +132,6 @@ class Showdown:
 
                     )
 
-
-
             return {
 
                 "results": {},
@@ -163,8 +141,6 @@ class Showdown:
                 "winners": [winner]
 
             }
-
-
 
         # ------------------------------------------
         # Evaluate hands once
@@ -178,30 +154,23 @@ class Showdown:
 
         )
 
-
-
         # ------------------------------------------
         # Build pots
         # ------------------------------------------
 
         pot_manager.build_side_pots()
 
-
         pots = pot_manager.get_all_pots()
-
 
         pot_results = []
 
         all_winners = []
-
-
 
         # ------------------------------------------
         # Resolve every pot
         # ------------------------------------------
 
         for pot in pots:
-
 
             eligible = pot_manager.eligible_players(
 
@@ -211,12 +180,9 @@ class Showdown:
 
             )
 
-
             if not eligible:
 
                 continue
-
-
 
             winners = self.find_best_players(
 
@@ -225,7 +191,6 @@ class Showdown:
                 results
 
             )
-
 
             self.resolve_pot(
 
@@ -237,7 +202,6 @@ class Showdown:
 
             )
 
-
             for winner in winners:
 
                 if winner not in all_winners:
@@ -247,7 +211,6 @@ class Showdown:
                         winner
 
                     )
-
 
             pot_results.append(
 
@@ -263,8 +226,6 @@ class Showdown:
 
             )
 
-
-
         return {
 
             "results": results,
@@ -274,8 +235,6 @@ class Showdown:
             "winners": all_winners
 
         }
-
-
 
     # ==================================================
     # Evaluation
@@ -287,12 +246,9 @@ class Showdown:
         community_cards
     ) -> dict[Player, HandResult]:
 
-
         results = {}
 
-
         for player in players:
-
 
             results[player] = self.evaluator.evaluate(
 
@@ -301,7 +257,6 @@ class Showdown:
                 community_cards
 
             )
-
 
         return results
         # ==================================================
@@ -323,8 +278,6 @@ class Showdown:
 
             return []
 
-
-
         best_score = min(
 
             results[player].score
@@ -332,8 +285,6 @@ class Showdown:
             for player in players
 
         )
-
-
 
         return [
 
@@ -344,8 +295,6 @@ class Showdown:
             if results[player].score == best_score
 
         ]
-
-
 
     # --------------------------------------------------
 
@@ -362,11 +311,7 @@ class Showdown:
 
             return None
 
-
-
         return results[winners[0]]
-
-
 
     # --------------------------------------------------
 
@@ -377,8 +322,6 @@ class Showdown:
 
         return len(winners)
 
-
-
     # --------------------------------------------------
 
     def has_tie(
@@ -387,8 +330,6 @@ class Showdown:
     ) -> bool:
 
         return len(winners) > 1
-
-
 
     # ==================================================
     # Showdown Utilities
@@ -412,8 +353,6 @@ class Showdown:
 
         ]
 
-
-
     # --------------------------------------------------
 
     def hand_results(
@@ -432,8 +371,6 @@ class Showdown:
             community_cards
 
         )
-
-
 
     # ==================================================
     # Pot Resolution
@@ -457,13 +394,9 @@ class Showdown:
 
         )
 
-
         resolved = []
 
-
-
         for pot in pot_manager.get_all_pots():
-
 
             eligible = pot_manager.eligible_players(
 
@@ -473,12 +406,9 @@ class Showdown:
 
             )
 
-
             if not eligible:
 
                 continue
-
-
 
             winners = self.find_best_players(
 
@@ -487,7 +417,6 @@ class Showdown:
                 results
 
             )
-
 
             self.resolve_pot(
 
@@ -498,7 +427,6 @@ class Showdown:
                 pot_manager
 
             )
-
 
             resolved.append(
 
@@ -514,11 +442,7 @@ class Showdown:
 
             )
 
-
-
         return resolved
-
-
 
     # --------------------------------------------------
 
@@ -540,10 +464,7 @@ class Showdown:
 
             return
 
-
-
         if len(winners) == 1:
-
 
             pot_manager.award_pot(
 
@@ -553,9 +474,7 @@ class Showdown:
 
             )
 
-
         else:
-
 
             pot_manager.split_pot(
 
@@ -564,8 +483,6 @@ class Showdown:
                 pot
 
             )
-
-
 
     # ==================================================
     # Winner Helpers
@@ -584,8 +501,6 @@ class Showdown:
 
         )
 
-
-
     # --------------------------------------------------
 
     def winning_player(
@@ -599,16 +514,11 @@ class Showdown:
 
         )
 
-
         if len(winners) != 1:
 
             return None
 
-
-
         return winners[0]
-
-
 
     # ==================================================
     # Debug
@@ -617,8 +527,6 @@ class Showdown:
     def __repr__(self):
 
         return "Showdown()"
-
-
 
     # --------------------------------------------------
 

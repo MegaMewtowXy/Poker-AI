@@ -2,8 +2,6 @@ from dataclasses import dataclass, field
 
 from models.player import Player
 
-
-
 @dataclass(slots=True)
 class Pot:
     """
@@ -22,26 +20,19 @@ class Pot:
     - Handle betting
     """
 
-
-
     # =====================================================
     # Identity
     # =====================================================
 
     pot_id: int = 0
 
-
     is_main_pot: bool = False
-
-
 
     # =====================================================
     # Chips
     # =====================================================
 
     amount: int = 0
-
-
 
     # =====================================================
     # Eligibility
@@ -51,8 +42,6 @@ class Pot:
         default_factory=list
     )
 
-
-
     # =====================================================
     # Showdown Result
     # =====================================================
@@ -61,12 +50,9 @@ class Pot:
         default_factory=list
     )
 
-
     payouts: dict[Player, int] = field(
         default_factory=dict
     )
-
-
 
     # =====================================================
     # State
@@ -74,12 +60,9 @@ class Pot:
 
     closed: bool = False
 
-
-
     # =====================================================
     # Chip Management
     # =====================================================
-
 
     def add_chips(
         self,
@@ -88,20 +71,15 @@ class Pot:
 
         self._validate_amount(amount)
 
-
         if self.closed:
 
             raise RuntimeError(
                 "Cannot add chips to closed pot."
             )
 
-
         self.amount += amount
 
-
-
     # -----------------------------------------------------
-
 
     def remove_chips(
         self,
@@ -110,22 +88,17 @@ class Pot:
 
         self._validate_amount(amount)
 
-
         if amount > self.amount:
 
             raise ValueError(
                 "Not enough chips in pot."
             )
 
-
         self.amount -= amount
-
-
 
     # =====================================================
     # Eligibility
     # =====================================================
-
 
     def add_player(
         self,
@@ -138,10 +111,7 @@ class Pot:
                 player
             )
 
-
-
     # -----------------------------------------------------
-
 
     def remove_player(
         self,
@@ -154,10 +124,7 @@ class Pot:
                 player
             )
 
-
-
     # -----------------------------------------------------
-
 
     def is_eligible(
         self,
@@ -166,12 +133,9 @@ class Pot:
 
         return player in self.eligible_players
 
-
-
     # =====================================================
     # Winner Handling
     # =====================================================
-
 
     def set_winners(
         self,
@@ -180,10 +144,7 @@ class Pot:
 
         self.winners = winners
 
-
-
     # -----------------------------------------------------
-
 
     def award(
         self,
@@ -193,13 +154,11 @@ class Pot:
 
         self._validate_amount(amount)
 
-
         if amount > self.amount:
 
             raise ValueError(
                 "Payout exceeds pot size."
             )
-
 
         self.payouts[player] = (
 
@@ -214,10 +173,7 @@ class Pot:
 
         )
 
-
-
     # -----------------------------------------------------
-
 
     def split_amount(
         self,
@@ -228,42 +184,31 @@ class Pot:
 
             return {}
 
-
         share = self.amount // len(winners)
 
         remainder = self.amount % len(winners)
 
-
         result = {}
-
 
         for index, player in enumerate(winners):
 
             result[player] = share
 
-
             if index < remainder:
 
                 result[player] += 1
 
-
         return result
-
-
 
     # =====================================================
     # Lifecycle
     # =====================================================
 
-
     def close(self):
 
         self.closed = True
 
-
-
     # -----------------------------------------------------
-
 
     def clear(self):
 
@@ -277,12 +222,9 @@ class Pot:
 
         self.closed = False
 
-
-
     # =====================================================
     # Information
     # =====================================================
-
 
     def player_count(self):
 
@@ -290,10 +232,7 @@ class Pot:
             self.eligible_players
         )
 
-
-
     # -----------------------------------------------------
-
 
     def winner_count(self):
 
@@ -301,19 +240,13 @@ class Pot:
             self.winners
         )
 
-
-
     # -----------------------------------------------------
-
 
     def is_empty(self):
 
         return self.amount == 0
 
-
-
     # -----------------------------------------------------
-
 
     def total_paid(self):
 
@@ -321,10 +254,7 @@ class Pot:
             self.payouts.values()
         )
 
-
-
     # -----------------------------------------------------
-
 
     def remaining_amount(self):
 
@@ -338,12 +268,9 @@ class Pot:
 
         )
 
-
-
     # =====================================================
     # Serialization
     # =====================================================
-
 
     def to_dict(self):
 
@@ -383,12 +310,9 @@ class Pot:
 
         }
 
-
-
     # =====================================================
     # Validation
     # =====================================================
-
 
     def _validate_amount(
         self,
@@ -401,12 +325,9 @@ class Pot:
                 "Amount cannot be negative."
             )
 
-
-
     # =====================================================
     # Debug
     # =====================================================
-
 
     def __repr__(self):
 
@@ -424,10 +345,7 @@ class Pot:
 
         )
 
-
-
     # -----------------------------------------------------
-
 
     def __str__(self):
 

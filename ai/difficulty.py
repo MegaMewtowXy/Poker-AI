@@ -1,9 +1,5 @@
 from enum import Enum
 
-
-
-
-
 class Difficulty(Enum):
     """
     AI difficulty levels.
@@ -15,8 +11,6 @@ class Difficulty(Enum):
     - Mistake rate
     """
 
-
-
     EASY = "easy"
 
     MEDIUM = "medium"
@@ -24,12 +18,6 @@ class Difficulty(Enum):
     HARD = "hard"
 
     EXPERT = "expert"
-
-
-
-
-
-
 
 class DifficultyConfig:
     """
@@ -44,11 +32,7 @@ class DifficultyConfig:
     - Strategy influence
     """
 
-
-
     CONFIG = {
-
-
 
         # ======================================
         # Easy AI
@@ -56,51 +40,41 @@ class DifficultyConfig:
 
         Difficulty.EASY: {
 
-
             "use_probability":
 
                 False,
-
 
             "use_opponent_model":
 
                 False,
 
-
             "use_bluffing":
 
                 False,
-
 
             "use_adaptation":
 
                 False,
 
-
             "use_self_training":
 
                 False,
-
 
             "equity_simulations":
 
                 100,
 
-
             "mistake_rate":
 
                 0.30,
-
 
             "bluff_multiplier":
 
                 0.5,
 
-
             "aggression_modifier":
 
                 0.8,
-
 
             "strategy_weight":
 
@@ -108,61 +82,47 @@ class DifficultyConfig:
 
         },
 
-
-
-
-
         # ======================================
         # Medium AI
         # ======================================
 
         Difficulty.MEDIUM: {
 
-
             "use_probability":
 
                 True,
-
 
             "use_opponent_model":
 
                 False,
 
-
             "use_bluffing":
 
                 True,
-
 
             "use_adaptation":
 
                 False,
 
-
             "use_self_training":
 
                 False,
-
 
             "equity_simulations":
 
                 500,
 
-
             "mistake_rate":
 
                 0.15,
-
 
             "bluff_multiplier":
 
                 0.75,
 
-
             "aggression_modifier":
 
                 1.0,
-
 
             "strategy_weight":
 
@@ -170,61 +130,47 @@ class DifficultyConfig:
 
         },
 
-
-
-
-
         # ======================================
         # Hard AI
         # ======================================
 
         Difficulty.HARD: {
 
-
             "use_probability":
 
                 True,
-
 
             "use_opponent_model":
 
                 True,
 
-
             "use_bluffing":
 
                 True,
-
 
             "use_adaptation":
 
                 True,
 
-
             "use_self_training":
 
                 False,
-
 
             "equity_simulations":
 
                 2000,
 
-
             "mistake_rate":
 
                 0.05,
-
 
             "bluff_multiplier":
 
                 1.0,
 
-
             "aggression_modifier":
 
                 1.15,
-
 
             "strategy_weight":
 
@@ -232,61 +178,47 @@ class DifficultyConfig:
 
         },
 
-
-
-
-
         # ======================================
         # Expert AI
         # ======================================
 
         Difficulty.EXPERT: {
 
-
             "use_probability":
 
                 True,
-
 
             "use_opponent_model":
 
                 True,
 
-
             "use_bluffing":
 
                 True,
-
 
             "use_adaptation":
 
                 True,
 
-
             "use_self_training":
 
                 True,
-
 
             "equity_simulations":
 
                 5000,
 
-
             "mistake_rate":
 
                 0.01,
-
 
             "bluff_multiplier":
 
                 1.2,
 
-
             "aggression_modifier":
 
                 1.25,
-
 
             "strategy_weight":
 
@@ -295,10 +227,6 @@ class DifficultyConfig:
         }
 
     }
-
-
-
-
 
     @classmethod
     def get_config(
@@ -317,10 +245,6 @@ class DifficultyConfig:
             cls.CONFIG[Difficulty.MEDIUM]
 
         )
-
-
-
-
 
     @classmethod
     def available_difficulties(
@@ -350,18 +274,12 @@ class DifficultyManager:
     - Execute actions
     """
 
-
-
     def __init__(
         self,
         difficulty=Difficulty.MEDIUM
     ):
 
         self.difficulty = difficulty
-
-
-
-
 
     # ==========================================
     # Configuration
@@ -379,10 +297,6 @@ class DifficultyManager:
             self.difficulty
 
         )
-
-
-
-
 
     # ==========================================
     # Generic Parameter Access
@@ -405,10 +319,6 @@ class DifficultyManager:
 
         )
 
-
-
-
-
     # ==========================================
     # Feature Checks
     # ==========================================
@@ -425,10 +335,6 @@ class DifficultyManager:
 
         )
 
-
-
-
-
     def can_use_opponent_model(
         self
     ) -> bool:
@@ -440,10 +346,6 @@ class DifficultyManager:
             False
 
         )
-
-
-
-
 
     def can_bluff(
         self
@@ -457,10 +359,6 @@ class DifficultyManager:
 
         )
 
-
-
-
-
     def can_adapt(
         self
     ) -> bool:
@@ -473,10 +371,6 @@ class DifficultyManager:
 
         )
 
-
-
-
-
     def can_self_train(
         self
     ) -> bool:
@@ -488,10 +382,6 @@ class DifficultyManager:
             False
 
         )
-
-
-
-
 
     # ==========================================
     # AI Parameters
@@ -509,10 +399,6 @@ class DifficultyManager:
 
         )
 
-
-
-
-
     def bluff_multiplier(
         self
     ) -> float:
@@ -525,10 +411,6 @@ class DifficultyManager:
 
         )
 
-
-
-
-
     def aggression_modifier(
         self
     ) -> float:
@@ -540,10 +422,6 @@ class DifficultyManager:
             1.0
 
         )
-
-
-
-
 
     def strategy_weight(
         self
@@ -560,10 +438,6 @@ class DifficultyManager:
 
         )
 
-
-
-
-
     def mistake_rate(
         self
     ) -> float:
@@ -575,10 +449,6 @@ class DifficultyManager:
             0.1
 
         )
-
-
-
-
 
     # ==========================================
     # Difficulty Change
@@ -597,10 +467,6 @@ class DifficultyManager:
 
         self.difficulty = difficulty
 
-
-
-
-
     # ==========================================
     # Profile
     # ==========================================
@@ -614,76 +480,51 @@ class DifficultyManager:
 
         return {
 
-
             "difficulty":
 
                 self.difficulty.value,
-
-
 
             "equity_simulations":
 
                 self.equity_simulations(),
 
-
-
             "probability":
 
                 self.can_use_probability(),
-
-
 
             "opponent_model":
 
                 self.can_use_opponent_model(),
 
-
-
             "bluffing":
 
                 self.can_bluff(),
-
-
 
             "adaptation":
 
                 self.can_adapt(),
 
-
-
             "self_training":
 
                 self.can_self_train(),
-
-
 
             "strategy_weight":
 
                 self.strategy_weight(),
 
-
-
             "aggression_modifier":
 
                 self.aggression_modifier(),
 
-
-
             "bluff_multiplier":
 
                 self.bluff_multiplier(),
-
-
 
             "mistake_rate":
 
                 self.mistake_rate()
 
         }
-
-
-
-
 
     # ==========================================
     # Debug
@@ -698,10 +539,6 @@ class DifficultyManager:
             f"{self.difficulty.value}"
 
         )
-
-
-
-
 
     def __repr__(self):
 

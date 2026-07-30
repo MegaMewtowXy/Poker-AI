@@ -10,8 +10,6 @@ from models.action import Action
 
 from models.card import Card, Suit, Rank
 
-
-
 def card(rank, suit):
 
     return Card(
@@ -19,11 +17,7 @@ def card(rank, suit):
         rank
     )
 
-
-
-
 class FakeBettingEngine:
-
 
     def __init__(self):
 
@@ -31,25 +25,17 @@ class FakeBettingEngine:
 
         self.last_amount = 0
 
-
-
     def fold(self, player):
 
         self.last_action = "fold"
-
-
 
     def call(self, player):
 
         self.last_action = "call"
 
-
-
     def check(self, player):
 
         self.last_action = "check"
-
-
 
     def bet(self, player, amount):
 
@@ -57,26 +43,17 @@ class FakeBettingEngine:
 
         self.last_amount = amount
 
-
-
     def raise_bet(self, player, amount):
 
         self.last_action = "raise"
 
         self.last_amount = amount
 
-
-
     def all_in(self, player):
 
         self.last_action = "all_in"
 
-
-
-
-
 class FakePlayer:
-
 
     def __init__(self):
 
@@ -98,11 +75,7 @@ class FakePlayer:
 
         self.chips = 1000
 
-
-
-
 class FakeTable:
-
 
     def __init__(self):
 
@@ -145,16 +118,9 @@ class FakeTable:
 
         ]
 
-
-
-
-
 def test_action_handler():
 
-
     print("\n========== ACTION HANDLER TEST ==========")
-
-
 
     # ==========================================
     # Engine
@@ -162,16 +128,11 @@ def test_action_handler():
 
     engine = FakeBettingEngine()
 
-
-
     handler = ActionHandler(
 
         engine
 
     )
-
-
-
 
     # ==========================================
     # Bot
@@ -187,11 +148,7 @@ def test_action_handler():
 
     )
 
-
-
     player = FakePlayer()
-
-
 
     handler.register_bot(
 
@@ -201,13 +158,7 @@ def test_action_handler():
 
     )
 
-
-
-
     table = FakeTable()
-
-
-
 
     # ==========================================
     # AI Decision
@@ -225,20 +176,13 @@ def test_action_handler():
 
     )
 
-
-
     print("\nAI Decision")
 
     print(decision)
 
-
-
     print("\nEngine Action")
 
     print(engine.last_action)
-
-
-
 
     # ==========================================
     # Validation
@@ -252,8 +196,6 @@ def test_action_handler():
 
     )
 
-
-
     assert isinstance(
 
         decision["action"],
@@ -262,20 +204,13 @@ def test_action_handler():
 
     )
 
-
-
     assert "amount" in decision
 
     assert "confidence" in decision
 
     assert "analysis" in decision
 
-
-
     assert engine.last_action == decision["action"].name.lower()
-
-
-
 
     if decision["action"] in [
 
@@ -287,27 +222,17 @@ def test_action_handler():
 
         assert engine.last_amount == decision["amount"]
 
-
-
-
     # ==========================================
     # History
     # ==========================================
 
     history = handler.get_history()
 
-
-
     print("\nHistory")
 
     print(history)
 
-
-
     assert len(history) == 1
-
-
-
 
     # ==========================================
     # Profile
@@ -315,29 +240,19 @@ def test_action_handler():
 
     profile = handler.profile()
 
-
-
     print("\nProfile")
 
     print(profile)
 
-
-
     assert profile["registered_bots"] == 1
 
     assert profile["actions_processed"] == 1
-
-
-
 
     print(
 
         "\n========== ACTION HANDLER TEST PASSED =========="
 
     )
-
-
-
 
 if __name__ == "__main__":
 

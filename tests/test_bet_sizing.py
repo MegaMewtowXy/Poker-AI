@@ -2,8 +2,6 @@ from AI.bet_sizing import BetSizer
 
 from models.action import Action
 
-
-
 class MockContext:
 
     def __init__(
@@ -22,21 +20,11 @@ class MockContext:
 
         self.street = street
 
-
-
-
-
 def test_bet_sizing():
-
 
     print("\n========== BET SIZING TEST ==========")
 
-
-
     sizer = BetSizer()
-
-
-
 
     # ==========================================
     # Weak Bet
@@ -50,8 +38,6 @@ def test_bet_sizing():
 
     )
 
-
-
     weak = sizer.bet_size(
 
         context,
@@ -59,7 +45,6 @@ def test_bet_sizing():
         40
 
     )
-
 
     print(
 
@@ -69,14 +54,9 @@ def test_bet_sizing():
 
     )
 
-
-
     assert weak["amount"] > 0
 
     assert weak["reason"] == "small_value_bet"
-
-
-
 
     # ==========================================
     # Strong Bet
@@ -90,7 +70,6 @@ def test_bet_sizing():
 
     )
 
-
     print(
 
         "\nStrong bet:",
@@ -99,14 +78,9 @@ def test_bet_sizing():
 
     )
 
-
-
     assert strong["amount"] > weak["amount"]
 
     assert strong["reason"] == "strong_value_bet"
-
-
-
 
     # ==========================================
     # Raise
@@ -122,8 +96,6 @@ def test_bet_sizing():
 
     )
 
-
-
     raise_amount = sizer.raise_size(
 
         raise_context,
@@ -131,8 +103,6 @@ def test_bet_sizing():
         80
 
     )
-
-
 
     print(
 
@@ -142,14 +112,9 @@ def test_bet_sizing():
 
     )
 
-
-
     assert raise_amount["amount"] >= 100
 
     assert raise_amount["reason"] == "strong_value_raise"
-
-
-
 
     # ==========================================
     # All In
@@ -161,8 +126,6 @@ def test_bet_sizing():
 
     )
 
-
-
     print(
 
         "\nAll In:",
@@ -171,22 +134,13 @@ def test_bet_sizing():
 
     )
 
-
-
     assert all_in["amount"] == 1000
-
-
-
 
     print(
 
         "\n========== BET SIZING TEST PASSED =========="
 
     )
-
-
-
-
 
 if __name__ == "__main__":
 

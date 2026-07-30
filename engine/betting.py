@@ -6,10 +6,6 @@ from models.player import Player
 from models.table import Table
 from models.action import Action
 
-
-
-
-
 class BettingEngine:
     """
     Executes all legal Texas Hold'em betting actions.
@@ -27,7 +23,6 @@ class BettingEngine:
     • BettingRound -> turn/state tracking
     • PotManager -> chip collection
 
-
     Does NOT:
 
     • Decide AI actions
@@ -35,10 +30,6 @@ class BettingEngine:
     • Evaluate hands
     • Award winners
     """
-
-
-
-
 
     def __init__(
         self,
@@ -52,10 +43,6 @@ class BettingEngine:
         self.pot_manager = pot_manager
 
         self.betting_round = betting_round
-
-
-
-
 
     # =====================================================
     # Internal Helpers
@@ -77,10 +64,6 @@ class BettingEngine:
 
             )
 
-
-
-
-
     # -----------------------------------------------------
 
     def _collect_bet(
@@ -97,19 +80,11 @@ class BettingEngine:
 
             return 0
 
-
-
-
-
         collected = player.place_bet(
 
             amount
 
         )
-
-
-
-
 
         self.pot_manager.add_to_main_pot(
 
@@ -119,15 +94,7 @@ class BettingEngine:
 
         )
 
-
-
-
-
         return collected
-
-
-
-
 
     # -----------------------------------------------------
 
@@ -158,10 +125,6 @@ class BettingEngine:
                 amount
 
             )
-
-
-
-
 
     # -----------------------------------------------------
 
@@ -233,8 +196,6 @@ class BettingEngine:
 
         return paid
 
-
-
     # =====================================================
     # Fold
     # =====================================================
@@ -253,9 +214,7 @@ class BettingEngine:
 
         )
 
-
         player.fold()
-
 
         self._record_action(
 
@@ -267,16 +226,11 @@ class BettingEngine:
 
         )
 
-
         self._mark_acted(
 
             player
 
         )
-
-
-
-
 
     # =====================================================
     # Check
@@ -299,7 +253,6 @@ class BettingEngine:
 
         )
 
-
         if self.amount_to_call(player) != 0:
 
             raise ValueError(
@@ -308,9 +261,7 @@ class BettingEngine:
 
             )
 
-
         player.check()
-
 
         self._record_action(
 
@@ -322,16 +273,11 @@ class BettingEngine:
 
         )
 
-
         self._mark_acted(
 
             player
 
         )
-
-
-
-
 
     # =====================================================
     # Call
@@ -351,13 +297,11 @@ class BettingEngine:
 
         )
 
-
         amount = self.amount_to_call(
 
             player
 
         )
-
 
         paid = self._collect_bet(
 
@@ -367,9 +311,7 @@ class BettingEngine:
 
         )
 
-
         player.call()
-
 
         self._record_action(
 
@@ -381,19 +323,13 @@ class BettingEngine:
 
         )
 
-
         self._mark_acted(
 
             player
 
         )
 
-
         return paid
-
-
-
-
 
     # =====================================================
     # Helpers
@@ -438,7 +374,6 @@ class BettingEngine:
 
         )
 
-
         if self.table.current_bet > 0:
 
             raise ValueError(
@@ -446,7 +381,6 @@ class BettingEngine:
                 "Cannot bet. A bet already exists."
 
             )
-
 
         if amount <= 0:
 
@@ -456,8 +390,6 @@ class BettingEngine:
 
             )
 
-
-
         paid = self._collect_bet(
 
             player,
@@ -466,14 +398,11 @@ class BettingEngine:
 
         )
 
-
-
         self.table.current_bet = (
 
             player.current_bet
 
         )
-
 
         self.table.minimum_raise = (
 
@@ -481,10 +410,7 @@ class BettingEngine:
 
         )
 
-
         player.bet()
-
-
 
         self._record_action(
 
@@ -496,14 +422,11 @@ class BettingEngine:
 
         )
 
-
         self._mark_acted(
 
             player
 
         )
-
-
 
         if self.betting_round is not None:
 
@@ -513,12 +436,7 @@ class BettingEngine:
 
             )
 
-
         return paid
-
-
-
-
 
     # =====================================================
     # Raise
@@ -551,11 +469,7 @@ class BettingEngine:
 
             )
 
-
-
         previous_bet = self.table.current_bet
-
-
 
         additional = (
 
@@ -567,8 +481,6 @@ class BettingEngine:
 
         )
 
-
-
         if additional <= 0:
 
             raise ValueError(
@@ -576,8 +488,6 @@ class BettingEngine:
                 "Invalid raise amount."
 
             )
-
-
 
         paid = self._collect_bet(
 
@@ -608,19 +518,11 @@ class BettingEngine:
 
             )
 
-
-
         self.table.current_bet = player.current_bet
-
-
 
         self.table.minimum_raise = actual_raise
 
-
-
         player.raise_bet()
-
-
 
         self._record_action(
 
@@ -632,15 +534,11 @@ class BettingEngine:
 
         )
 
-
-
         self._mark_acted(
 
             player
 
         )
-
-
 
         if self.betting_round is not None:
 
@@ -649,7 +547,6 @@ class BettingEngine:
                 player
 
             )
-
 
         return paid
     
@@ -675,15 +572,11 @@ class BettingEngine:
 
         )
 
-
         amount = player.chips
-
 
         if amount <= 0:
 
             return 0
-
-
 
         paid = self._collect_bet(
 
@@ -693,10 +586,7 @@ class BettingEngine:
 
         )
 
-
         player.last_action = Action.ALL_IN
-
-
 
         self._record_action(
 
@@ -708,21 +598,17 @@ class BettingEngine:
 
         )
 
-
         self._mark_acted(
 
             player
 
         )
 
-
-
         # ---------------------------------------------
         # Full raise handling
         # ---------------------------------------------
 
         if player.current_bet > self.table.current_bet:
-
 
             raise_amount = (
 
@@ -734,20 +620,15 @@ class BettingEngine:
 
             )
 
-
             self.table.current_bet = (
 
                 player.current_bet
 
             )
 
-
-
             if raise_amount >= self.table.minimum_raise:
 
                 self.table.minimum_raise = raise_amount
-
-
 
                 if self.betting_round is not None:
 
@@ -757,12 +638,7 @@ class BettingEngine:
 
                     )
 
-
         return paid
-
-
-
-
 
     # =====================================================
     # Validation Helpers
@@ -784,10 +660,6 @@ class BettingEngine:
 
             )
 
-
-
-
-
     # -----------------------------------------------------
 
     def validate_raise(
@@ -805,7 +677,6 @@ class BettingEngine:
 
         )
 
-
         if raise_to <= self.table.current_bet:
 
             raise ValueError(
@@ -813,7 +684,6 @@ class BettingEngine:
                 "Raise must exceed current bet."
 
             )
-
 
         if (
 
@@ -830,10 +700,6 @@ class BettingEngine:
                 "Raise is below minimum raise."
 
             )
-
-
-
-
 
     # =====================================================
     # All-In Helpers
@@ -852,8 +718,6 @@ class BettingEngine:
 
             return False
 
-
-
         raise_amount = (
 
             player.current_bet
@@ -864,7 +728,6 @@ class BettingEngine:
 
         )
 
-
         return (
 
             raise_amount > 0
@@ -874,10 +737,6 @@ class BettingEngine:
             raise_amount < self.table.minimum_raise
 
         )
-
-
-
-
 
     # -----------------------------------------------------
 
@@ -912,10 +771,6 @@ class BettingEngine:
 
         return self.pot_manager.total_pot()
 
-
-
-
-
     # -----------------------------------------------------
 
     def player_contribution(
@@ -928,10 +783,6 @@ class BettingEngine:
         """
 
         return player.total_bet
-
-
-
-
 
     # =====================================================
     # Player State Helpers
@@ -947,10 +798,6 @@ class BettingEngine:
 
         return player.can_act()
 
-
-
-
-
     # -----------------------------------------------------
 
     def player_has_folded(
@@ -960,10 +807,6 @@ class BettingEngine:
 
         return player.folded
 
-
-
-
-
     # -----------------------------------------------------
 
     def player_is_all_in(
@@ -972,10 +815,6 @@ class BettingEngine:
     ) -> bool:
 
         return player.all_in
-
-
-
-
 
     # =====================================================
     # Street Helpers
@@ -990,10 +829,6 @@ class BettingEngine:
 
         return self.table.street
 
-
-
-
-
     # -----------------------------------------------------
 
     def is_pre_flop(
@@ -1001,10 +836,6 @@ class BettingEngine:
     ) -> bool:
 
         return self.table.is_pre_flop()
-
-
-
-
 
     # -----------------------------------------------------
 
@@ -1014,10 +845,6 @@ class BettingEngine:
 
         return self.table.is_flop()
 
-
-
-
-
     # -----------------------------------------------------
 
     def is_turn(
@@ -1026,10 +853,6 @@ class BettingEngine:
 
         return self.table.is_turn()
 
-
-
-
-
     # -----------------------------------------------------
 
     def is_river(
@@ -1037,10 +860,6 @@ class BettingEngine:
     ) -> bool:
 
         return self.table.is_river()
-
-
-
-
 
     # =====================================================
     # Betting Completion
@@ -1063,38 +882,23 @@ class BettingEngine:
 
         for player in players:
 
-
             if player.folded:
 
                 continue
-
-
 
             if player.eliminated:
 
                 continue
 
-
-
             if player.all_in:
 
                 continue
-
-
 
             if player.current_bet != self.table.current_bet:
 
                 return False
 
-
-
-
-
         return True
-
-
-
-
 
     # -----------------------------------------------------
 
@@ -1123,10 +927,6 @@ class BettingEngine:
             )
 
         ]
-
-
-
-
 
     # -----------------------------------------------------
 
@@ -1160,10 +960,6 @@ class BettingEngine:
 
         ]
 
-
-
-
-
     # =====================================================
     # Pot Finalization
     # =====================================================
@@ -1178,10 +974,6 @@ class BettingEngine:
         """
 
         self.pot_manager.build_side_pots()
-
-
-
-
 
     # =====================================================
     # Street Reset
@@ -1203,10 +995,6 @@ class BettingEngine:
 
         )
 
-
-
-
-
     # =====================================================
     # Full Reset
     # =====================================================
@@ -1222,10 +1010,6 @@ class BettingEngine:
 
         self.reset_street()
 
-
-
-
-
     # =====================================================
     # Debug
     # =====================================================
@@ -1239,19 +1023,15 @@ class BettingEngine:
             "\n========== BETTING STATUS ==========\n"
         )
 
-
         print(
             f"Current Bet   : ${self.table.current_bet}"
         )
-
 
         print(
             f"Minimum Raise : ${self.table.minimum_raise}"
         )
 
-
         print()
-
 
         for player in players:
 
@@ -1270,10 +1050,6 @@ class BettingEngine:
                 f"All-In: {player.all_in}"
 
             )
-
-
-
-
 
     # =====================================================
     # String Representation

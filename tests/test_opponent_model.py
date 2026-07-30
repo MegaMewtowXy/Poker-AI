@@ -1,12 +1,8 @@
 from AI.opponent_model import OpponentModel
 
-
-
 def test_opponent_model():
 
     print("\n========== OPPONENT MODEL TEST ==========\n")
-
-
 
     # ======================================
     # Loose Aggressive Player
@@ -17,7 +13,6 @@ def test_opponent_model():
         "Aggressive Bob"
 
     )
-
 
     for _ in range(100):
 
@@ -35,11 +30,7 @@ def test_opponent_model():
 
         aggressive.record_bet()
 
-
-
     aggressive_profile = aggressive.ai_profile()
-
-
 
     print("Aggressive Player")
 
@@ -49,8 +40,6 @@ def test_opponent_model():
 
     )
 
-
-
     assert aggressive_profile["VPIP"] == 100.0
 
     assert aggressive_profile["PFR"] == 100.0
@@ -58,8 +47,6 @@ def test_opponent_model():
     assert aggressive_profile["aggression"] > 1
 
     assert aggressive_profile["type"] == "loose_aggressive"
-
-
 
     # ======================================
     # Calling Station
@@ -71,7 +58,6 @@ def test_opponent_model():
 
     )
 
-
     for _ in range(100):
 
         passive.record_hand()
@@ -80,11 +66,7 @@ def test_opponent_model():
 
         passive.record_call()
 
-
-
     passive_profile = passive.ai_profile()
-
-
 
     print("\nCalling Station")
 
@@ -94,8 +76,6 @@ def test_opponent_model():
 
     )
 
-
-
     assert passive_profile["VPIP"] == 100.0
 
     assert passive_profile["PFR"] == 0.0
@@ -103,8 +83,6 @@ def test_opponent_model():
     assert passive_profile["aggression"] == 0.0
 
     assert passive_profile["type"] == "calling_station"
-
-
 
     # ======================================
     # Tight Aggressive Player
@@ -116,12 +94,9 @@ def test_opponent_model():
 
     )
 
-
     for _ in range(100):
 
         tight.record_hand()
-
-
 
     for _ in range(20):
 
@@ -137,11 +112,7 @@ def test_opponent_model():
 
         tight.record_bet()
 
-
-
     tight_profile = tight.ai_profile()
-
-
 
     print("\nTight Aggressive Player")
 
@@ -151,15 +122,11 @@ def test_opponent_model():
 
     )
 
-
-
     assert tight_profile["VPIP"] == 20.0
 
     assert tight_profile["PFR"] == 20.0
 
     assert tight_profile["type"] == "tight_aggressive"
-
-
 
     # ======================================
     # Unknown Player
@@ -171,14 +138,9 @@ def test_opponent_model():
 
     )
 
-
     unknown.record_hand()
 
-
-
     unknown_profile = unknown.ai_profile()
-
-
 
     print("\nUnknown Player")
 
@@ -188,20 +150,13 @@ def test_opponent_model():
 
     )
 
-
-
     assert unknown_profile["type"] == "unknown"
-
-
 
     print(
 
         "\n========== OPPONENT MODEL TEST PASSED =========="
 
     )
-
-
-
 
 if __name__ == "__main__":
 

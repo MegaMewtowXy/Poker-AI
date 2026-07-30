@@ -1,8 +1,6 @@
 from models.card import Card
 from models.street import Street
 
-
-
 class Table:
     """
     Represents the physical poker table.
@@ -23,14 +21,11 @@ class Table:
     • AI
     """
 
-
-
     def __init__(
         self,
         small_blind: int = 10,
         big_blind: int = 20
     ):
-
 
         # =====================================
         # Validation
@@ -41,23 +36,17 @@ class Table:
             big_blind
         )
 
-
-
         # =====================================
         # Community Cards
         # =====================================
 
         self.community_cards: list[Card] = []
 
-
-
         # =====================================
         # Dealer Button
         # =====================================
 
         self.dealer_position = 0
-
-
 
         # =====================================
         # Blinds
@@ -67,8 +56,6 @@ class Table:
 
         self.big_blind = big_blind
 
-
-
         # =====================================
         # Betting State
         # =====================================
@@ -76,8 +63,6 @@ class Table:
         self.current_bet = 0
 
         self.minimum_raise = big_blind
-
-
 
         # =====================================
         # Hand State
@@ -87,12 +72,9 @@ class Table:
 
         self.hand_number = 1
 
-
-
     # ==================================================
     # Validation
     # ==================================================
-
 
     def validate_blinds(
         self,
@@ -106,19 +88,15 @@ class Table:
                 "Small blind must be positive."
             )
 
-
         if big_blind <= small_blind:
 
             raise ValueError(
                 "Big blind must be greater than small blind."
             )
 
-
-
     # ==================================================
     # Community Cards
     # ==================================================
-
 
     def add_community_card(
         self,
@@ -131,22 +109,15 @@ class Table:
                 "Board already has five cards."
             )
 
-
         self.community_cards.append(card)
 
-
-
     # --------------------------------------------------
-
 
     def reset_board(self):
 
         self.community_cards.clear()
 
-
-
     # --------------------------------------------------
-
 
     def community_card(
         self,
@@ -155,10 +126,7 @@ class Table:
 
         return self.community_cards[index]
 
-
-
     # --------------------------------------------------
-
 
     def board_size(self):
 
@@ -166,71 +134,49 @@ class Table:
             self.community_cards
         )
 
-
-
     # --------------------------------------------------
-
 
     def flop_dealt(self):
 
         return self.board_size() >= 3
 
-
-
     # --------------------------------------------------
-
 
     def turn_dealt(self):
 
         return self.board_size() >= 4
 
-
-
     # --------------------------------------------------
-
 
     def river_dealt(self):
 
         return self.board_size() == 5
 
-
-
     # --------------------------------------------------
-
 
     def board_complete(self):
 
         return self.board_size() == 5
 
-
-
     # --------------------------------------------------
-
 
     def can_add_card(self):
 
         return self.board_size() < 5
 
-
-
     # --------------------------------------------------
-
 
     def cards_needed(self):
 
         return 5 - self.board_size()
 
-
-
     # --------------------------------------------------
-
 
     def show_community_cards(self):
 
         if not self.community_cards:
 
             return "(Empty)"
-
 
         return " ".join(
 
@@ -240,12 +186,9 @@ class Table:
 
         )
 
-
-
     # ==================================================
     # Street Management
     # ==================================================
-
 
     def set_street(
         self,
@@ -254,10 +197,7 @@ class Table:
 
         self.street = street
 
-
-
     # --------------------------------------------------
-
 
     def next_street(self):
 
@@ -277,64 +217,45 @@ class Table:
 
         }
 
-
         if self.street in transitions:
 
             self.street = transitions[
                 self.street
             ]
 
-
-
     # --------------------------------------------------
-
 
     def is_pre_flop(self):
 
         return self.street == Street.PRE_FLOP
 
-
-
     # --------------------------------------------------
-
 
     def is_flop(self):
 
         return self.street == Street.FLOP
 
-
-
     # --------------------------------------------------
-
 
     def is_turn(self):
 
         return self.street == Street.TURN
 
-
-
     # --------------------------------------------------
-
 
     def is_river(self):
 
         return self.street == Street.RIVER
 
-
-
     # --------------------------------------------------
-
 
     def is_showdown(self):
 
         return self.street == Street.SHOWDOWN
 
-
-
     # ==================================================
     # Betting State
     # ==================================================
-
 
     def reset_betting(self):
 
@@ -342,12 +263,9 @@ class Table:
 
         self.minimum_raise = self.big_blind
 
-
-
     # ==================================================
     # Dealer Button
     # ==================================================
-
 
     def rotate_dealer(
         self,
@@ -360,19 +278,15 @@ class Table:
                 "Table requires players."
             )
 
-
         self.dealer_position = (
 
             self.dealer_position + 1
 
         ) % total_players
 
-
-
     # ==================================================
     # Blind Management
     # ==================================================
-
 
     def update_blinds(
         self,
@@ -385,28 +299,21 @@ class Table:
             big_blind
         )
 
-
         self.small_blind = small_blind
 
         self.big_blind = big_blind
 
         self.minimum_raise = big_blind
 
-
-
     # ==================================================
     # Hand Management
     # ==================================================
-
 
     def next_hand(self):
 
         self.hand_number += 1
 
-
-
     # --------------------------------------------------
-
 
     def reset_for_round(self):
 
@@ -416,21 +323,15 @@ class Table:
 
         self.street = Street.PRE_FLOP
 
-
-
     # ==================================================
     # Utility
     # ==================================================
-
 
     def board(self):
 
         return self.community_cards.copy()
 
-
-
     # --------------------------------------------------
-
 
     def has_board(self):
 
@@ -438,15 +339,11 @@ class Table:
             self.community_cards
         ) > 0
 
-
-
     # --------------------------------------------------
-
 
     def clear(self):
 
         self.reset_for_round()
-
 
         # --------------------------------------------------
 
@@ -461,7 +358,6 @@ class Table:
     # ==================================================
     # Debug
     # ==================================================
-
 
     def __repr__(self):
 
@@ -481,10 +377,7 @@ class Table:
 
         )
 
-
-
     # --------------------------------------------------
-
 
     def __str__(self):
 

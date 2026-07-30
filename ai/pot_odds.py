@@ -13,8 +13,6 @@ class PotOddsCalculator:
     • Control gameplay
     """
 
-
-
     # ==================================================
     # Pot Odds
     # ==================================================
@@ -42,12 +40,9 @@ class PotOddsCalculator:
                 "Pot size cannot be negative."
             )
 
-
         if call_amount <= 0:
 
             return 0.0
-
-
 
         total_pot = (
 
@@ -58,7 +53,6 @@ class PotOddsCalculator:
             call_amount
 
         )
-
 
         return round(
 
@@ -75,8 +69,6 @@ class PotOddsCalculator:
             2
 
         )
-
-
 
     # ==================================================
     # Decimal Format
@@ -102,8 +94,6 @@ class PotOddsCalculator:
             call_amount
 
         ) / 100
-
-
 
     # ==================================================
     # Call Evaluation
@@ -144,8 +134,6 @@ class PotOddsCalculator:
 
         return equity >= pot_odds
 
-
-
     # ==================================================
     # Expected Value
     # ==================================================
@@ -185,8 +173,6 @@ class PotOddsCalculator:
 
             return 0.0
 
-
-
         final_pot = (
 
             pot_size
@@ -196,7 +182,6 @@ class PotOddsCalculator:
             call_amount
 
         )
-
 
         return (
 
@@ -208,8 +193,6 @@ class PotOddsCalculator:
 
         ) - call_amount
 
-
-
     # ==================================================
     # Debug
     # ==================================================
@@ -217,8 +200,6 @@ class PotOddsCalculator:
     def __repr__(self):
 
         return "PotOddsCalculator()"
-
-
 
     def __str__(self):
 

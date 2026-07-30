@@ -3,8 +3,6 @@ from typing import Optional
 
 from models.card import Card
 
-
-
 @dataclass(slots=True)
 class HandResult:
     """
@@ -16,7 +14,6 @@ class HandResult:
     - AI analysis
     - Monte Carlo simulation
     """
-
 
     # =====================================================
     # Evaluation
@@ -32,8 +29,6 @@ class HandResult:
         default_factory=list
     )
 
-
-
     # =====================================================
     # AI Data
     # =====================================================
@@ -48,8 +43,6 @@ class HandResult:
 
     explanation: str = ""
 
-
-
     # =====================================================
     # Showdown
     # =====================================================
@@ -60,11 +53,7 @@ class HandResult:
 
     split_pot: bool = False
 
-
-
     showdown_message: str = ""
-
-
 
     # =====================================================
     # Validation
@@ -78,14 +67,11 @@ class HandResult:
                 "Hand score cannot be negative."
             )
 
-
         if not 0 <= self.rank <= 9:
 
             raise ValueError(
                 "Invalid poker hand rank."
             )
-
-
 
     # =====================================================
     # AI Helpers
@@ -100,20 +86,17 @@ class HandResult:
         explanation: str
     ):
 
-
         if not 0 <= win_probability <= 1:
 
             raise ValueError(
                 "Win probability must be between 0 and 1."
             )
 
-
         if not 0 <= confidence <= 1:
 
             raise ValueError(
                 "Confidence must be between 0 and 1."
             )
-
 
         self.win_probability = win_probability
 
@@ -125,8 +108,6 @@ class HandResult:
 
         self.explanation = explanation
 
-
-
     # =====================================================
     # Showdown Helpers
     # =====================================================
@@ -137,14 +118,11 @@ class HandResult:
         split_pot: bool = False
     ):
 
-
         self.is_winner = True
 
         self.chips_won = chips_won
 
         self.split_pot = split_pot
-
-
 
     # -----------------------------------------------------
 
@@ -156,11 +134,7 @@ class HandResult:
 
         self.split_pot = False
 
-
-
         self.showdown_message = ""
-
-
 
     # =====================================================
     # Hand Classification
@@ -175,7 +149,6 @@ class HandResult:
             "Royal Flush"
         )
 
-
     @property
     def is_pair(self):
 
@@ -184,8 +157,6 @@ class HandResult:
             in
             self.hand_name
         )
-
-
 
     @property
     def has_ai_analysis(self):
@@ -200,14 +171,10 @@ class HandResult:
 
         )
 
-
-
     @property
     def lost(self):
 
         return not self.is_winner
-
-
 
     # =====================================================
     # Comparison
@@ -225,12 +192,9 @@ class HandResult:
 
             return NotImplemented
 
-
         # Lower Treys score wins
 
         return self.score < other.score
-
-
 
     # =====================================================
     # Debug
@@ -252,8 +216,6 @@ class HandResult:
 
         )
 
-
-
     # -----------------------------------------------------
 
     def __str__(self):
@@ -266,7 +228,6 @@ class HandResult:
 
         ]
 
-
         if self.win_probability is not None:
 
             text.append(
@@ -275,7 +236,6 @@ class HandResult:
                 f"{self.win_probability:.2%}"
 
             )
-
 
         if self.hand_strength is not None:
 
@@ -286,7 +246,6 @@ class HandResult:
 
             )
 
-
         if self.confidence is not None:
 
             text.append(
@@ -296,7 +255,6 @@ class HandResult:
 
             )
 
-
         if self.is_winner:
 
             text.append(
@@ -304,6 +262,5 @@ class HandResult:
                 f"Winner (+{self.chips_won} chips)"
 
             )
-
 
         return "\n".join(text)

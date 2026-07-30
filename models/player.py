@@ -3,8 +3,6 @@ from models.card import Card
 from models.player_position import PlayerPosition
 from models.player_role import PlayerRole
 
-
-
 class Player:
     """
     Represents a Texas Hold'em player.
@@ -20,8 +18,6 @@ class Player:
     - Statistics
     """
 
-
-
     def __init__(
         self,
         name: str,
@@ -35,14 +31,11 @@ class Player:
                 "Player name is required."
             )
 
-
         if chips < 0:
 
             raise ValueError(
                 "Player chips cannot be negative."
             )
-
-
 
         # ==========================================
         # Identity
@@ -52,14 +45,11 @@ class Player:
 
         self.is_ai = is_ai
 
-
-
         # ==========================================
         # Position + Roles
         # ==========================================
 
         self.position = PlayerPosition.UNKNOWN
-
 
         # Multiple roles possible
         #
@@ -71,23 +61,17 @@ class Player:
 
         self.roles: set[PlayerRole] = set()
 
-
-
         # ==========================================
         # Chips
         # ==========================================
 
         self.chips = chips
 
-
-
         # ==========================================
         # Cards
         # ==========================================
 
         self.hand: list[Card] = []
-
-
 
         # ==========================================
         # Betting
@@ -96,8 +80,6 @@ class Player:
         self.current_bet = 0
 
         self.total_bet = 0
-
-
 
         # ==========================================
         # State
@@ -109,10 +91,7 @@ class Player:
 
         self.eliminated = False
 
-
         self.last_action: Action | None = None
-
-
 
         # ==========================================
         # Statistics
@@ -154,8 +133,6 @@ class Player:
 
         self.clear_roles()
 
-
-
     # --------------------------------------------------
 
     def reset_betting_round(self):
@@ -165,8 +142,6 @@ class Player:
         """
 
         self.current_bet = 0
-
-
 
     # --------------------------------------------------
 
@@ -184,8 +159,6 @@ class Player:
         self.current_bet = 0
 
         self.total_bet = 0
-
-
 
     # ==================================================
     # Roles
@@ -207,8 +180,6 @@ class Player:
 
         self.roles.add(role)
 
-
-
     # --------------------------------------------------
 
     def remove_role(
@@ -217,8 +188,6 @@ class Player:
     ):
 
         self.roles.discard(role)
-
-
 
     # --------------------------------------------------
 
@@ -229,15 +198,11 @@ class Player:
 
         return role in self.roles
 
-
-
     # --------------------------------------------------
 
     def clear_roles(self):
 
         self.roles.clear()
-
-
 
     # --------------------------------------------------
 
@@ -247,8 +212,6 @@ class Player:
             PlayerRole.DEALER
         )
 
-
-
     # --------------------------------------------------
 
     def is_small_blind(self):
@@ -257,8 +220,6 @@ class Player:
             PlayerRole.SMALL_BLIND
         )
 
-
-
     # --------------------------------------------------
 
     def is_big_blind(self):
@@ -266,8 +227,6 @@ class Player:
         return self.has_role(
             PlayerRole.BIG_BLIND
         )
-
-
 
     # ==================================================
     # Cards
@@ -287,10 +246,7 @@ class Player:
                 "Player already has two hole cards."
             )
 
-
         self.hand.append(card)
-
-
 
     # --------------------------------------------------
 
@@ -298,15 +254,11 @@ class Player:
 
         self.hand.clear()
 
-
-
     # --------------------------------------------------
 
     def has_cards(self):
 
         return len(self.hand) == 2
-
-
 
     # --------------------------------------------------
 
@@ -315,7 +267,6 @@ class Player:
         if not self.hand:
 
             return "(No Cards)"
-
 
         return " ".join(
 
@@ -338,8 +289,6 @@ class Player:
 
         self.position = position
 
-
-
     # --------------------------------------------------
 
     def is_button(self):
@@ -353,8 +302,6 @@ class Player:
             PlayerPosition.BUTTON
 
         )
-
-
 
     # ==================================================
     # Actions
@@ -370,8 +317,6 @@ class Player:
 
         self.last_action = action
 
-
-
     # --------------------------------------------------
 
     def fold(self):
@@ -380,15 +325,11 @@ class Player:
 
         self.last_action = Action.FOLD
 
-
-
     # --------------------------------------------------
 
     def check(self):
 
         self.last_action = Action.CHECK
-
-
 
     # --------------------------------------------------
 
@@ -396,23 +337,17 @@ class Player:
 
         self.last_action = Action.CALL
 
-
-
     # --------------------------------------------------
 
     def bet(self):
 
         self.last_action = Action.BET
 
-
-
     # --------------------------------------------------
 
     def raise_bet(self):
 
         self.last_action = Action.RAISE
-
-
 
     # ==================================================
     # Betting
@@ -434,12 +369,9 @@ class Player:
                 "Bet amount cannot be negative."
             )
 
-
         if amount == 0:
 
             return 0
-
-
 
         actual_amount = min(
 
@@ -449,27 +381,17 @@ class Player:
 
         )
 
-
-
         self.chips -= actual_amount
-
 
         self.current_bet += actual_amount
 
-
         self.total_bet += actual_amount
-
-
 
         if self.chips == 0:
 
             self.all_in = True
 
-
-
         return actual_amount
-
-
 
     # --------------------------------------------------
 
@@ -487,13 +409,9 @@ class Player:
                 "Cannot win negative chips."
             )
 
-
         self.chips += amount
 
-
         self.total_profit += amount
-
-
 
     # --------------------------------------------------
 
@@ -511,10 +429,7 @@ class Player:
                 "Cannot lose negative chips."
             )
 
-
         self.total_profit -= amount
-
-
 
     # --------------------------------------------------
 
@@ -524,7 +439,6 @@ class Player:
         """
 
         self.last_action = Action.ALL_IN
-
 
         return self.place_bet(
 
@@ -551,8 +465,6 @@ class Player:
 
         )
 
-
-
     # --------------------------------------------------
 
     def can_act(self) -> bool:
@@ -574,8 +486,6 @@ class Player:
 
         )
 
-
-
     # --------------------------------------------------
 
     def is_all_in(self) -> bool:
@@ -585,15 +495,11 @@ class Player:
 
         return self.all_in
 
-
-
     # --------------------------------------------------
 
     def is_folded(self) -> bool:
 
         return self.folded
-
-
 
     # --------------------------------------------------
 
@@ -604,15 +510,11 @@ class Player:
 
         return self.eliminated
 
-
-
     # --------------------------------------------------
 
     def has_chips(self) -> bool:
 
         return self.chips > 0
-
-
 
     # ==================================================
     # Betting Helpers
@@ -626,8 +528,6 @@ class Player:
 
         return self.chips
 
-
-
     # --------------------------------------------------
 
     @property
@@ -638,8 +538,6 @@ class Player:
         """
 
         return self.total_bet
-
-
 
     # --------------------------------------------------
 
@@ -659,8 +557,6 @@ class Player:
 
         )
 
-
-
     # ==================================================
     # Tournament
     # ==================================================
@@ -672,8 +568,6 @@ class Player:
 
         self.eliminated = True
 
-
-
     # ==================================================
     # Statistics
     # ==================================================
@@ -684,8 +578,6 @@ class Player:
         """
 
         self.hands_played += 1
-
-
 
     # --------------------------------------------------
 
@@ -699,8 +591,6 @@ class Player:
 
         self.hands_won += amount
 
-
-
     # --------------------------------------------------
 
     @property
@@ -709,7 +599,6 @@ class Player:
         if self.hands_played == 0:
 
             return 0.0
-
 
         return (
 
@@ -720,8 +609,6 @@ class Player:
             self.hands_played
 
         )
-
-
 
     # --------------------------------------------------
 
@@ -757,8 +644,6 @@ class Player:
 
         )
 
-
-
     # --------------------------------------------------
 
     def __str__(self):
@@ -772,8 +657,6 @@ class Player:
             else "Human"
 
         )
-
-
 
         roles = ", ".join(
 
@@ -789,13 +672,9 @@ class Player:
 
         )
 
-
-
         if not roles:
 
             roles = "None"
-
-
 
         return (
 

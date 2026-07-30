@@ -2,7 +2,6 @@ from models.card import Card, Suit, Rank
 
 from engine.evaluator import HandEvaluator
 
-
 def card(
     rank,
     suit
@@ -16,11 +15,9 @@ def card(
         rank
     )
 
-
 def test_evaluator():
 
     evaluator = HandEvaluator()
-
 
     # ==================================================
     # High Card
@@ -50,10 +47,7 @@ def test_evaluator():
         result.hand_name
     )
 
-
     assert result.hand_name == "High Card"
-
-
 
     # ==================================================
     # Pair
@@ -78,16 +72,12 @@ def test_evaluator():
 
     )
 
-
     print(
         "Pair:",
         result.hand_name
     )
 
-
     assert result.hand_name == "Pair"
-
-
 
     # ==================================================
     # Straight
@@ -112,16 +102,12 @@ def test_evaluator():
 
     )
 
-
     print(
         "Straight:",
         result.hand_name
     )
 
-
     assert result.hand_name == "Straight"
-
-
 
     # ==================================================
     # Flush
@@ -146,16 +132,12 @@ def test_evaluator():
 
     )
 
-
     print(
         "Flush:",
         result.hand_name
     )
 
-
     assert result.hand_name == "Flush"
-
-
 
     # ==================================================
     # Full House
@@ -180,20 +162,16 @@ def test_evaluator():
 
     )
 
-
     print(
         "Full House:",
         result.hand_name
     )
 
-
     assert result.hand_name == "Full House"
-
 
     print(
         "\n========== EVALUATOR TEST PASSED =========="
     )
-
 
 if __name__ == "__main__":
 

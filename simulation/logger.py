@@ -1,37 +1,12 @@
+import concurrent.futures
 import os
-
 import json
-
 from simulation.hand_history import HandHistory
-
-
-
-
 
 class GameLogger:
     """
-    Poker game event logger.
-
-    Responsibilities
-    ----------------
-    • Create hand records
-    • Record player actions
-    • Record cards
-    • Record results
-    • Save hand histories
-    • Load saved histories
-
-
-    Does NOT
-    --------
-    • Decide poker actions
-    • Modify game rules
-    • Control AI
+    Poker game event logger with multi-threaded asynchronous disk saving.
     """
-
-
-
-
 
     def __init__(
         self,
@@ -39,32 +14,14 @@ class GameLogger:
     ):
 
         self.current_hand = None
-
-
         self.history = []
-
-
         self.save_directory = save_directory
-
-
-
-
-
-        # ======================================
-        # Create Storage Directory
-        # ======================================
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
         os.makedirs(
-
             self.save_directory,
-
             exist_ok=True
-
         )
-
-
-
-
 
     # ==========================================
     # Start Hand
@@ -81,13 +38,7 @@ class GameLogger:
         Create new hand history.
         """
 
-
-
         self.current_hand = HandHistory()
-
-
-
-
 
         self.current_hand.set_blinds(
 
@@ -97,22 +48,13 @@ class GameLogger:
 
         )
 
-
-
-
-
         self.current_hand.dealer_position = (
 
             dealer_position
 
         )
 
-
-
-
-
         for player in players:
-
 
             self.current_hand.add_player(
 
@@ -120,15 +62,7 @@ class GameLogger:
 
             )
 
-
-
-
-
         return self.current_hand
-
-
-
-
 
     # ==========================================
     # Get Current Hand
@@ -140,8 +74,6 @@ class GameLogger:
         """
         Return active hand.
         """
-
-
 
         return self.current_hand
     
@@ -160,8 +92,6 @@ class GameLogger:
         Record poker action.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -169,10 +99,6 @@ class GameLogger:
                 "No active hand to log."
 
             )
-
-
-
-
 
         self.current_hand.record_action(
 
@@ -185,10 +111,6 @@ class GameLogger:
             street
 
         )
-
-
-
-
 
     # ==========================================
     # Record Hole Cards
@@ -203,8 +125,6 @@ class GameLogger:
         Record player's hole cards.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -213,10 +133,6 @@ class GameLogger:
 
             )
 
-
-
-
-
         self.current_hand.record_hole_cards(
 
             player,
@@ -224,10 +140,6 @@ class GameLogger:
             cards
 
         )
-
-
-
-
 
     # ==========================================
     # Record Community Cards
@@ -241,8 +153,6 @@ class GameLogger:
         Record flop, turn and river cards.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -251,19 +161,11 @@ class GameLogger:
 
             )
 
-
-
-
-
         self.current_hand.add_community_cards(
 
             cards
 
         )
-
-
-
-
 
     # ==========================================
     # Update Pot
@@ -277,8 +179,6 @@ class GameLogger:
         Record current pot size.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -287,19 +187,11 @@ class GameLogger:
 
             )
 
-
-
-
-
         self.current_hand.update_pot(
 
             pot
 
         )
-
-
-
-
 
     # ==========================================
     # Record Winner
@@ -313,8 +205,6 @@ class GameLogger:
         Store hand winner.
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -323,107 +213,45 @@ class GameLogger:
 
             )
 
-
-
-
-
         self.current_hand.set_winner(
 
             player
 
         )
 
-
-
-
-
     # ==========================================
     # Save Single Hand
     # ==========================================
 
+    def _write_json_file(self, path, data_dict):
+        try:
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump(data_dict, file, indent=4, default=str)
+        except Exception:
+            pass
+
     def save_hand(
         self,
-        hand=None
+        hand=None,
+        async_save=True
     ):
         """
-        Save one hand history as JSON.
-
-        Output:
-
-        data/hand_history/
-            hand_<id>.json
+        Save one hand history as JSON using background thread pool.
         """
-
-
-
         if hand is None:
-
             hand = self.current_hand
 
-
-
-
-
         if hand is None:
+            raise ValueError("No hand available to save.")
 
-            raise ValueError(
+        file_name = f"hand_{hand.hand_id}.json"
+        path = os.path.join(self.save_directory, file_name)
+        data_dict = hand.to_dict()
 
-                "No hand available to save."
-
-            )
-
-
-
-
-
-        file_name = (
-
-            f"hand_{hand.hand_id}.json"
-
-        )
-
-
-
-
-
-        path = os.path.join(
-
-            self.save_directory,
-
-            file_name
-
-        )
-
-
-
-
-
-        with open(
-
-            path,
-
-            "w",
-
-            encoding="utf-8"
-
-        ) as file:
-
-
-            json.dump(
-
-                hand.to_dict(),
-
-                file,
-
-                indent=4,
-
-                default=str
-
-            )
-
-
-
-
+        if async_save:
+            self._executor.submit(self._write_json_file, path, data_dict)
+        else:
+            self._write_json_file(path, data_dict)
 
         return path
     
@@ -445,8 +273,6 @@ class GameLogger:
         - JSON storage
         """
 
-
-
         if self.current_hand is None:
 
             raise ValueError(
@@ -455,35 +281,19 @@ class GameLogger:
 
             )
 
-
-
-
-
         self.current_hand.update_final_stacks(
 
             players
 
         )
 
-
-
-
-
         self.current_hand.complete()
-
-
-
-
 
         self.history.append(
 
             self.current_hand
 
         )
-
-
-
-
 
         # ======================================
         # Save Permanently
@@ -495,25 +305,11 @@ class GameLogger:
 
         )
 
-
-
-
-
         finished_hand = self.current_hand
-
-
 
         self.current_hand = None
 
-
-
-
-
         return finished_hand
-
-
-
-
 
     # ==========================================
     # Save All History
@@ -532,8 +328,6 @@ class GameLogger:
         - training
         """
 
-
-
         path = os.path.join(
 
             self.save_directory,
@@ -542,23 +336,13 @@ class GameLogger:
 
         )
 
-
-
-
-
         data = [
-
 
             hand.to_dict()
 
             for hand in self.history
 
-
         ]
-
-
-
-
 
         with open(
 
@@ -569,7 +353,6 @@ class GameLogger:
             encoding="utf-8"
 
         ) as file:
-
 
             json.dump(
 
@@ -583,15 +366,7 @@ class GameLogger:
 
             )
 
-
-
-
-
         return path
-
-
-
-
 
     # ==========================================
     # Load History
@@ -604,7 +379,6 @@ class GameLogger:
         """
         Load saved hand histories.
 
-
         Parameters
         ----------
         as_objects:
@@ -612,8 +386,6 @@ class GameLogger:
 
             True -> return HandHistory objects
         """
-
-
 
         path = os.path.join(
 
@@ -623,17 +395,9 @@ class GameLogger:
 
         )
 
-
-
-
-
         if not os.path.exists(path):
 
             return []
-
-
-
-
 
         with open(
 
@@ -645,34 +409,17 @@ class GameLogger:
 
         ) as file:
 
-
             data = json.load(file)
-
-
-
-
 
         if not as_objects:
 
-
             return data
-
-
-
-
 
         histories = []
 
-
-
-
-
         for item in data:
 
-
             hand = HandHistory()
-
-
 
             hand.from_dict(
 
@@ -680,23 +427,13 @@ class GameLogger:
 
             )
 
-
-
             histories.append(
 
                 hand
 
             )
 
-
-
-
-
         return histories
-
-
-
-
 
     # ==========================================
     # Get History
@@ -709,13 +446,7 @@ class GameLogger:
         Return completed hands.
         """
 
-
-
         return self.history.copy()
-
-
-
-
 
     # ==========================================
     # Get Last Hand
@@ -728,21 +459,11 @@ class GameLogger:
         Return latest completed hand.
         """
 
-
-
         if not self.history:
 
             return None
 
-
-
-
-
         return self.history[-1]
-
-
-
-
 
     # ==========================================
     # Clear Logger
@@ -757,16 +478,9 @@ class GameLogger:
         Does not delete files.
         """
 
-
-
         self.current_hand = None
 
-
         self.history.clear()
-
-
-
-
 
     # ==========================================
     # Profile
@@ -779,16 +493,11 @@ class GameLogger:
         Logger information.
         """
 
-
-
         return {
-
 
             "saved_directory":
 
                 self.save_directory,
-
-
 
             "completed_hands":
 
@@ -798,17 +507,11 @@ class GameLogger:
 
                 ),
 
-
-
             "active_hand":
 
                 self.current_hand is not None
 
         }
-
-
-
-
 
     # ==========================================
     # Debug
@@ -823,10 +526,6 @@ class GameLogger:
             "Poker Game Logger"
 
         )
-
-
-
-
 
     def __repr__(
         self

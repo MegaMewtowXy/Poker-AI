@@ -1,7 +1,5 @@
 from enum import Enum
 
-
-
 class OpponentType(Enum):
     """
     Opponent playing styles.
@@ -19,10 +17,6 @@ class OpponentType(Enum):
 
     CALLING_STATION = "calling_station"
 
-
-
-
-
 class OpponentModel:
     """
     Learns opponent behaviour.
@@ -39,16 +33,12 @@ class OpponentModel:
     - Control betting
     """
 
-
-
     def __init__(
         self,
         opponent_name: str
     ):
 
         self.name = opponent_name
-
-
 
         # ======================================
         # Hand Statistics
@@ -59,8 +49,6 @@ class OpponentModel:
         self.hands_entered = 0
 
         self.preflop_raises = 0
-
-
 
         # ======================================
         # Action Statistics
@@ -74,8 +62,6 @@ class OpponentModel:
 
         self.total_raises = 0
 
-
-
         # ======================================
         # Advanced Statistics
         # ======================================
@@ -88,15 +74,18 @@ class OpponentModel:
 
         self.total_raise_amount = 0
 
-
-
         # ======================================
         # Tracking
         # ======================================
 
         self.observations = 0
 
-
+        # Multi-Street Action Tracking
+        self.street_actions = {
+            "flop": {"bets": 0, "calls": 0, "folds": 0, "raises": 0},
+            "turn": {"bets": 0, "calls": 0, "folds": 0, "raises": 0},
+            "river": {"bets": 0, "calls": 0, "folds": 0, "raises": 0}
+        }
 
     # ==========================================
     # Recording Actions
@@ -111,8 +100,6 @@ class OpponentModel:
 
         self.hands_played += 1
 
-
-
     def record_entry(
         self
     ):
@@ -121,8 +108,6 @@ class OpponentModel:
         """
 
         self.hands_entered += 1
-
-
 
     def record_raise(
         self,
@@ -138,8 +123,6 @@ class OpponentModel:
 
         self.observations += 1
 
-
-
     def record_preflop_raise(
         self
     ):
@@ -149,8 +132,6 @@ class OpponentModel:
 
         self.preflop_raises += 1
 
-
-
     def record_three_bet(
         self
     ):
@@ -159,8 +140,6 @@ class OpponentModel:
         """
 
         self.three_bets += 1
-
-
 
     def record_bet(
         self
@@ -173,8 +152,6 @@ class OpponentModel:
 
         self.observations += 1
 
-
-
     def record_call(
         self
     ):
@@ -185,8 +162,6 @@ class OpponentModel:
         self.total_calls += 1
 
         self.observations += 1
-
-
 
     def record_fold(
         self
@@ -199,8 +174,6 @@ class OpponentModel:
 
         self.observations += 1
 
-
-
     def record_fold_to_raise(
         self
     ):
@@ -210,8 +183,6 @@ class OpponentModel:
 
         self.fold_to_raise += 1
 
-
-
     def record_showdown(
         self
     ):
@@ -220,6 +191,15 @@ class OpponentModel:
         """
 
         self.showdowns += 1
+
+    def record_street_action(self, street: str, action: str):
+        """
+        Record action specific to a street ('flop', 'turn', 'river').
+        """
+        st = str(street).lower()
+        act = str(action).lower()
+        if st in self.street_actions and act in self.street_actions[st]:
+            self.street_actions[st][act] += 1
         # ==========================================
     # Statistics
     # ==========================================
@@ -234,7 +214,6 @@ class OpponentModel:
         if self.hands_played == 0:
 
             return 0.0
-
 
         return round(
 
@@ -256,8 +235,6 @@ class OpponentModel:
 
         )
 
-
-
     # ------------------------------------------
 
     def pfr(
@@ -270,7 +247,6 @@ class OpponentModel:
         if self.hands_played == 0:
 
             return 0.0
-
 
         return round(
 
@@ -291,8 +267,6 @@ class OpponentModel:
             2
 
         )
-
-
 
     # ------------------------------------------
 
@@ -315,7 +289,6 @@ class OpponentModel:
 
         )
 
-
         if self.total_calls == 0:
 
             return round(
@@ -325,7 +298,6 @@ class OpponentModel:
                 2
 
             )
-
 
         return round(
 
@@ -338,8 +310,6 @@ class OpponentModel:
             2
 
         )
-
-
 
     # ------------------------------------------
 
@@ -372,11 +342,9 @@ class OpponentModel:
 
         )
 
-
         if total_actions == 0:
 
             return 0.0
-
 
         return round(
 
@@ -406,8 +374,6 @@ class OpponentModel:
 
         )
 
-
-
     # ------------------------------------------
 
     def fold_percentage(
@@ -435,11 +401,9 @@ class OpponentModel:
 
         )
 
-
         if total_actions == 0:
 
             return 0.0
-
 
         return round(
 
@@ -461,8 +425,6 @@ class OpponentModel:
 
         )
 
-
-
     # ------------------------------------------
 
     def three_bet_percentage(
@@ -475,7 +437,6 @@ class OpponentModel:
         if self.hands_played == 0:
 
             return 0.0
-
 
         return round(
 
@@ -497,8 +458,6 @@ class OpponentModel:
 
         )
 
-
-
     # ------------------------------------------
 
     def average_raise_size(
@@ -512,7 +471,6 @@ class OpponentModel:
 
             return 0
 
-
         return round(
 
             self.total_raise_amount
@@ -524,8 +482,6 @@ class OpponentModel:
             2
 
         )
-
-
 
     # ------------------------------------------
 
@@ -539,7 +495,6 @@ class OpponentModel:
         if self.hands_played == 0:
 
             return 0.0
-
 
         return round(
 
@@ -561,8 +516,6 @@ class OpponentModel:
 
         )
 
-
-
     # ==========================================
     # Classification
     # ==========================================
@@ -578,13 +531,9 @@ class OpponentModel:
 
             return OpponentType.UNKNOWN
 
-
-
         vpip = self.vpip()
 
         aggression = self.aggression_factor()
-
-
 
         if (
 
@@ -598,35 +547,23 @@ class OpponentModel:
 
             return OpponentType.CALLING_STATION
 
-
-
         if vpip >= 35:
-
 
             if aggression >= 1.5:
 
                 return OpponentType.LOOSE_AGGRESSIVE
 
-
             return OpponentType.LOOSE_PASSIVE
 
-
-
         if vpip < 25:
-
 
             if aggression >= 1.5:
 
                 return OpponentType.TIGHT_AGGRESSIVE
 
-
             return OpponentType.TIGHT_PASSIVE
 
-
-
         return OpponentType.UNKNOWN
-
-
 
     # ==========================================
     # Threat Level
@@ -644,46 +581,31 @@ class OpponentModel:
 
         threat = 5
 
-
         style = self.classify()
-
-
 
         if style == OpponentType.LOOSE_AGGRESSIVE:
 
             threat += 3
 
-
-
         elif style == OpponentType.TIGHT_AGGRESSIVE:
 
             threat += 2
-
-
 
         elif style == OpponentType.CALLING_STATION:
 
             threat += 1
 
-
-
         elif style == OpponentType.LOOSE_PASSIVE:
 
             threat -= 1
-
-
 
         elif style == OpponentType.TIGHT_PASSIVE:
 
             threat -= 2
 
-
-
         if self.three_bet_percentage() > 8:
 
             threat += 1
-
-
 
         return max(
 
@@ -698,8 +620,6 @@ class OpponentModel:
             )
 
         )
-
-
 
     # ==========================================
     # Confidence
@@ -727,8 +647,6 @@ class OpponentModel:
 
         )
 
-
-
     # ==========================================
     # Profiles
     # ==========================================
@@ -742,59 +660,47 @@ class OpponentModel:
 
         return {
 
-
             "name":
 
                 self.name,
-
 
             "hands_played":
 
                 self.hands_played,
 
-
             "VPIP":
 
                 self.vpip(),
-
 
             "PFR":
 
                 self.pfr(),
 
-
             "aggression":
 
                 self.aggression_factor(),
-
 
             "aggression_frequency":
 
                 self.aggression_frequency(),
 
-
             "fold_percentage":
 
                 self.fold_percentage(),
-
 
             "3bet_percentage":
 
                 self.three_bet_percentage(),
 
-
             "average_raise_size":
 
                 self.average_raise_size(),
-
 
             "showdown_frequency":
 
                 self.showdown_frequency()
 
         }
-
-
 
     # ------------------------------------------
 
@@ -807,27 +713,21 @@ class OpponentModel:
 
         return {
 
-
             **self.profile(),
-
 
             "type":
 
                 self.classify().value,
 
-
             "threat_level":
 
                 self.threat_level(),
-
 
             "confidence":
 
                 self.confidence()
 
         }
-
-
 
     # ==========================================
     # Debug
@@ -842,8 +742,6 @@ class OpponentModel:
             f"{self.name})"
 
         )
-
-
 
     def __str__(self):
 

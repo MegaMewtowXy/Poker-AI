@@ -2,8 +2,6 @@ import random
 
 from models.card import Card, Suit, Rank
 
-
-
 class Deck:
     """
     Represents a standard 52-card poker deck.
@@ -17,15 +15,11 @@ class Deck:
     • Support Monte Carlo simulation
     """
 
-
-
     def __init__(self):
 
         self.cards: list[Card] = []
 
         self.reset()
-
-
 
     # =====================================================
     # Deck Management
@@ -51,8 +45,6 @@ class Deck:
             for rank in Rank
 
         ]
-
-
 
     # -----------------------------------------------------
 
@@ -84,8 +76,6 @@ class Deck:
 
             )
 
-
-
     # =====================================================
     # Card Operations
     # =====================================================
@@ -101,10 +91,7 @@ class Deck:
                 "Cannot deal from empty deck."
             )
 
-
         return self.cards.pop()
-
-
 
     # -----------------------------------------------------
 
@@ -122,13 +109,11 @@ class Deck:
                 "Count cannot be negative."
             )
 
-
         if count > len(self.cards):
 
             raise RuntimeError(
                 "Not enough cards."
             )
-
 
         return [
 
@@ -138,8 +123,6 @@ class Deck:
 
         ]
 
-
-
     # -----------------------------------------------------
 
     def burn(self):
@@ -148,8 +131,6 @@ class Deck:
         """
 
         self.deal()
-
-
 
     # -----------------------------------------------------
 
@@ -170,8 +151,6 @@ class Deck:
             if card in self.cards:
 
                 self.cards.remove(card)
-
-
 
     # -----------------------------------------------------
 
@@ -200,8 +179,6 @@ class Deck:
 
         return new_deck
 
-
-
     # -----------------------------------------------------
 
     def clone(self):
@@ -210,8 +187,6 @@ class Deck:
         """
 
         return self.copy()
-
-
 
     # -----------------------------------------------------
 
@@ -232,13 +207,11 @@ class Deck:
                 "Count cannot be negative."
             )
 
-
         if count > len(self.cards):
 
             raise RuntimeError(
                 "Not enough cards available."
             )
-
 
         return random.sample(
 
@@ -248,8 +221,6 @@ class Deck:
 
         )
 
-
-
     # -----------------------------------------------------
 
     def remaining_cards(self) -> list[Card]:
@@ -258,8 +229,6 @@ class Deck:
         """
 
         return self.cards.copy()
-
-
 
     # =====================================================
     # Information
@@ -272,8 +241,6 @@ class Deck:
             self.cards
 
         )
-
-
 
     # -----------------------------------------------------
 
@@ -289,8 +256,6 @@ class Deck:
 
         )
 
-
-
     # -----------------------------------------------------
 
     def __len__(self):
@@ -301,8 +266,6 @@ class Deck:
 
         )
 
-
-
     # -----------------------------------------------------
 
     def __iter__(self):
@@ -312,8 +275,6 @@ class Deck:
             self.cards
 
         )
-
-
 
     # =====================================================
     # Debug
@@ -328,8 +289,6 @@ class Deck:
             f"{len(self.cards)} cards)"
 
         )
-
-
 
     # -----------------------------------------------------
 

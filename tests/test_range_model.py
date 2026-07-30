@@ -1,12 +1,8 @@
 from AI.range_model import RangeModel
 
-
-
 def test_range_model():
 
     print("\n========== RANGE MODEL TEST ==========\n")
-
-
 
     # ======================================
     # Initial Range
@@ -18,7 +14,6 @@ def test_range_model():
 
     )
 
-
     print("Initial Range")
 
     print(
@@ -27,13 +22,9 @@ def test_range_model():
 
     )
 
-
-
     assert model.range["AA"] == 1.0
 
     assert model.range["AK"] == 1.0
-
-
 
     # ======================================
     # UTG Raise Test
@@ -47,7 +38,6 @@ def test_range_model():
 
     )
 
-
     print("\nAfter UTG Raise")
 
     print(
@@ -56,13 +46,9 @@ def test_range_model():
 
     )
 
-
-
     assert model.range["KQ"] < 1.0
 
     assert model.range["bluffs"] < 1.0
-
-
 
     # ======================================
     # Button Raise Test
@@ -74,7 +60,6 @@ def test_range_model():
 
     )
 
-
     button_model.observe_action(
 
         "raise",
@@ -82,7 +67,6 @@ def test_range_model():
         "BUTTON"
 
     )
-
 
     print("\nAfter BUTTON Raise")
 
@@ -92,11 +76,7 @@ def test_range_model():
 
     )
 
-
-
     assert button_model.range["bluffs"] > 0.3
-
-
 
     # ======================================
     # Player Type Adjustment
@@ -108,7 +88,6 @@ def test_range_model():
 
     )
 
-
     lag_model.observe_action(
 
         "raise",
@@ -119,7 +98,6 @@ def test_range_model():
 
     )
 
-
     print("\nLoose Aggressive Adjustment")
 
     print(
@@ -128,11 +106,7 @@ def test_range_model():
 
     )
 
-
-
     assert lag_model.range["bluffs"] > 0.3
-
-
 
     # ======================================
     # 3 Bet Test
@@ -144,13 +118,11 @@ def test_range_model():
 
     )
 
-
     three_bet_model.observe_action(
 
         "3bet"
 
     )
-
 
     print("\nAfter 3Bet")
 
@@ -160,10 +132,7 @@ def test_range_model():
 
     )
 
-
     assert three_bet_model.range["bluffs"] < 0.3
-
-
 
     # ======================================
     # Profile Test
@@ -171,13 +140,9 @@ def test_range_model():
 
     profile = model.profile()
 
-
-
     print("\nProfile")
 
     print(profile)
-
-
 
     assert profile["confidence"] > 0
 
@@ -185,15 +150,11 @@ def test_range_model():
 
     assert profile["range_strength"] > 0
 
-
-
     # ======================================
     # Reset Test
     # ======================================
 
     model.reset()
-
-
 
     print("\nAfter Reset")
 
@@ -203,22 +164,15 @@ def test_range_model():
 
     )
 
-
-
     assert model.range["KQ"] == 0.8
 
     assert model.observations == 0
-
-
 
     print(
 
         "\n========== RANGE MODEL TEST PASSED =========="
 
     )
-
-
-
 
 if __name__ == "__main__":
 
