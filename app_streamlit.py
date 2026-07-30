@@ -1,0 +1,835 @@
+import streamlit as st
+import time
+import random
+
+from engine.game import Game
+from models.action import Action
+from models.card import Card
+from models.street import Street
+from engine.game_state import GameState
+from AI.bot_player import BotPlayer
+from AI.difficulty import Difficulty
+from AI.strategy import Strategy
+from AI.equity import EquityCalculator
+from AI.game_context import GameContext
+from engine.evaluator import HandEvaluator
+from integration.ai_player import AIPlayer
+from models.player import Player
+
+# Page Setup
+st.set_page_config(
+    page_title="Texas Hold'em Poker AI | Web Game",
+    page_icon="♠️",
+    layout="wide"
+)
+
+# Custom High-End Web Aesthetics matching game_screen.py and lobby.py
+st.markdown("""
+<style>
+    .main { background-color: #0b0f19; }
+    
+    .poker-title {
+        text-align: center;
+        color: #f59e0b;
+        font-size: 2.5rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-shadow: 0px 4px 18px rgba(245, 158, 11, 0.4);
+        margin-bottom: 2px;
+    }
+    
+    /* Felt Oval Table Container matching game_screen.py */
+    .felt-table {
+        background: radial-gradient(ellipse at center, #10b981 0%, #0b4f37 70%, #0f172a 100%);
+        border: 14px solid #1e293b;
+        outline: 4px solid #f59e0b;
+        border-radius: 200px;
+        padding: 45px 25px;
+        box-shadow: 0px 18px 45px rgba(0, 0, 0, 0.95), inset 0px 0px 35px rgba(0,0,0,0.65);
+        margin: 15px auto 30px auto;
+        text-align: center;
+        color: white;
+    }
+
+    /* Pot Display */
+    .pot-badge {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: #fef08a;
+        background: rgba(15, 23, 42, 0.95);
+        padding: 10px 32px;
+        border-radius: 30px;
+        border: 2px solid #f59e0b;
+        display: inline-block;
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        margin-bottom: 18px;
+    }
+    
+    /* Card Badges */
+    .card-badge {
+        display: inline-block;
+        background-color: #ffffff;
+        color: #0f172a;
+        font-weight: 900;
+        font-size: 1.45rem;
+        padding: 10px 16px;
+        border-radius: 10px;
+        margin: 4px;
+        box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.6);
+    }
+    .card-red { color: #ef4444 !important; }
+    .card-black { color: #0f172a !important; }
+    .card-back {
+        background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+        color: #f59e0b !important;
+        border: 2px solid #f59e0b;
+    }
+
+    /* Player Seats */
+    .player-seat {
+        background: rgba(15, 23, 42, 0.92);
+        border: 2px solid #334155;
+        border-radius: 16px;
+        padding: 16px 10px;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+    .active-seat-glow {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 25px #10b981 !important;
+    }
+    .winner-seat-glow {
+        border: 3px solid #f59e0b !important;
+        box-shadow: 0 0 35px #f59e0b !important;
+        background: rgba(245, 158, 11, 0.15) !important;
+    }
+    .winner-badge {
+        background-color: #f59e0b;
+        color: #0f172a;
+        font-weight: 900;
+        font-size: 0.8rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+        display: inline-block;
+        margin-bottom: 6px;
+    }
+    .dealer-badge {
+        background-color: #f59e0b;
+        color: #0f172a;
+        font-weight: 900;
+        font-size: 0.75rem;
+        padding: 2px 7px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 6px;
+    }
+    
+    /* AI Brain HUD Box */
+    .hud-box {
+        background: rgba(30, 41, 59, 0.95);
+        border: 2px solid #6366f1;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Winner Banner Box */
+    .winner-banner-box {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(16, 185, 129, 0.25));
+        border: 2px solid #f59e0b;
+        border-radius: 14px;
+        padding: 16px;
+        text-align: center;
+        margin-top: 15px;
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+
+    /* Room Code Box */
+    .room-box {
+        background: rgba(15, 23, 42, 0.95);
+        border: 2px solid #10b981;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+def render_card_html(card):
+    if not card:
+        return '<span class="card-badge card-back">🂠</span>'
+    if hasattr(card, "rank") and hasattr(card, "suit"):
+        rank_str = card.rank.symbol if hasattr(card.rank, "symbol") else str(card.rank)
+        suit_sym = card.suit.symbol if hasattr(card.suit, "symbol") else str(card.suit)
+        is_red = getattr(card, "is_red", False)
+        cls = "card-red" if is_red else "card-black"
+        return f'<span class="card-badge {cls}">{rank_str}{suit_sym}</span>'
+    s = str(card).strip()
+    return f'<span class="card-badge card-black">{s}</span>'
+
+def get_action_badge_html(player, is_winner):
+    if is_winner:
+        return ''
+    
+    last_act = getattr(player, "last_action", None)
+    if not last_act and getattr(player, "folded", False):
+        last_act = Action.FOLD
+        
+    if not last_act:
+        return '<div style="height: 22px;"></div>'
+        
+    act_name = last_act.name if hasattr(last_act, "name") else str(last_act)
+    
+    if act_name == "FOLD":
+        bg_color, text_color = "#ef4444", "#ffffff"
+    elif act_name == "CHECK":
+        bg_color, text_color = "#3b82f6", "#ffffff"
+    elif act_name == "CALL":
+        bg_color, text_color = "#10b981", "#ffffff"
+    elif act_name in ("BET", "RAISE"):
+        bg_color, text_color = "#f59e0b", "#0f172a"
+    elif act_name == "ALL_IN":
+        bg_color, text_color = "#dc2626", "#fef08a"
+    else:
+        bg_color, text_color = "#64748b", "#ffffff"
+
+    return f'<div style="background-color:{bg_color}; color:{text_color}; font-weight:800; font-size:0.75rem; padding:3px 10px; border-radius:12px; display:inline-block; margin-top:4px; letter-spacing:1px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">{act_name}</div>'
+
+def check_and_advance_street(game):
+    if not game or game.state in (GameState.SHOWDOWN, GameState.HAND_COMPLETE):
+        return
+    
+    active_non_folded = [p for p in game.players if not getattr(p, "folded", False)]
+    
+    # 1. Everyone folded except 1 player
+    if len(active_non_folded) <= 1:
+        if active_non_folded:
+            winner = active_non_folded[0]
+            pot_val = game.pot_manager.total_pot()
+            winner.chips += pot_val
+            game.pot_manager.reset()
+            game.state = GameState.HAND_COMPLETE
+            st.session_state.winners_list = [winner.name]
+            st.session_state.winner_banner_text = f"🏆 WINNER: {winner.name} won ${pot_val} (Everyone Folded)!"
+            st.session_state.log_messages.append(f"🏆 {winner.name} won ${pot_val} (Everyone Folded)!")
+        return
+
+    # 2. Advance exactly ONE street per call so community cards render visually
+    #    step-by-step between frames (Flop → Turn → River → Showdown).
+    if not game.betting_round.betting_complete():
+        return
+
+    comm = game.table.community_cards
+    if len(comm) < 3:
+        game.deal_flop()
+        game.betting_round.reset()
+        game.betting_round.set_street(Street.FLOP)
+        game.betting_round.start()
+        st.session_state.log_messages.append("🎴 Flop Dealt")
+    elif len(comm) < 4:
+        game.deal_turn()
+        game.betting_round.reset()
+        game.betting_round.set_street(Street.TURN)
+        game.betting_round.start()
+        st.session_state.log_messages.append("🎴 Turn Dealt")
+    elif len(comm) < 5:
+        game.deal_river()
+        game.betting_round.reset()
+        game.betting_round.set_street(Street.RIVER)
+        game.betting_round.start()
+        st.session_state.log_messages.append("🎴 River Dealt")
+    else:
+        # SHOWDOWN
+        game.state = GameState.SHOWDOWN
+        pot_val = game.pot_manager.total_pot()
+        res = game.showdown.resolve(game.players, game.table.community_cards, game.pot_manager)
+        
+        pots = res.get("pots", []) if isinstance(res, dict) else []
+        results_dict = res.get("results", {}) if isinstance(res, dict) else {}
+        all_winners = res.get("winners", []) if isinstance(res, dict) else []
+        
+        main_pot_winners = []
+        if pots:
+            biggest_pot_info = max(pots, key=lambda p_info: getattr(p_info.get("pot"), "amount", 0), default=pots[0])
+            main_pot_winners = biggest_pot_info.get("winners", [])
+        
+        if not main_pot_winners:
+            main_pot_winners = all_winners
+
+        unique_winners = []
+        seen = set()
+        for w in main_pot_winners:
+            w_name = w.name if hasattr(w, "name") else str(w)
+            if w_name not in seen:
+                seen.add(w_name)
+                unique_winners.append(w)
+
+        if unique_winners:
+            st.session_state.winners_list = [w.name if hasattr(w, "name") else str(w) for w in unique_winners]
+            w_names = ", ".join(st.session_state.winners_list)
+            
+            w_res = results_dict.get(unique_winners[0])
+            hand_desc = f" ({w_res.hand_name})" if w_res and hasattr(w_res, "hand_name") else ""
+            
+            if len(unique_winners) > 1:
+                banner = f"🤝 SPLIT POT: {w_names} tied and split ${pot_val}{hand_desc}!"
+            else:
+                banner = f"🏆 WINNER: {w_names} won ${pot_val}{hand_desc}!"
+            
+            st.session_state.winner_banner_text = banner
+            st.session_state.log_messages.append(banner)
+
+def execute_player_action(game, player, action, amount=0):
+    if not player or not hasattr(player, "can_act") or not player.can_act():
+        return
+    
+    current_high = getattr(game.table, "current_bet", 0)
+    
+    try:
+        if action == Action.FOLD:
+            game.betting_engine.fold(player)
+        elif action == Action.CHECK:
+            try:
+                game.betting_engine.check(player)
+            except Exception:
+                game.betting_engine.fold(player)
+        elif action == Action.CALL:
+            try:
+                game.betting_engine.call(player)
+            except Exception:
+                game.betting_engine.fold(player)
+        elif action in (Action.BET, Action.RAISE):
+            if amount >= player.chips:
+                game.betting_engine.all_in(player)
+            elif current_high > 0 or action == Action.RAISE:
+                try:
+                    game.betting_engine.raise_bet(player, amount)
+                except Exception:
+                    game.betting_engine.all_in(player)
+            else:
+                try:
+                    game.betting_engine.bet(player, amount)
+                except Exception:
+                    game.betting_engine.all_in(player)
+        elif action == Action.ALL_IN:
+            game.betting_engine.all_in(player)
+    except Exception:
+        try:
+            game.betting_engine.fold(player)
+        except Exception:
+            pass
+
+    game.betting_round.next_player()
+    check_and_advance_street(game)
+
+def start_game_hand(game_obj):
+    st.session_state.winners_list = []
+    st.session_state.winner_banner_text = ""
+    game_obj.start_hand()
+    game_obj.betting_round.set_street(Street.PRE_FLOP)
+    game_obj.betting_round.start()
+
+# State Setup
+if "view" not in st.session_state:
+    st.session_state.view = "lobby"
+    st.session_state.num_seats = 2
+    st.session_state.starting_chips = 1000
+    st.session_state.small_blind = 10
+    st.session_state.big_blind = 20
+    st.session_state.auto_rebuy = True
+    st.session_state.ai_paused = False
+    st.session_state.show_hud = True
+    st.session_state.show_rankings = False
+    st.session_state.show_cards_showdown = True
+    st.session_state.room_code = ""
+    st.session_state.my_player_name = "You (Human)"
+    st.session_state.log_messages = []
+    st.session_state.hand_count = 1
+    st.session_state.winners_list = []
+    st.session_state.winner_banner_text = ""
+    
+    st.session_state.seat_configs = [
+        {"name": "You (Human)", "is_ai": False, "difficulty": "HARD", "strategy": "BALANCED"},
+        {"name": "Player 2 (Human)", "is_ai": False, "difficulty": "HARD", "strategy": "BALANCED"},
+        {"name": "Bot Alpha", "is_ai": True, "difficulty": "HARD", "strategy": "TIGHT_AGGRESSIVE"},
+        {"name": "Bot Bravo", "is_ai": True, "difficulty": "MEDIUM", "strategy": "LOOSE_AGGRESSIVE"},
+        {"name": "Bot Charlie", "is_ai": True, "difficulty": "EASY", "strategy": "CALLING_STATION"},
+        {"name": "Bot Delta", "is_ai": True, "difficulty": "EXPERT", "strategy": "TIGHT_PASSIVE"},
+        {"name": "Bot Echo", "is_ai": True, "difficulty": "MEDIUM", "strategy": "BALANCED"},
+        {"name": "Bot Foxtrot", "is_ai": True, "difficulty": "HARD", "strategy": "BALANCED"},
+        {"name": "Bot Golf", "is_ai": True, "difficulty": "EASY", "strategy": "CALLING_STATION"}
+    ]
+
+equity_calc = EquityCalculator()
+evaluator = HandEvaluator()
+
+# ==============================================================================
+# LOBBY VIEW
+# ==============================================================================
+if st.session_state.view == "lobby":
+    st.markdown('<div class="poker-title">♠️ TEXAS HOLD\'EM POKER LOBBY ♠️</div>', unsafe_allow_html=True)
+    st.caption("<div style='text-align:center;'>Select Game Mode, Configure Seats, AI Personalities, Blinds & Multi-Player Rooms</div>", unsafe_allow_html=True)
+    st.markdown("---")
+
+    lobby_tab1, lobby_tab2, lobby_tab3 = st.tabs([
+        "🎮 LOCAL GAME / BOT BATTLE",
+        "🌐 HOST MULTIPLAYER ROOM",
+        "🚪 JOIN MULTIPLAYER ROOM"
+    ])
+
+    # --------------------------------------------------------------------------
+    # TAB 1: LOCAL GAME & BOT BATTLE SETUP
+    # --------------------------------------------------------------------------
+    with lobby_tab1:
+        st.markdown("##### ⚡ Quick Table Size Presets:")
+        q1, q2, q3, q4 = st.columns(4)
+        with q1:
+            if st.button("👥 2 Players (Heads Up)", use_container_width=True):
+                st.session_state.num_seats = 2
+                st.session_state.num_seats_input = 2
+                st.rerun()
+        with q2:
+            if st.button("👨‍👩‍👧‍👦 4 Players", use_container_width=True):
+                st.session_state.num_seats = 4
+                st.session_state.num_seats_input = 4
+                st.rerun()
+        with q3:
+            if st.button("♠️ 6 Players (6-Max)", use_container_width=True):
+                st.session_state.num_seats = 6
+                st.session_state.num_seats_input = 6
+                st.rerun()
+        with q4:
+            if st.button("🏟️ 9 Players (Full Ring)", use_container_width=True):
+                st.session_state.num_seats = 9
+                st.session_state.num_seats_input = 9
+                st.rerun()
+
+        st.markdown("---")
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            if "num_seats_input" not in st.session_state:
+                st.session_state.num_seats_input = st.session_state.num_seats
+
+            num_s = st.number_input("Number of Seats (2 to 9)", min_value=2, max_value=9, step=1, key="num_seats_input")
+            st.session_state.num_seats = int(num_s)
+        with c2:
+            st.session_state.starting_chips = st.select_slider("Starting Stack ($)", options=[500, 1000, 2000, 5000, 10000], value=st.session_state.starting_chips)
+        with c3:
+            b_choice = st.selectbox("Blinds ($SB / $BB)", options=["$10 / $20", "$25 / $50", "$50 / $100"])
+            st.session_state.small_blind, st.session_state.big_blind = (10, 20) if "$10" in b_choice else ((25, 50) if "$25" in b_choice else (50, 100))
+        with c4:
+            st.session_state.auto_rebuy = st.checkbox("🔄 Auto-Rebuy When Broke", value=st.session_state.auto_rebuy)
+
+        st.markdown(f"### 🪑 Configuring {st.session_state.num_seats} Seats")
+
+        while len(st.session_state.seat_configs) < st.session_state.num_seats:
+            idx = len(st.session_state.seat_configs) + 1
+            st.session_state.seat_configs.append({"name": f"Bot {idx}", "is_ai": True, "difficulty": "MEDIUM", "strategy": "BALANCED"})
+
+        cols_per_row = 3
+        active_seats = st.session_state.seat_configs[:st.session_state.num_seats]
+        for i in range(0, len(active_seats), cols_per_row):
+            row_cols = st.columns(min(cols_per_row, len(active_seats) - i))
+            for j, col in enumerate(row_cols):
+                idx = i + j
+                cfg = active_seats[idx]
+                with col:
+                    st.markdown(f"#### Seat #{idx+1}")
+                    cfg["name"] = st.text_input("Player Name", value=cfg["name"], key=f"s_name_{idx}")
+                    p_type = st.radio("Player Type", ["HUMAN", "AI BOT"], index=1 if cfg["is_ai"] else 0, key=f"s_type_{idx}", horizontal=True)
+                    cfg["is_ai"] = (p_type == "AI BOT")
+                    
+                    if cfg["is_ai"]:
+                        cfg["difficulty"] = st.selectbox("AI Difficulty", ["EASY", "MEDIUM", "HARD", "EXPERT"], index=["EASY", "MEDIUM", "HARD", "EXPERT"].index(cfg.get("difficulty", "MEDIUM")), key=f"s_diff_{idx}")
+                        cfg["strategy"] = st.selectbox("Playstyle", ["BALANCED", "TIGHT_AGGRESSIVE", "LOOSE_AGGRESSIVE", "TIGHT_PASSIVE", "CALLING_STATION"], index=0, key=f"s_strat_{idx}")
+                    st.markdown("---")
+
+        if st.button("🚀 START LOCAL POKER GAME", use_container_width=True):
+            st.session_state.room_code = ""
+            st.session_state.my_player_name = active_seats[0]["name"]
+            
+            player_objs = []
+            for i in range(st.session_state.num_seats):
+                cfg = active_seats[i]
+                if not cfg["is_ai"]:
+                    player_objs.append(Player(name=cfg["name"], chips=st.session_state.starting_chips, is_ai=False))
+                else:
+                    d = getattr(Difficulty, cfg["difficulty"])
+                    s = getattr(Strategy, cfg["strategy"])
+                    bot = BotPlayer(name=cfg["name"], difficulty=d, strategy=s)
+                    player_objs.append(AIPlayer(name=cfg["name"], bot=bot, chips=st.session_state.starting_chips))
+
+            game_obj = Game(players=player_objs)
+            game_obj.table.small_blind = st.session_state.small_blind
+            game_obj.table.big_blind = st.session_state.big_blind
+            start_game_hand(game_obj)
+            
+            st.session_state.game = game_obj
+            st.session_state.view = "game"
+            st.session_state.log_messages = [f"Game started with {st.session_state.num_seats} seats! Hand #1."]
+            st.rerun()
+
+    # --------------------------------------------------------------------------
+    # TAB 2: HOST MULTIPLAYER ROOM
+    # --------------------------------------------------------------------------
+    with lobby_tab2:
+        st.markdown("### 🌐 Host an Online Room")
+        st.caption("Create a multiplayer table and share your Room Code with friends so they can join your room!")
+        
+        if not st.session_state.room_code:
+            st.session_state.room_code = f"PKR-{random.randint(1000, 9999)}"
+
+        st.markdown(f"""<div class="room-box">
+<h3 style="color:#10b981; margin:0;">YOUR HOST ROOM CODE:</h3>
+<h1 style="color:#f59e0b; font-size:3.5rem; letter-spacing:4px; margin:10px 0;">{st.session_state.room_code}</h1>
+<p style="color:#cbd5e1;">Status: <b style="color:#10b981;">Online & Listening for Connections</b></p>
+</div>""", unsafe_allow_html=True)
+
+        if st.button("🚀 LAUNCH HOSTED ROOM TABLE", use_container_width=True):
+            st.session_state.my_player_name = "Host (You)"
+            p1 = Player(name="Host (You)", chips=st.session_state.starting_chips, is_ai=False)
+            p2 = AIPlayer(name="Bot Alpha", bot=BotPlayer(name="Bot Alpha", difficulty=Difficulty.HARD, strategy=Strategy.TIGHT_AGGRESSIVE), chips=st.session_state.starting_chips)
+            
+            game_obj = Game(players=[p1, p2])
+            game_obj.table.small_blind = st.session_state.small_blind
+            game_obj.table.big_blind = st.session_state.big_blind
+            start_game_hand(game_obj)
+            
+            st.session_state.game = game_obj
+            st.session_state.view = "game"
+            st.session_state.log_messages = [f"Hosted Multiplayer Room {st.session_state.room_code} launched!"]
+            st.rerun()
+
+    # --------------------------------------------------------------------------
+    # TAB 3: JOIN MULTIPLAYER ROOM
+    # --------------------------------------------------------------------------
+    with lobby_tab3:
+        st.markdown("### 🚪 Join a Multiplayer Room")
+        st.caption("Enter the 6-character Room Code provided by the Room Host:")
+        
+        join_code_input = st.text_input("Enter Room Code (e.g. PKR-4892):", placeholder="PKR-XXXX")
+        join_name_input = st.text_input("Your Player Name:", value="Guest (You)")
+        
+        if st.button("🔌 CONNECT & JOIN ROOM", use_container_width=True):
+            if join_code_input.strip():
+                st.session_state.room_code = join_code_input.strip().upper()
+                st.session_state.my_player_name = join_name_input.strip() or "Guest (You)"
+                
+                p1 = Player(name=st.session_state.my_player_name, chips=st.session_state.starting_chips, is_ai=False)
+                p2 = Player(name="Host Player", chips=st.session_state.starting_chips, is_ai=False)
+                
+                game_obj = Game(players=[p1, p2])
+                game_obj.table.small_blind = st.session_state.small_blind
+                game_obj.table.big_blind = st.session_state.big_blind
+                start_game_hand(game_obj)
+                
+                st.session_state.game = game_obj
+                st.session_state.view = "game"
+                st.session_state.log_messages = [f"Connected to Multiplayer Room {st.session_state.room_code}!"]
+                st.rerun()
+            else:
+                st.error("Please enter a valid Room Code!")
+
+# ==============================================================================
+# GAME VIEW
+# ==============================================================================
+elif st.session_state.view == "game":
+    game = st.session_state.game
+    
+    # Auto-advance street if betting round is complete or all active players are All-In
+    check_and_advance_street(game)
+
+    # Pre-compute AI decision BEFORE rendering (so we can show what it chose)
+    # but do NOT rerun yet — we rerun at the very bottom after the full UI renders.
+    curr_p = game.betting_round.current_player_or_none()
+    hand_in_progress = (game.state.name not in ("SHOWDOWN", "HAND_COMPLETE", "WAITING"))
+    is_all_ai_game = all(getattr(p, "is_ai", False) for p in game.players)
+
+    ai_needs_rerun = False
+    if curr_p and not getattr(curr_p, "folded", False) and getattr(curr_p, "is_ai", False) and hand_in_progress and not st.session_state.ai_paused:
+        # Pre-compute the AI decision synchronously (fast) so we can display it
+        context = GameContext(
+            hole_cards=curr_p.hand,
+            community_cards=game.table.community_cards,
+            pot_size=game.pot_manager.total_pot(),
+            current_bet=getattr(game.table, "current_bet", 0),
+            call_amount=max(0, getattr(game.table, "current_bet", 0) - curr_p.current_bet),
+            player_stack=curr_p.chips,
+            players_remaining=sum(1 for p in game.players if not getattr(p, "folded", False))
+        )
+        
+        try:
+            decision = curr_p.decide(context)
+            if isinstance(decision, dict):
+                act = decision.get("action", Action.CHECK)
+                amt = decision.get("amount", 0)
+            elif isinstance(decision, tuple):
+                act, amt = decision
+            else:
+                act, amt = Action.CHECK, 0
+        except Exception:
+            act, amt = Action.CHECK, 0
+
+        execute_player_action(game, curr_p, act, amt)
+        st.session_state.log_messages.append(f"{curr_p.name} performed {act.name} ${amt}")
+        ai_needs_rerun = True
+        # Re-read current player after the action was applied
+        curr_p = game.betting_round.current_player_or_none()
+        hand_in_progress = (game.state.name not in ("SHOWDOWN", "HAND_COMPLETE", "WAITING"))
+
+    # ===================== RENDER FULL UI FIRST =====================
+
+    top_c1, top_c2, top_c3, top_c4 = st.columns(4)
+    with top_c1:
+        if st.button("🏠 RETURN TO LOBBY"):
+            st.session_state.view = "lobby"
+            st.rerun()
+    with top_c2:
+        st.session_state.show_hud = st.checkbox("🧠 AI Brain HUD", value=st.session_state.show_hud)
+    with top_c3:
+        st.session_state.show_rankings = st.checkbox("🏆 Hand Rankings Guide", value=st.session_state.show_rankings)
+    with top_c4:
+        if is_all_ai_game:
+            pause_label = "▶️ Resume Battle" if st.session_state.ai_paused else "⏸️ Pause AI Battle"
+            if st.button(pause_label):
+                st.session_state.ai_paused = not st.session_state.ai_paused
+                st.rerun()
+
+    room_banner = f" • Room: <b style='color:#a855f7;'>{st.session_state.room_code}</b>" if st.session_state.room_code else ""
+    st.markdown('<div class="poker-title">♠️ TEXAS HOLD\'EM POKER ♠️</div>', unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; color:#94a3b8; font-weight:600;'>Hand #{st.session_state.hand_count} • Blinds ${game.table.small_blind}/${game.table.big_blind} • Street: <b style='color:#10b981;'>{game.table.street.name}</b>{room_banner}</div>", unsafe_allow_html=True)
+
+    if st.session_state.show_rankings:
+        with st.expander("🏆 Texas Hold'em Hand Rankings Guide (Highest to Lowest)", expanded=True):
+            st.markdown("""
+            1. **Royal Flush**: A, K, Q, J, 10 (Same Suit)
+            2. **Straight Flush**: 5 Cards in sequence (Same Suit)
+            3. **Four of a Kind**: 4 Cards of matching rank
+            4. **Full House**: 3 of a Kind + 1 Pair
+            5. **Flush**: 5 Cards of same suit
+            6. **Straight**: 5 Cards in sequence
+            7. **Three of a Kind**: 3 Cards of matching rank
+            8. **Two Pair**: 2 pairs of different ranks
+            9. **One Pair**: 2 Cards of matching rank
+            10. **High Card**: Highest single card
+            """)
+
+    # AI BRAIN HUD OVERLAY (Skip in all-AI mode)
+    hud_player = curr_p if (curr_p and not getattr(curr_p, "is_ai", False)) else next((p for p in game.players if not getattr(p, "is_ai", False) and not getattr(p, "folded", False)), None)
+    if st.session_state.show_hud and hud_player and hasattr(hud_player, "hand") and hud_player.hand and hand_in_progress and not is_all_ai_game:
+        active_opponents = sum(1 for p in game.players if not getattr(p, "folded", False) and p.name != hud_player.name)
+        try:
+            eq_res = equity_calc.calculate(hud_player.hand, game.table.community_cards, max(1, active_opponents), simulations=150)
+            equity_pct = eq_res.get("equity", 0.5) * 100
+        except Exception:
+            equity_pct = 50.0
+        
+        eval_hand = hud_player.hand + game.table.community_cards
+        rank_name = "High Card"
+        if len(eval_hand) >= 5:
+            try:
+                res = evaluator.evaluate(hud_player.hand, game.table.community_cards)
+                rank_name = res.hand_name
+            except Exception:
+                pass
+
+        st.markdown(f"""<div class="hud-box">
+<h4 style="margin:0; color:#818cf8;">🧠 AI BRAIN LIVE HUD — {hud_player.name}</h4>
+<div style="display:flex; justify-content:space-around; margin-top:8px;">
+<div><b>Hand Strength:</b> <span style="color:#f59e0b;">{rank_name}</span></div>
+<div><b>Monte Carlo Equity:</b> <span style="color:#10b981;">{equity_pct:.1f}%</span></div>
+<div><b>Pot Odds:</b> <span style="color:#38bdf8;">{(game.table.big_blind / max(1, game.pot_manager.total_pot()))*100:.1f}%</span></div>
+</div>
+</div>""", unsafe_allow_html=True)
+
+    # LIVE ACTION STATUS TICKER BANNER
+    last_logged_action = st.session_state.log_messages[-1] if st.session_state.log_messages else "Game Started"
+    st.markdown(f'<div style="text-align:center; color:#38bdf8; font-weight:800; font-size:1.15rem; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">📢 LAST ACTION: <span style="color:#f59e0b;">{last_logged_action}</span></div>', unsafe_allow_html=True)
+
+    total_pot = game.pot_manager.total_pot()
+    comm_cards = game.table.community_cards
+    comm_html = "".join([render_card_html(c) for c in comm_cards])
+    if not comm_cards:
+        comm_html = "".join([render_card_html(None) for _ in range(5)])
+
+    # FELT OVAL TABLE CONTAINER
+    st.markdown(f"""<div class="felt-table">
+<div class="pot-badge">🪙 TOTAL POT: ${total_pot}</div>
+<div style="margin-top: 10px;">{comm_html}</div>
+</div>""", unsafe_allow_html=True)
+
+    # WINNER BANNER DISPLAY (Prominent Gold/Emerald Box)
+    if not hand_in_progress and st.session_state.winner_banner_text:
+        st.markdown(f"""<div class="winner-banner-box">
+<h2 style="color:#f59e0b; margin:0; font-size:2rem; font-weight:900;">{st.session_state.winner_banner_text}</h2>
+</div>""", unsafe_allow_html=True)
+
+    # PLAYER SEATS GRID
+    cols = st.columns(len(game.players))
+    for i, p in enumerate(game.players):
+        with cols[i]:
+            is_winner = (p.name in st.session_state.winners_list)
+            is_curr = (curr_p and curr_p.name == p.name and hand_in_progress)
+            
+            box_cls = "player-seat"
+            if is_winner:
+                box_cls += " winner-seat-glow"
+            elif is_curr:
+                box_cls += " active-seat-glow"
+                
+            winner_badge = '<div class="winner-badge">🏆 WINNER</div>' if is_winner else ''
+            dealer_badge = '<span class="dealer-badge">D</span>' if p.is_dealer() else ''
+            action_badge_html = get_action_badge_html(p, is_winner)
+            
+            # PRIVACY ENGINE:
+            # 0. All-AI spectator mode: always reveal all hole cards
+            # 1. At Showdown, reveal cards if checkbox is checked
+            # 2. In Online Mode, Machine A only sees Machine A's cards; Machine B only sees Machine B's cards
+            # 3. In Local Play Mode, ONLY the active human player whose turn it currently is sees their cards face up!
+            should_reveal_hole_cards = False
+            if is_all_ai_game:
+                should_reveal_hole_cards = True
+            elif not hand_in_progress:
+                should_reveal_hole_cards = st.session_state.show_cards_showdown
+            elif st.session_state.room_code != "":
+                should_reveal_hole_cards = (p.name == st.session_state.get("my_player_name", ""))
+            else:
+                should_reveal_hole_cards = (curr_p and curr_p.name == p.name and not getattr(p, "is_ai", False))
+
+            if should_reveal_hole_cards:
+                cards_html = "".join([render_card_html(c) for c in p.hand])
+            else:
+                cards_html = "".join([render_card_html(None) for _ in p.hand])
+
+            hand_name_desc = ""
+            if not hand_in_progress and len(p.hand + game.table.community_cards) >= 5:
+                try:
+                    p_res = evaluator.evaluate(p.hand, game.table.community_cards)
+                    hand_name_desc = f'<div style="color:#f59e0b; font-weight:700; font-size:0.85rem; margin-top:4px;">Hand: {p_res.hand_name}</div>'
+                except Exception:
+                    pass
+
+            seat_html = (
+                f'<div class="{box_cls}">'
+                f'{winner_badge}'
+                f'{action_badge_html}'
+                f'<div style="font-weight:800; font-size:1.1rem; color:#f59e0b; margin-top:4px;">{p.name}{dealer_badge}</div>'
+                f'<div style="color:#10b981; font-weight:700;">Chips: ${p.chips}</div>'
+                f'<div style="color:#cbd5e1; font-size:0.85rem;">Bet: ${p.current_bet}</div>'
+                f'<div style="margin-top:8px;">{cards_html}</div>'
+                f'{hand_name_desc}'
+                f'</div>'
+            )
+            st.markdown(seat_html, unsafe_allow_html=True)
+
+    # HUMAN ACTION BAR
+    st.markdown("---")
+    if curr_p and not getattr(curr_p, "is_ai", False) and hand_in_progress:
+        st.subheader(f"🎯 YOUR TURN ({curr_p.name}) — SELECT ACTION:")
+        
+        # Quick Bet Ratio Shortcuts
+        st.markdown("##### ⚡ Quick Bet Shortcuts:")
+        qb1, qb2, qb3, qb4, qb5 = st.columns(5)
+        current_tbl_bet = getattr(game.table, "current_bet", 0)
+        call_amt = max(0, current_tbl_bet - curr_p.current_bet)
+        
+        with qb1:
+            if st.button("MIN BET", use_container_width=True):
+                execute_player_action(game, curr_p, Action.BET, game.table.big_blind)
+                st.session_state.log_messages.append(f"{curr_p.name} BET ${game.table.big_blind}")
+                st.rerun()
+        with qb2:
+            if st.button("+3BB", use_container_width=True):
+                amt = game.table.big_blind * 3
+                execute_player_action(game, curr_p, Action.RAISE, amt)
+                st.session_state.log_messages.append(f"{curr_p.name} RAISED ${amt}")
+                st.rerun()
+        with qb3:
+            if st.button("1/2 POT", use_container_width=True):
+                amt = max(game.table.big_blind, int(total_pot * 0.5))
+                execute_player_action(game, curr_p, Action.RAISE, amt)
+                st.session_state.log_messages.append(f"{curr_p.name} RAISED 1/2 POT (${amt})")
+                st.rerun()
+        with qb4:
+            if st.button("FULL POT", use_container_width=True):
+                amt = max(game.table.big_blind, total_pot)
+                execute_player_action(game, curr_p, Action.RAISE, amt)
+                st.session_state.log_messages.append(f"{curr_p.name} RAISED POT (${amt})")
+                st.rerun()
+        with qb5:
+            if st.button("🔥 ALL-IN", use_container_width=True):
+                execute_player_action(game, curr_p, Action.ALL_IN, curr_p.chips)
+                st.session_state.log_messages.append(f"{curr_p.name} went ALL-IN for ${curr_p.chips}!")
+                st.rerun()
+
+        # Primary Actions Row
+        ac1, ac2, ac3 = st.columns(3)
+        with ac1:
+            if st.button("🔴 FOLD", use_container_width=True):
+                execute_player_action(game, curr_p, Action.FOLD, 0)
+                st.session_state.log_messages.append(f"{curr_p.name} FOLDED")
+                st.rerun()
+
+        with ac2:
+            lbl = "🟢 CHECK" if call_amt <= 0 else f"🟢 CALL (${call_amt})"
+            act_type = Action.CHECK if call_amt <= 0 else Action.CALL
+            if st.button(lbl, use_container_width=True):
+                execute_player_action(game, curr_p, act_type, max(0, call_amt))
+                st.session_state.log_messages.append(f"{curr_p.name} {lbl}")
+                st.rerun()
+
+        with ac3:
+            min_raise = current_tbl_bet * 2 if current_tbl_bet > 0 else game.table.big_blind
+            max_raise = curr_p.chips
+            if max_raise > min_raise:
+                raise_amt = st.slider("Custom Raise Amount ($)", min_value=int(min_raise), max_value=int(max_raise), value=int(min_raise), step=10)
+                if st.button(f"🔵 RAISE (${raise_amt})", use_container_width=True):
+                    execute_player_action(game, curr_p, Action.RAISE, raise_amt)
+                    st.session_state.log_messages.append(f"{curr_p.name} RAISED to ${raise_amt}")
+                    st.rerun()
+            else:
+                st.caption("Insufficient chips to raise")
+
+    elif not hand_in_progress:
+        m_c1, m_c2 = st.columns(2)
+        with m_c1:
+            st.session_state.show_cards_showdown = st.checkbox("👁️ Reveal Hole Cards at Showdown", value=st.session_state.show_cards_showdown)
+        with m_c2:
+            if st.button("▶️ Deal Next Hand", use_container_width=True):
+                if st.session_state.auto_rebuy:
+                    for p in game.players:
+                        if p.chips <= 0:
+                            p.chips = st.session_state.starting_chips
+                            st.session_state.log_messages.append(f"🔄 Auto-Rebought {p.name} for ${st.session_state.starting_chips}")
+
+                st.session_state.hand_count += 1
+                start_game_hand(game)
+                st.rerun()
+
+    st.sidebar.title("📜 Hand History Log")
+    for log_msg in reversed(st.session_state.log_messages[-10:]):
+        st.sidebar.caption(log_msg)
+
+    # ===================== RERUN TRIGGERS (AFTER ALL UI RENDERED) =====================
+    # The full table, cards, seats, and action badges have been sent to the browser.
+    # Now trigger the next frame if needed.
+
+    # 1. AI just acted — rerun for the next AI step
+    if ai_needs_rerun:
+        time.sleep(0.15)
+        st.rerun()
+
+    # 2. All remaining players are all-in — nobody can act, but we need to
+    #    advance streets one at a time visually (Flop → Turn → River → Showdown).
+    #    Each rerun draws the new community cards, then triggers the next street.
+    if hand_in_progress and game.betting_round.betting_complete():
+        all_in_or_folded = all(
+            getattr(p, "folded", False) or not p.can_act()
+            for p in game.players
+        )
+        if all_in_or_folded:
+            time.sleep(0.8)  # Pause so user sees each street dealt
+            st.rerun()

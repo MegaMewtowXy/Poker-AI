@@ -49,19 +49,19 @@ class DecisionEngine:
         self.action_thresholds = {
 
             "fold":
-              -20,
+              -35,
 
             "call":
 
-                20,
+                10,
 
             "bet":
 
-                45,
+                40,
 
             "raise":
 
-                75
+                70
 
         }
 
@@ -177,6 +177,10 @@ class DecisionEngine:
 
             value = 15
 
+        elif strength >= 30:
+
+            value = 0
+
         else:
 
             value = -15
@@ -208,7 +212,7 @@ class DecisionEngine:
         elif equity >= 55:
 
             value = 15
-        elif equity >= 45:
+        elif equity >= 35:
             value = 0
 
         else:

@@ -804,7 +804,7 @@ class HandStrength:
         harder to win.
 
         Range:
-        -20 to +10
+        -10 to +10
         """
 
         if opponent_count <= 1:
@@ -817,9 +817,9 @@ class HandStrength:
 
         if opponent_count <= 5:
 
-            return -10
+            return -5
 
-        return -20
+        return -10
 
     # ==========================================
     # Final Strength Calculation
