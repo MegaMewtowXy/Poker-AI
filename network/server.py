@@ -50,7 +50,9 @@ class RoomServer:
         return "127.0.0.1"
 
     def generate_room_code(self):
-        return self.ip_to_room_code(self.get_local_ip())
+        chars = string.ascii_uppercase + string.digits
+        rand_str = "".join(random.choices(chars, k=4))
+        return f"PKR-{rand_str}"
 
     def get_local_ip(self):
         try:
@@ -90,10 +92,21 @@ class RoomServer:
             except Exception:
                 break
 
+    def _cleanup_stale_rooms(self):
+        with self.lock:
+            now = time.time()
+            stale_codes = [
+                code for code, room in self.rooms.items()
+                if now - room.get("last_active", now) > 3600 or not room.get("clients")
+            ]
+            for code in stale_codes:
+                self.rooms.pop(code, None)
+
     def _client_handler(self, client_sock, addr):
         buffer = bytearray()
         client_room_code = None
         player_name = None
+        self._cleanup_stale_rooms()
 
         try:
             while self.is_running:
@@ -111,6 +124,7 @@ class RoomServer:
                         with self.lock:
                             room_code = self.generate_room_code()
                             player_name = p_data.get("host_name", "Host")
+                            now = time.time()
                             self.rooms[room_code] = {
                                 "code": room_code,
                                 "host_sock": client_sock,
@@ -119,7 +133,9 @@ class RoomServer:
                                 "small_blind": p_data.get("small_blind", 10),
                                 "big_blind": p_data.get("big_blind", 20),
                                 "clients": [(client_sock, player_name)],
-                                "game_started": False
+                                "game_started": False,
+                                "created_at": now,
+                                "last_active": now
                             }
                             client_room_code = room_code
 
@@ -150,6 +166,7 @@ class RoomServer:
                                 client_sock.sendall(err)
                                 continue
 
+                            room["last_active"] = time.time()
                             room["clients"].append((client_sock, player_name))
                             client_room_code = requested_code
 
@@ -167,9 +184,19 @@ class RoomServer:
                                 try: sock.sendall(state_pkt)
                                 except Exception: pass
 
+                    elif p_type == NetworkProtocol.CHAT_MESSAGE:
+                        if client_room_code and client_room_code in self.rooms:
+                            room = self.rooms[client_room_code]
+                            room["last_active"] = time.time()
+                            chat_pkt = NetworkProtocol.encode(NetworkProtocol.CHAT_MESSAGE, p_data)
+                            for sock, _ in room["clients"]:
+                                try: sock.sendall(chat_pkt)
+                                except Exception: pass
+
                     elif p_type in (NetworkProtocol.START_GAME, NetworkProtocol.GAME_ACTION, NetworkProtocol.STATE_SYNC):
                         if client_room_code and client_room_code in self.rooms:
                             room = self.rooms[client_room_code]
+                            room["last_active"] = time.time()
                             broadcast_pkt = NetworkProtocol.encode(p_type, p_data)
                             for sock, _ in room["clients"]:
                                 if sock != client_sock:

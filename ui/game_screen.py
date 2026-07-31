@@ -67,6 +67,7 @@ class GameScreen:
         self.current_ai_analysis = None
         self.last_action_texts = {}
         self.left_players = set()
+        self.chat_messages = []
 
         # Navigation & Action Widgets
         self.fold_btn = None
@@ -749,6 +750,35 @@ class GameScreen:
 
         # Draw Help / Tutorial Overlay Modal if active
         self.help_modal.draw()
+
+        # Draw Live Chat & Emotes Panel
+        self._draw_chat_overlay()
+
+    def _draw_chat_overlay(self):
+        sw, sh = self.screen.get_size()
+        panel_w = int(sw * 0.22)
+        panel_h = int(sh * 0.22)
+        panel_x = int(sw * 0.02)
+        panel_y = sh - panel_h - int(sh * 0.14)
+
+        rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+        draw_glass_panel(self.screen, rect, bg_color=(15, 23, 42), alpha=215, border_color=(16, 185, 129), radius=8)
+
+        font_h = pygame.font.SysFont("arial", max(11, int(panel_h * 0.09)), bold=True)
+        title_surf = font_h.render("💬 LIVE CHAT [Keys 1-6 Emotes]", True, (16, 185, 129))
+        self.screen.blit(title_surf, (panel_x + 10, panel_y + 8))
+
+        font_body = pygame.font.SysFont("arial", max(10, int(panel_h * 0.075)))
+        y_off = panel_y + 30
+        
+        recent_msgs = self.chat_messages[-4:]
+        if not recent_msgs:
+            recent_msgs = ["System: Press 1-6 for Quick Emotes!"]
+
+        for msg in recent_msgs:
+            surf = font_body.render(msg[:32], True, (226, 232, 240))
+            self.screen.blit(surf, (panel_x + 10, y_off))
+            y_off += int(panel_h * 0.16)
 
     def _draw_stats_overlay(self):
         sw, sh = self.screen.get_size()

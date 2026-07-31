@@ -48,6 +48,9 @@ class NetworkClient:
             except Exception:
                 self.is_connected = False
 
+    def send_chat(self, sender: str, message: str):
+        self.send(NetworkProtocol.CHAT_MESSAGE, {"sender": sender, "message": message})
+
     def _listen_loop(self):
         buffer = bytearray()
         while self.is_connected:

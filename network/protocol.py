@@ -12,6 +12,7 @@ class NetworkProtocol:
     START_GAME = "START_GAME"
     GAME_ACTION = "GAME_ACTION"
     STATE_SYNC = "STATE_SYNC"
+    CHAT_MESSAGE = "CHAT_MESSAGE"
     ERROR = "ERROR"
 
     @staticmethod
