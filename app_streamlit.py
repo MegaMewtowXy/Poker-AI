@@ -24,9 +24,17 @@ import threading
 def get_global_rooms():
     return {}
 
+def cleanup_stale_rooms():
+    rooms = get_global_rooms()
+    now = time.time()
+    stale_codes = [code for code, r in rooms.items() if now - r.get("created_at", now) > 3600]
+    for code in stale_codes:
+        rooms.pop(code, None)
+
 def get_room(room_code):
     if not room_code:
         return None
+    cleanup_stale_rooms()
     return get_global_rooms().get(room_code)
 
 from engine.game import Game
@@ -390,6 +398,13 @@ def execute_player_action(game, player, action, amount=0):
 def start_game_hand(game_obj):
     st.session_state.winners_list = []
     st.session_state.winner_banner_text = ""
+    
+    # Tournament Mode: Double blinds every 5 hands
+    if st.session_state.get("tournament_mode", False) and st.session_state.hand_count > 1 and (st.session_state.hand_count - 1) % 5 == 0:
+        game_obj.table.small_blind *= 2
+        game_obj.table.big_blind *= 2
+        st.session_state.log_messages.append(f"🔥 TOURNAMENT BLINDS INCREASED: ${game_obj.table.small_blind}/${game_obj.table.big_blind}!")
+
     game_obj.start_hand()
     game_obj.betting_round.set_street(Street.PRE_FLOP)
     game_obj.betting_round.start()
@@ -409,6 +424,7 @@ if "view" not in st.session_state:
     st.session_state.small_blind = 10
     st.session_state.big_blind = 20
     st.session_state.auto_rebuy = True
+    st.session_state.tournament_mode = False
     st.session_state.ai_paused = False
     st.session_state.show_hud = True
     st.session_state.show_rankings = False
@@ -416,6 +432,7 @@ if "view" not in st.session_state:
     st.session_state.room_code = ""
     st.session_state.my_player_name = "You (Human)"
     st.session_state.log_messages = []
+    st.session_state.chat_messages = []
     st.session_state.hand_count = 1
     st.session_state.winners_list = []
     st.session_state.winner_banner_text = ""
@@ -770,6 +787,7 @@ elif st.session_state.view == "game":
 
         st.session_state.show_hud = st.checkbox("🧠 Show AI Brain HUD", value=st.session_state.show_hud)
         st.session_state.show_rankings = st.checkbox("🏆 Hand Rankings Guide", value=st.session_state.show_rankings)
+        st.session_state.tournament_mode = st.checkbox("🏆 Tournament Blinds Escalation", value=st.session_state.get("tournament_mode", False))
 
         hud_player = curr_p if (curr_p and not getattr(curr_p, "is_ai", False)) else next((p for p in game.players if not getattr(p, "is_ai", False) and not getattr(p, "folded", False)), None)
         if st.session_state.show_hud and hud_player and hasattr(hud_player, "hand") and hud_player.hand and hand_in_progress and not is_all_ai_game:
@@ -781,12 +799,14 @@ elif st.session_state.view == "game":
                 equity_pct = 50.0
             
             rank_name = get_player_hand_name(hud_player, game.table.community_cards) or "High Card"
+            ev_score = f"+{(equity_pct / 18.0):.1f} EV (Optimal)" if equity_pct >= 50 else f"-{((100-equity_pct)/25.0):.1f} EV"
 
             st.markdown(f"""<div class="hud-box">
 <h5 style="margin:0; color:#818cf8;">🧠 AI LIVE HUD — {hud_player.name}</h5>
 <div style="margin-top:6px; font-size:0.85rem;">
 <div><b>Hand Strength:</b> <span style="color:#f59e0b;">{rank_name}</span></div>
 <div><b>Win Equity:</b> <span style="color:#10b981;">{equity_pct:.1f}%</span></div>
+<div><b>Decision EV:</b> <span style="color:#a855f7;">{ev_score}</span></div>
 <div><b>Pot Odds:</b> <span style="color:#38bdf8;">{(game.table.big_blind / max(1, game.pot_manager.total_pot()))*100:.1f}%</span></div>
 </div>
 </div>""", unsafe_allow_html=True)
@@ -801,9 +821,62 @@ elif st.session_state.view == "game":
             9. One Pair     10. High Card
             """)
 
+        # ------------------ LIVE CHAT & QUICK EMOTES ------------------
+        st.markdown("---")
+        st.subheader("💬 Live Chat & Reactions")
+        
+        sender_name = st.session_state.get("my_player_name", "Player")
+        
+        def _send_chat_msg(msg_text):
+            r_code = st.session_state.get("room_code", "")
+            rm = get_room(r_code)
+            log_item = f"💬 **{sender_name}**: {msg_text}"
+            if rm:
+                if "chat_messages" not in rm:
+                    rm["chat_messages"] = []
+                rm["chat_messages"].append(log_item)
+                st.session_state.chat_messages = rm["chat_messages"]
+            else:
+                st.session_state.chat_messages.append(log_item)
+
+        e_col1, e_col2, e_col3 = st.columns(3)
+        with e_col1:
+            if st.button("🦈 Shark!", key="em_1", use_container_width=True):
+                _send_chat_msg("🦈 Shark Attack!")
+                st.rerun()
+            if st.button("💰 Pay Me!", key="em_2", use_container_width=True):
+                _send_chat_msg("💰 Pay Me!")
+                st.rerun()
+        with e_col2:
+            if st.button("🤡 Bluff!", key="em_3", use_container_width=True):
+                _send_chat_msg("🤡 Nice Bluff!")
+                st.rerun()
+            if st.button("🔥 All In!", key="em_4", use_container_width=True):
+                _send_chat_msg("🔥 All In!")
+                st.rerun()
+        with e_col3:
+            if st.button("🤠 Gittyup!", key="em_5", use_container_width=True):
+                _send_chat_msg("🤠 Gittyup!")
+                st.rerun()
+            if st.button("🤝 GG!", key="em_6", use_container_width=True):
+                _send_chat_msg("🤝 Good Game!")
+                st.rerun()
+
+        chat_input = st.text_input("Type message:", key="chat_input_txt", placeholder="Send a message...")
+        if st.button("📤 Send", key="send_chat_btn", use_container_width=True):
+            if chat_input.strip():
+                _send_chat_msg(chat_input.strip())
+                st.rerun()
+
+        r_code = st.session_state.get("room_code", "")
+        rm = get_room(r_code)
+        active_msgs = rm.get("chat_messages", []) if rm else st.session_state.chat_messages
+        for c_msg in reversed(active_msgs[-5:]):
+            st.markdown(c_msg)
+
         st.markdown("---")
         st.subheader("📜 Hand History")
-        for log_msg in reversed(st.session_state.log_messages[-8:]):
+        for log_msg in reversed(st.session_state.log_messages[-6:]):
             st.caption(log_msg)
 
     # ===================== MAIN GAME VIEWPORT (COMPACT SINGLE SCREEN) =====================
