@@ -862,11 +862,16 @@ elif st.session_state.view == "game":
                 _send_chat_msg("🤝 Good Game!")
                 st.rerun()
 
-        chat_input = st.text_input("Type message:", key="chat_input_txt", placeholder="Send a message...")
-        if st.button("📤 Send", key="send_chat_btn", use_container_width=True):
-            if chat_input.strip():
-                _send_chat_msg(chat_input.strip())
-                st.rerun()
+        def _on_chat_enter():
+            text = st.session_state.get("chat_input_txt", "").strip()
+            if text:
+                _send_chat_msg(text)
+                st.session_state["chat_input_txt"] = ""
+
+        st.text_input("Type message & press Enter:", key="chat_input_txt", placeholder="Type message & press Enter...", on_change=_on_chat_enter)
+        if st.button("📤 Send Chat", key="send_chat_btn", use_container_width=True):
+            _on_chat_enter()
+            st.rerun()
 
         r_code = st.session_state.get("room_code", "")
         rm = get_room(r_code)

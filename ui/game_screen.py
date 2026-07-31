@@ -8,7 +8,7 @@ from models.player_role import PlayerRole
 from ui.card_renderer import card_renderer
 from ui.help_modal import HelpModal
 from ui.audio_manager import audio_manager
-from ui.widgets import Button, Slider, draw_glass_panel, draw_progress_bar, draw_chip_stack
+from ui.widgets import Button, Slider, TextInput, draw_glass_panel, draw_progress_bar, draw_chip_stack
 
 class GameScreen:
     """
@@ -576,7 +576,19 @@ class GameScreen:
                     else:
                         self.user_showed_players.add(player.name)
                         self.status_message = f"{player.name} SHOWED CARDS! Press SPACE for Next Hand"
-                    return True
+        if hasattr(self, "chat_input") and self.chat_input:
+            if self.chat_input.handle_event(event):
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    txt = self.chat_input.text.strip()
+                    if txt:
+                        p_name = self.players[0].name if self.players else "Player"
+                        msg = f"💬 {p_name}: {txt}"
+                        self.chat_messages.append(msg)
+                        if hasattr(self, "client") and self.client and self.client.is_connected:
+                            self.client.send_chat(p_name, txt)
+                        self.chat_input.text = ""
+                    self.chat_input.focused = False
+                return True
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_TAB:
@@ -757,28 +769,35 @@ class GameScreen:
     def _draw_chat_overlay(self):
         sw, sh = self.screen.get_size()
         panel_w = int(sw * 0.22)
-        panel_h = int(sh * 0.22)
+        panel_h = int(sh * 0.24)
         panel_x = int(sw * 0.02)
         panel_y = sh - panel_h - int(sh * 0.14)
 
         rect = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
         draw_glass_panel(self.screen, rect, bg_color=(15, 23, 42), alpha=215, border_color=(16, 185, 129), radius=8)
 
-        font_h = pygame.font.SysFont("arial", max(11, int(panel_h * 0.09)), bold=True)
-        title_surf = font_h.render("💬 LIVE CHAT [Keys 1-6 Emotes]", True, (16, 185, 129))
-        self.screen.blit(title_surf, (panel_x + 10, panel_y + 8))
+        font_h = pygame.font.SysFont("arial", max(11, int(panel_h * 0.08)), bold=True)
+        title_surf = font_h.render("💬 LIVE CHAT [Keys 1-6 / Enter]", True, (16, 185, 129))
+        self.screen.blit(title_surf, (panel_x + 10, panel_y + 6))
 
-        font_body = pygame.font.SysFont("arial", max(10, int(panel_h * 0.075)))
-        y_off = panel_y + 30
+        font_body = pygame.font.SysFont("arial", max(10, int(panel_h * 0.07)))
+        y_off = panel_y + 26
         
-        recent_msgs = self.chat_messages[-4:]
+        recent_msgs = self.chat_messages[-3:]
         if not recent_msgs:
-            recent_msgs = ["System: Press 1-6 for Quick Emotes!"]
+            recent_msgs = ["System: Type & Press Enter!"]
 
         for msg in recent_msgs:
-            surf = font_body.render(msg[:32], True, (226, 232, 240))
+            surf = font_body.render(msg[:30], True, (226, 232, 240))
             self.screen.blit(surf, (panel_x + 10, y_off))
-            y_off += int(panel_h * 0.16)
+            y_off += int(panel_h * 0.15)
+
+        if not hasattr(self, "chat_input") or not self.chat_input:
+            self.chat_input = TextInput((panel_x + 8, panel_y + panel_h - 28, panel_w - 16, 22), initial_text="", max_length=24)
+        else:
+            self.chat_input.update_rect((panel_x + 8, panel_y + panel_h - 28, panel_w - 16, 22))
+
+        self.chat_input.draw(self.screen)
 
     def _draw_stats_overlay(self):
         sw, sh = self.screen.get_size()
