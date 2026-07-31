@@ -549,13 +549,19 @@ if st.session_state.view == "lobby":
         st.caption("Create a multiplayer table and share your Room Code with friends so they can join your room!")
         
         if not st.session_state.room_code:
-            st.session_state.room_code = f"PKR-{random.randint(1000, 9999)}"
+            rand_code = "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
+            st.session_state.room_code = f"PKR-{rand_code}"
 
         st.markdown(f"""<div class="room-box">
 <h3 style="color:#10b981; margin:0;">YOUR HOST ROOM CODE:</h3>
 <h1 style="color:#f59e0b; font-size:3.5rem; letter-spacing:4px; margin:10px 0;">{st.session_state.room_code}</h1>
 <p style="color:#cbd5e1;">Status: <b style="color:#10b981;">Online & Ready to Host</b></p>
 </div>""", unsafe_allow_html=True)
+
+        if st.button("🎲 Generate New Random Code"):
+            rand_code = "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
+            st.session_state.room_code = f"PKR-{rand_code}"
+            st.rerun()
 
         host_name_in = st.text_input("Your Host Name:", value="Host (You)", key="host_name_input")
 
@@ -591,13 +597,15 @@ if st.session_state.view == "lobby":
     # --------------------------------------------------------------------------
     with lobby_tab3:
         st.markdown("### 🚪 Join a Multiplayer Room")
-        st.caption("Enter the 6-character Room Code provided by the Room Host:")
+        st.caption("Enter the Room Code provided by the Room Host:")
         
-        join_code_input = st.text_input("Enter Room Code (e.g. PKR-4892):", placeholder="PKR-XXXX")
+        join_code_input = st.text_input("Enter Room Code (e.g. 4892 or PKR-4892):", placeholder="e.g. 4892")
         join_name_input = st.text_input("Your Player Name:", value="Guest (You)")
         
         if st.button("🔌 CONNECT & JOIN ROOM", use_container_width=True):
             code = join_code_input.strip().upper()
+            if code and not code.startswith("PKR-"):
+                code = f"PKR-{code}"
             guest_name = join_name_input.strip() or "Guest (You)"
             
             rooms = get_global_rooms()

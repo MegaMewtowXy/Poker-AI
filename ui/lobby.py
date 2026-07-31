@@ -157,7 +157,7 @@ class LobbyScreen:
         # Join Room Modal Input
         modal_w, modal_h = int(sw * 0.42), int(sh * 0.38)
         mx, my = (sw - modal_w) // 2, (sh - modal_h) // 2
-        self.join_code_input = TextInput((mx + 140, my + 90, 200, 32), initial_text="PKR-")
+        self.join_code_input = TextInput((mx + 140, my + 90, 200, 32), initial_text="")
 
     def _host_room_action(self):
         try:
@@ -172,6 +172,8 @@ class LobbyScreen:
 
     def _submit_join_room_action(self):
         code = self.join_code_input.text.strip().upper()
+        if code and not code.startswith("PKR-"):
+            code = f"PKR-{code}"
         target_ip = self.server.room_code_to_ip(code)
         if self.client.connect(target_ip, 9999):
             self.client.send("JOIN_ROOM", {"room_code": code, "player_name": "FriendPlayer"})
