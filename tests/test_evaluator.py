@@ -173,6 +173,26 @@ def test_evaluator():
         "\n========== EVALUATOR TEST PASSED =========="
     )
 
-if __name__ == "__main__":
+def test_streamlit_hand_name_helper():
+    from app_streamlit import get_player_hand_name
+    from models.player import Player
+    
+    p_pair = Player("Test", chips=1000)
+    p_pair.hand = [card(Rank.ACE, Suit.SPADES), card(Rank.ACE, Suit.HEARTS)]
+    
+    # Pre-flop pocket pair
+    assert "Pair" in get_player_hand_name(p_pair, [])
+    
+    p_high = Player("Test", chips=1000)
+    p_high.hand = [card(Rank.ACE, Suit.SPADES), card(Rank.KING, Suit.HEARTS)]
+    
+    # Pre-flop high card
+    assert "High Card" in get_player_hand_name(p_high, [])
+    
+    # Flop pair
+    comm = [card(Rank.ACE, Suit.CLUBS), card(Rank.SEVEN, Suit.DIAMONDS), card(Rank.TWO, Suit.HEARTS)]
+    assert get_player_hand_name(p_high, comm) == "Pair"
 
+if __name__ == "__main__":
     test_evaluator()
+    test_streamlit_hand_name_helper()

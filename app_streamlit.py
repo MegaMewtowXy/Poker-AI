@@ -198,6 +198,28 @@ def get_action_badge_html(player, is_winner):
 
     return f'<div style="background-color:{bg_color}; color:{text_color}; font-weight:800; font-size:0.75rem; padding:3px 10px; border-radius:12px; display:inline-block; margin-top:4px; letter-spacing:1px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">{act_name}</div>'
 
+def get_player_hand_name(player, community_cards):
+    if not player or not hasattr(player, "hand") or len(player.hand) < 2:
+        return ""
+    
+    if len(community_cards) < 3:
+        c1, c2 = player.hand[0], player.hand[1]
+        r1 = c1.rank.symbol if hasattr(c1.rank, "symbol") else str(c1.rank)
+        r2 = c2.rank.symbol if hasattr(c2.rank, "symbol") else str(c2.rank)
+        if r1 == r2:
+            return f"Pair ({r1}s)"
+        else:
+            s1 = c1.numeric_rank if hasattr(c1, "numeric_rank") else 0
+            s2 = c2.numeric_rank if hasattr(c2, "numeric_rank") else 0
+            high_r = r1 if s1 >= s2 else r2
+            return f"High Card ({high_r})"
+    else:
+        try:
+            res = evaluator.evaluate(player.hand, community_cards)
+            return res.hand_name
+        except Exception:
+            return "High Card"
+
 def check_and_advance_street(game):
     if not game or game.state in (GameState.SHOWDOWN, GameState.HAND_COMPLETE):
         return
@@ -627,14 +649,7 @@ elif st.session_state.view == "game":
         except Exception:
             equity_pct = 50.0
         
-        eval_hand = hud_player.hand + game.table.community_cards
-        rank_name = "High Card"
-        if len(eval_hand) >= 5:
-            try:
-                res = evaluator.evaluate(hud_player.hand, game.table.community_cards)
-                rank_name = res.hand_name
-            except Exception:
-                pass
+        rank_name = get_player_hand_name(hud_player, game.table.community_cards) or "High Card"
 
         st.markdown(f"""<div class="hud-box">
 <h4 style="margin:0; color:#818cf8;">🧠 AI BRAIN LIVE HUD — {hud_player.name}</h4>
@@ -705,12 +720,10 @@ elif st.session_state.view == "game":
                 cards_html = "".join([render_card_html(None) for _ in p.hand])
 
             hand_name_desc = ""
-            if not hand_in_progress and len(p.hand + game.table.community_cards) >= 5:
-                try:
-                    p_res = evaluator.evaluate(p.hand, game.table.community_cards)
-                    hand_name_desc = f'<div style="color:#f59e0b; font-weight:700; font-size:0.85rem; margin-top:4px;">Hand: {p_res.hand_name}</div>'
-                except Exception:
-                    pass
+            if should_reveal_hole_cards and len(p.hand) >= 2:
+                h_comb = get_player_hand_name(p, game.table.community_cards)
+                if h_comb:
+                    hand_name_desc = f'<div style="color:#f59e0b; font-weight:700; font-size:0.85rem; margin-top:4px;">✨ Hand: {h_comb}</div>'
 
             seat_html = (
                 f'<div class="{box_cls}">'
@@ -729,6 +742,9 @@ elif st.session_state.view == "game":
     st.markdown("---")
     if curr_p and not getattr(curr_p, "is_ai", False) and hand_in_progress:
         st.subheader(f"🎯 YOUR TURN ({curr_p.name}) — SELECT ACTION:")
+        curr_hand_combination = get_player_hand_name(curr_p, game.table.community_cards)
+        if curr_hand_combination:
+            st.markdown(f'<div style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid #10b981; border-radius: 12px; padding: 10px 18px; margin-bottom: 14px; font-size: 1.1rem; font-weight: 700; color: #e2e8f0; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">🃏 YOUR BEST HAND COMBINATION: <span style="color: #f59e0b; font-weight: 900; font-size: 1.25rem; margin-left: 6px; text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);">{curr_hand_combination}</span></div>', unsafe_allow_html=True)
         
         # Quick Bet Ratio Shortcuts
         st.markdown("##### ⚡ Quick Bet Shortcuts:")
