@@ -18,6 +18,16 @@ except ImportError:
 import streamlit as st
 import time
 import random
+import threading
+
+@st.cache_resource
+def get_global_rooms():
+    return {}
+
+def get_room(room_code):
+    if not room_code:
+        return None
+    return get_global_rooms().get(room_code)
 
 from engine.game import Game
 from models.action import Action
@@ -322,47 +332,60 @@ def check_and_advance_street(game):
             st.session_state.log_messages.append(banner)
 
 def execute_player_action(game, player, action, amount=0):
-    if not player or not hasattr(player, "can_act") or not player.can_act():
-        return
+    r_code = st.session_state.get("room_code", "")
+    rm = get_room(r_code)
     
-    current_high = getattr(game.table, "current_bet", 0)
-    
-    try:
-        if action == Action.FOLD:
-            game.betting_engine.fold(player)
-        elif action == Action.CHECK:
-            try:
-                game.betting_engine.check(player)
-            except Exception:
-                game.betting_engine.fold(player)
-        elif action == Action.CALL:
-            try:
-                game.betting_engine.call(player)
-            except Exception:
-                game.betting_engine.fold(player)
-        elif action in (Action.BET, Action.RAISE):
-            if amount >= player.chips:
-                game.betting_engine.all_in(player)
-            elif current_high > 0 or action == Action.RAISE:
-                try:
-                    game.betting_engine.raise_bet(player, amount)
-                except Exception:
-                    game.betting_engine.all_in(player)
-            else:
-                try:
-                    game.betting_engine.bet(player, amount)
-                except Exception:
-                    game.betting_engine.all_in(player)
-        elif action == Action.ALL_IN:
-            game.betting_engine.all_in(player)
-    except Exception:
+    def _act_body():
+        if not player or not hasattr(player, "can_act") or not player.can_act():
+            return
+        
+        current_high = getattr(game.table, "current_bet", 0)
+        
         try:
-            game.betting_engine.fold(player)
+            if action == Action.FOLD:
+                game.betting_engine.fold(player)
+            elif action == Action.CHECK:
+                try:
+                    game.betting_engine.check(player)
+                except Exception:
+                    game.betting_engine.fold(player)
+            elif action == Action.CALL:
+                try:
+                    game.betting_engine.call(player)
+                except Exception:
+                    game.betting_engine.fold(player)
+            elif action in (Action.BET, Action.RAISE):
+                if amount >= player.chips:
+                    game.betting_engine.all_in(player)
+                elif current_high > 0 or action == Action.RAISE:
+                    try:
+                        game.betting_engine.raise_bet(player, amount)
+                    except Exception:
+                        game.betting_engine.all_in(player)
+                else:
+                    try:
+                        game.betting_engine.bet(player, amount)
+                    except Exception:
+                        game.betting_engine.all_in(player)
+            elif action == Action.ALL_IN:
+                game.betting_engine.all_in(player)
         except Exception:
-            pass
+            try:
+                game.betting_engine.fold(player)
+            except Exception:
+                pass
 
-    game.betting_round.next_player()
-    check_and_advance_street(game)
+        game.betting_round.next_player()
+        check_and_advance_street(game)
+
+    if rm and "lock" in rm:
+        with rm["lock"]:
+            _act_body()
+            rm["log_messages"] = st.session_state.log_messages
+            rm["winners_list"] = st.session_state.winners_list
+            rm["winner_banner_text"] = st.session_state.winner_banner_text
+    else:
+        _act_body()
 
 def start_game_hand(game_obj):
     st.session_state.winners_list = []
@@ -370,6 +393,13 @@ def start_game_hand(game_obj):
     game_obj.start_hand()
     game_obj.betting_round.set_street(Street.PRE_FLOP)
     game_obj.betting_round.start()
+    
+    r_code = st.session_state.get("room_code", "")
+    rm = get_room(r_code)
+    if rm:
+        rm["winners_list"] = []
+        rm["winner_banner_text"] = ""
+        rm["log_messages"] = st.session_state.log_messages
 
 # State Setup
 if "view" not in st.session_state:
@@ -524,22 +554,36 @@ if st.session_state.view == "lobby":
         st.markdown(f"""<div class="room-box">
 <h3 style="color:#10b981; margin:0;">YOUR HOST ROOM CODE:</h3>
 <h1 style="color:#f59e0b; font-size:3.5rem; letter-spacing:4px; margin:10px 0;">{st.session_state.room_code}</h1>
-<p style="color:#cbd5e1;">Status: <b style="color:#10b981;">Online & Listening for Connections</b></p>
+<p style="color:#cbd5e1;">Status: <b style="color:#10b981;">Online & Ready to Host</b></p>
 </div>""", unsafe_allow_html=True)
 
+        host_name_in = st.text_input("Your Host Name:", value="Host (You)", key="host_name_input")
+
         if st.button("🚀 LAUNCH HOSTED ROOM TABLE", use_container_width=True):
-            st.session_state.my_player_name = "Host (You)"
-            p1 = Player(name="Host (You)", chips=st.session_state.starting_chips, is_ai=False)
-            p2 = AIPlayer(name="Bot Alpha", bot=BotPlayer(name="Bot Alpha", difficulty=Difficulty.HARD, strategy=Strategy.TIGHT_AGGRESSIVE), chips=st.session_state.starting_chips)
+            code = st.session_state.room_code
+            st.session_state.my_player_name = host_name_in.strip() or "Host (You)"
             
-            game_obj = Game(players=[p1, p2])
-            game_obj.table.small_blind = st.session_state.small_blind
-            game_obj.table.big_blind = st.session_state.big_blind
-            start_game_hand(game_obj)
+            rooms = get_global_rooms()
+            host_p = Player(name=st.session_state.my_player_name, chips=st.session_state.starting_chips, is_ai=False)
             
-            st.session_state.game = game_obj
-            st.session_state.view = "game"
-            st.session_state.log_messages = [f"Hosted Multiplayer Room {st.session_state.room_code} launched!"]
+            rooms[code] = {
+                "code": code,
+                "host_name": st.session_state.my_player_name,
+                "lock": threading.Lock(),
+                "starting_chips": st.session_state.starting_chips,
+                "small_blind": st.session_state.small_blind,
+                "big_blind": st.session_state.big_blind,
+                "players": [host_p],
+                "game": None,
+                "status": "WAITING",
+                "created_at": time.time(),
+                "winners_list": [],
+                "winner_banner_text": "",
+                "log_messages": [f"Room {code} created by {st.session_state.my_player_name}. Waiting for players to join..."],
+                "hand_count": 1,
+            }
+            
+            st.session_state.view = "waiting_room"
             st.rerun()
 
     # --------------------------------------------------------------------------
@@ -553,30 +597,114 @@ if st.session_state.view == "lobby":
         join_name_input = st.text_input("Your Player Name:", value="Guest (You)")
         
         if st.button("🔌 CONNECT & JOIN ROOM", use_container_width=True):
-            if join_code_input.strip():
-                st.session_state.room_code = join_code_input.strip().upper()
-                st.session_state.my_player_name = join_name_input.strip() or "Guest (You)"
-                
-                p1 = Player(name=st.session_state.my_player_name, chips=st.session_state.starting_chips, is_ai=False)
-                p2 = Player(name="Host Player", chips=st.session_state.starting_chips, is_ai=False)
-                
-                game_obj = Game(players=[p1, p2])
-                game_obj.table.small_blind = st.session_state.small_blind
-                game_obj.table.big_blind = st.session_state.big_blind
-                start_game_hand(game_obj)
-                
-                st.session_state.game = game_obj
-                st.session_state.view = "game"
-                st.session_state.log_messages = [f"Connected to Multiplayer Room {st.session_state.room_code}!"]
-                st.rerun()
+            code = join_code_input.strip().upper()
+            guest_name = join_name_input.strip() or "Guest (You)"
+            
+            rooms = get_global_rooms()
+            if code not in rooms:
+                st.error(f"Room {code} not found! Make sure the Room Host has launched the room.")
             else:
-                st.error("Please enter a valid Room Code!")
+                room = rooms[code]
+                with room["lock"]:
+                    st.session_state.my_player_name = guest_name
+                    st.session_state.room_code = code
+                    
+                    # Add guest player if not already in list
+                    existing = [p for p in room["players"] if p.name == guest_name]
+                    if not existing:
+                        guest_p = Player(name=guest_name, chips=room["starting_chips"], is_ai=False)
+                        room["players"].append(guest_p)
+                    
+                    if room["game"] is None:
+                        game_obj = Game(players=room["players"])
+                        game_obj.table.small_blind = room["small_blind"]
+                        game_obj.table.big_blind = room["big_blind"]
+                        start_game_hand(game_obj)
+                        room["game"] = game_obj
+                        room["status"] = "IN_GAME"
+                    
+                    st.session_state.game = room["game"]
+                    st.session_state.view = "game"
+                    st.rerun()
+
+# ==============================================================================
+# WAITING ROOM VIEW (Hosted Rooms)
+# ==============================================================================
+elif st.session_state.view == "waiting_room":
+    code = st.session_state.room_code
+    rooms = get_global_rooms()
+    room = rooms.get(code)
+    
+    if not room:
+        st.error("Room expired or cancelled!")
+        if st.button("🏠 Return to Lobby"):
+            st.session_state.view = "lobby"
+            st.rerun()
+    else:
+        # Check if guest player connected in background
+        if room["status"] == "IN_GAME" and room.get("game"):
+            st.session_state.game = room["game"]
+            st.session_state.view = "game"
+            st.rerun()
+
+        st.markdown('<div class="poker-title">♠️ MULTIPLAYER WAITING LOBBY ♠️</div>', unsafe_allow_html=True)
+        st.caption("<div style='text-align:center;'>Share your Room Code with your friend so they can connect!</div>", unsafe_allow_html=True)
+        st.markdown("---")
+
+        st.markdown(f"""<div class="room-box">
+<h3 style="color:#10b981; margin:0;">YOUR HOST ROOM CODE:</h3>
+<h1 style="color:#f59e0b; font-size:3.5rem; letter-spacing:4px; margin:10px 0;">{code}</h1>
+<h3 style="color:#38bdf8; margin: 10px 0;">Give this code to your friend to join your game!</h3>
+<p style="color:#cbd5e1;">Status: <b style="color:#f59e0b;">Waiting for Guest Player...</b></p>
+</div>""", unsafe_allow_html=True)
+
+        st.markdown(f"### 👥 Connected Seats ({len(room['players'])} Player):")
+        for i, p in enumerate(room["players"]):
+            st.write(f"• **Seat #{i+1}: {p.name}** ({'AI Bot' if getattr(p, 'is_ai', False) else 'Human Player'})")
+
+        st.markdown("---")
+        w_col1, w_col2 = st.columns(2)
+        with w_col1:
+            if st.button("🤖 Add AI Bot & Start Game Now", use_container_width=True):
+                with room["lock"]:
+                    bot_p = AIPlayer(name="Bot Alpha", bot=BotPlayer(name="Bot Alpha", difficulty=Difficulty.HARD, strategy=Strategy.TIGHT_AGGRESSIVE), chips=room["starting_chips"])
+                    room["players"].append(bot_p)
+                    game_obj = Game(players=room["players"])
+                    game_obj.table.small_blind = room["small_blind"]
+                    game_obj.table.big_blind = room["big_blind"]
+                    start_game_hand(game_obj)
+                    room["game"] = game_obj
+                    room["status"] = "IN_GAME"
+                    st.session_state.game = game_obj
+                    st.session_state.view = "game"
+                    st.rerun()
+
+        with w_col2:
+            if st.button("❌ Cancel Hosted Room", use_container_width=True):
+                rooms.pop(code, None)
+                st.session_state.room_code = ""
+                st.session_state.view = "lobby"
+                st.rerun()
+
+        time.sleep(1.2)
+        st.rerun()
 
 # ==============================================================================
 # GAME VIEW
 # ==============================================================================
 elif st.session_state.view == "game":
-    game = st.session_state.game
+    room_code = st.session_state.get("room_code", "")
+    rooms = get_global_rooms()
+    room = rooms.get(room_code) if room_code else None
+    
+    if room and room.get("game"):
+        game = room["game"]
+        st.session_state.game = game
+        st.session_state.winners_list = room.get("winners_list", [])
+        st.session_state.winner_banner_text = room.get("winner_banner_text", "")
+        st.session_state.log_messages = room.get("log_messages", [])
+    else:
+        game = st.session_state.game
     
     # Auto-advance street if betting round is complete or all active players are All-In
     check_and_advance_street(game)
@@ -865,4 +993,11 @@ elif st.session_state.view == "game":
         )
         if all_in_or_folded:
             time.sleep(0.8)  # Pause so user sees each street dealt
+            st.rerun()
+
+    # 3. In Online Room Multiplayer, auto-poll if waiting for opponent's turn
+    if room_code and hand_in_progress:
+        curr_p = game.betting_round.current_player_or_none()
+        if curr_p and curr_p.name != st.session_state.my_player_name and not getattr(curr_p, "is_ai", False):
+            time.sleep(1.0)
             st.rerun()
