@@ -1,3 +1,20 @@
+import sys
+import os
+
+# Ensure project root directory is in sys.path for Linux / Streamlit Cloud deployment
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+# Case-sensitivity helper for Linux environments (AI vs ai)
+try:
+    import AI
+    sys.modules['ai'] = AI
+except ImportError:
+    try:
+        import ai
+        sys.modules['AI'] = ai
+    except ImportError:
+        pass
+
 import streamlit as st
 import time
 import random
