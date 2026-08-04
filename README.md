@@ -1,22 +1,49 @@
 # ♠️ Texas Hold'em AI Engine & Web Platform
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://poker-ai-texas-holdem.streamlit.app/)
+
 A comprehensive, full-featured Texas Hold'em Poker Engine featuring intelligent AI opponents, Monte Carlo equity & EV HUD, multiplayer rooms, and dual client support: a modern **Streamlit Web Interface** and a responsive **Pygame Desktop Client**.
+
+🚀 **Live Web Application**: [https://poker-ai-texas-holdem.streamlit.app/](https://poker-ai-texas-holdem.streamlit.app/)
 
 ---
 
 ## 📸 Screenshots
 
-### 🃏 1. Texas Hold'em Poker Lobby
-*Select Game Mode (Local, Host/Join Multiplayer), Configure Seats (2-9 Players), Starting Stack, Blinds, and AI Personalities.*
+### 🖥️ Pygame Desktop Client
 
-![Texas Hold'em Poker Lobby](image.png)
+#### 🃏 1. Desktop Lobby Screen
+*Native 60 FPS Desktop interface for table configuration and game mode selection.*
+
+<p align="center">
+  <img src="./image.png" alt="Pygame Desktop Lobby Screen" width="100%" />
+</p>
+
+#### 🎮 2. Desktop Poker Table Screen
+*Interactive desktop poker table rendering with chip displays and game controls.*
+
+<p align="center">
+  <img src="./image-1.png" alt="Pygame Desktop Poker Table Screen" width="100%" />
+</p>
 
 ---
 
-### 🎮 2. Interactive Poker Table & AI Live HUD
-*Features a compact felt oval table, real-time community & hole card rendering, interactive betting controls, live chat & reaction emojis, and an integrated AI Live Brain HUD showing Win Equity, Decision EV, Hand Strength, and Pot Odds.*
+### 🌐 Streamlit Web Platform
+*Live App: [poker-ai-texas-holdem.streamlit.app](https://poker-ai-texas-holdem.streamlit.app/)*
 
-![Texas Hold'em Poker Game Table & AI HUD](image-1.png)
+#### 🃏 3. Streamlit Lobby & Multi-Seat Configuration
+*Select Game Mode (Local / Multiplayer), Configure 2-9 Seats, Blinds, and AI Bot Personalities.*
+
+<p align="center">
+  <img src="./image-2.png" alt="Streamlit Web Lobby Screen" width="100%" />
+</p>
+
+#### 🎮 4. Streamlit Interactive Poker Table & AI Live HUD
+*Features felt oval table, real-time card rendering, live chat, and AI Live Brain HUD showing Win Equity %, Decision EV, and Pot Odds.*
+
+<p align="center">
+  <img src="./image-3.png" alt="Streamlit Web Poker Table Screen" width="100%" />
+</p>
 
 ---
 
@@ -121,7 +148,7 @@ Install web dependencies and run Streamlit:
 pip install -r requirements-streamlit.txt
 streamlit run app_streamlit.py
 ```
-*Access the app at `http://localhost:8501` in your web browser.*
+*Access the app live at [https://poker-ai-texas-holdem.streamlit.app/](https://poker-ai-texas-holdem.streamlit.app/) or locally at `http://localhost:8501`.*
 
 ### Option B: Launch Pygame Desktop Application
 Install full desktop dependencies and run main:
